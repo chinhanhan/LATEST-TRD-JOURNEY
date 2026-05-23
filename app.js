@@ -1,0 +1,1850 @@
+const STORAGE_KEY = "trd-journey-os-v1";
+const LEGACY_KEY = "trd-journey-v1";
+const LANGUAGE_KEY = "trd-journey-language";
+const IMAGE_LIMIT = 850 * 1024;
+
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const money = (value) => `$${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+const uid = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+const safe = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[c]);
+
+const starterTrades = [
+  { id: "1", date: "2026-05-13", symbol: "NQ", setup: "Opening Drive", direction: "Long", grade: "A", risk: 100, pnl: 230, rule: true, emotion: "Focused", note: "Clean drive after range break.", checklist: { hasPlan: true, hasTrigger: true, hasStop: true, hasTarget: true, emotionControlled: true }, tradingViewUrl: "https://www.tradingview.com/chart/" },
+  { id: "2", date: "2026-05-14", symbol: "ES", setup: "Range Fade", direction: "Short", grade: "B", risk: 100, pnl: -80, rule: true, emotion: "Calm", note: "Exit respected.", checklist: { hasPlan: true, hasTrigger: true, hasStop: true, hasTarget: false, emotionControlled: true } },
+  { id: "3", date: "2026-05-15", symbol: "NQ", setup: "Liquidity Sweep", direction: "Long", grade: "A", risk: 120, pnl: 300, rule: true, emotion: "Focused", note: "Sweep into HTF level.", checklist: { hasPlan: true, hasTrigger: true, hasStop: true, hasTarget: true, emotionControlled: true } },
+  { id: "4", date: "2026-05-18", symbol: "CL", setup: "Breakout Retest", direction: "Long", grade: "C", risk: 80, pnl: -110, rule: false, emotion: "FOMO", note: "Entered before retest completed.", checklist: { hasPlan: false, hasTrigger: false, hasStop: true, hasTarget: false, emotionControlled: false } },
+  { id: "5", date: "2026-05-19", symbol: "NQ", setup: "Pullback Continuation", direction: "Short", grade: "A", risk: 100, pnl: 170, rule: true, emotion: "Calm", note: "One pullback, one decision.", checklist: { hasPlan: true, hasTrigger: true, hasStop: true, hasTarget: true, emotionControlled: true } },
+  { id: "6", date: "2026-05-20", symbol: "GC", setup: "Liquidity Sweep", direction: "Short", grade: "B", risk: 90, pnl: -45, rule: true, emotion: "Hesitant", note: "Reduced size after late signal.", checklist: { hasPlan: true, hasTrigger: true, hasStop: true, hasTarget: false, emotionControlled: false } },
+  { id: "7", date: "2026-05-21", symbol: "NQ", setup: "Opening Drive", direction: "Long", grade: "A", risk: 100, pnl: 260, rule: true, emotion: "Focused", note: "Held to target without moving stop.", checklist: { hasPlan: true, hasTrigger: true, hasStop: true, hasTarget: true, emotionControlled: true }, imageUrl: "https://s3.tradingview.com/snapshots/x/x8KQ6Y1R.png" }
+];
+
+const defaultPreferences = {
+  defaultSymbol: "NQ",
+  riskPerTrade: 100,
+  dailyMaxLossR: -2,
+  maxTradesPerDay: 3,
+  setups: ["Opening Drive", "Pullback Continuation", "Liquidity Sweep", "Range Fade", "Breakout Retest"],
+  dailyRules: ["Only A setups before 11:30", "Stop trading at -2R", "No revenge trades", "One setup, one decision"]
+};
+
+const defaultSopDetails = {
+  market: "Futures",
+  timeframe: "Intraday",
+  status: "active",
+  levelNotes: "",
+  entryRules: "Define location, trigger, invalidation, and target before entry.",
+  exitRules: "Exit at invalidation or planned target. Do not move stop impulsively.",
+  riskRules: "Risk stays within the planned R. No averaging down.",
+  noTradeRules: "No trade when the setup is unclear, rushed, or emotionally forced.",
+  checklist: ["Location", "Trigger", "Invalidation", "Target", "Emotion controlled"],
+  weaknesses: ["Early entry", "Moving stop", "Holding without target"]
+};
+
+let journalView = "timeline";
+
+let state = loadState();
+let selectedDay = todayISO();
+let activeModule = null;
+let language = localStorage.getItem(LANGUAGE_KEY) || "en";
+let interactionState = {
+  sourceModule: null,
+  transitionTimer: null
+};
+
+const dictionary = {
+  en: {
+    switchLanguage: "中文",
+    homeTitle: "Choose your next move.",
+    homeCopy: "Plan quietly. Execute cleanly. Review what the data actually says.",
+    today: "Today",
+    journal: "Journal",
+    review: "Review",
+    system: "System",
+    back: "Back",
+    logTrade: "Log Trade",
+    planReady: "Plan ready",
+    planMissing: "Plan missing",
+    open: "Open",
+    closed: "closed",
+    last: "Last",
+    processLeak: "process leak",
+    risk: "Risk",
+    backupReady: "Backup ready",
+    openTrades: "Open Trades",
+    liveExecution: "Live execution",
+    startTrade: "Start Trade",
+    noOpenTrades: "No open trades.",
+    reviewPrompt: "Close open trades to complete review.",
+    working: "Working",
+    leaking: "Leaking",
+    nextFocus: "Next Focus",
+    noData: "No data",
+    addTrades: "Add closed trades",
+    closeTrade: "Close Trade",
+    rResult: "R Result",
+    rHint: "Use R when you want statistics before exact dollars.",
+    pnlWins: "If both are filled, Net P&L is used.",
+    needsResult: "Add Net P&L or R Result to close this trade.",
+    tradeClosed: "Trade closed.",
+    languageSaved: "Language updated.",
+    maxDailyLoss: "Max daily loss",
+    maxTrades: "Max trades"
+  },
+  zh: {
+    switchLanguage: "EN",
+    homeTitle: "选择下一步。",
+    homeCopy: "安静计划。干净执行。复盘真实数据。",
+    today: "今日",
+    journal: "交易记录",
+    review: "复盘",
+    system: "系统",
+    back: "返回",
+    logTrade: "记录交易",
+    planReady: "计划已完成",
+    planMissing: "缺少计划",
+    open: "进行中",
+    closed: "已完成",
+    last: "上一笔",
+    processLeak: "流程泄漏",
+    risk: "风险",
+    backupReady: "可备份",
+    openTrades: "进行中交易",
+    liveExecution: "执行中",
+    startTrade: "开始记录",
+    noOpenTrades: "暂无进行中交易。",
+    reviewPrompt: "完成进行中交易后再结束复盘。",
+    working: "有效的部分",
+    leaking: "泄漏的部分",
+    nextFocus: "下一步专注",
+    noData: "暂无数据",
+    addTrades: "添加已完成交易",
+    closeTrade: "结束交易",
+    rResult: "R 结果",
+    rHint: "还没有精确金额时，可以先用 R 统计。",
+    pnlWins: "如果同时填写，优先使用 Net P&L。",
+    needsResult: "请填写 Net P&L 或 R Result 后再结束交易。",
+    tradeClosed: "交易已结束。",
+    languageSaved: "语言已更新。",
+    maxDailyLoss: "每日最大亏损",
+    maxTrades: "最大交易数"
+  }
+};
+
+function t(key) {
+  return dictionary[language]?.[key] || dictionary.en[key] || key;
+}
+
+function defaultState() {
+  const base = {
+    version: 1,
+    preferences: structuredClone(defaultPreferences),
+    trades: starterTrades.map((trade) => normalizeTrade(trade)),
+    dailyPlans: {
+      [todayISO()]: { bias: "Wait for confirmation near key levels.", levels: "Previous high / low, session open", allowedSetups: "Opening Drive, Liquidity Sweep", maxLossR: -2, maxTrades: 3 }
+    },
+    dailyReviews: {}
+  };
+  return ensureSopState(base);
+}
+
+function loadState() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) return normalizeState(JSON.parse(saved));
+  const legacy = localStorage.getItem(LEGACY_KEY);
+  if (legacy) return normalizeState({ trades: JSON.parse(legacy) });
+  return defaultState();
+}
+
+function normalizeState(raw) {
+  return ensureSopState({
+    version: 1,
+    preferences: { ...structuredClone(defaultPreferences), ...(raw.preferences || {}) },
+    trades: (raw.trades || []).map(normalizeTrade),
+    dailyPlans: raw.dailyPlans || {},
+    dailyReviews: raw.dailyReviews || {},
+    sops: raw.sops || [],
+    accounts: raw.accounts || [],
+    activeSopId: raw.activeSopId || "",
+    activeAccountId: raw.activeAccountId || ""
+  });
+}
+
+function normalizeTrade(trade) {
+  const status = trade.status === "open" ? "open" : "closed";
+  return {
+    id: String(trade.id || uid()),
+    status,
+    date: trade.date || todayISO(),
+    closedAt: trade.closedAt || (status === "closed" ? trade.date || todayISO() : ""),
+    symbol: trade.symbol || defaultPreferences.defaultSymbol,
+    setup: trade.setup || defaultPreferences.setups[0],
+    direction: trade.direction || "Long",
+    grade: trade.grade || "B",
+    risk: Number(trade.risk || 0),
+    pnl: trade.pnl === "" || trade.pnl == null ? 0 : Number(trade.pnl || 0),
+    rule: trade.rule !== false,
+    emotion: trade.emotion || "Calm",
+    note: trade.note || "",
+    entryPlan: trade.entryPlan || trade.entryNote || "",
+    entryNote: trade.entryNote || "",
+    stopPlan: trade.stopPlan || "",
+    targetPlan: trade.targetPlan || "",
+    exitNote: trade.exitNote || "",
+    checklist: { hasPlan: false, hasTrigger: false, hasStop: false, hasTarget: false, emotionControlled: false, ...(trade.checklist || {}) },
+    tradingViewUrl: trade.tradingViewUrl || "",
+    imageUrl: trade.imageUrl || "",
+    imageData: trade.imageData || "",
+    sopId: trade.sopId || "",
+    accountId: trade.accountId || ""
+  };
+}
+
+function makeSopId(name) {
+  return `sop-${String(name || "sop").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || uid()}`;
+}
+
+function makeAccountId(sopId, name) {
+  return `acct-${sopId.replace(/^sop-/, "")}-${String(name || "main").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || uid()}`;
+}
+
+function ensureSopState(rawState) {
+  const setupNames = [...new Set([
+    ...(rawState.preferences?.setups || defaultPreferences.setups),
+    ...(rawState.trades || []).map((trade) => trade.setup).filter(Boolean)
+  ])];
+  const existingSops = (rawState.sops || []).map((sop) => ({
+    id: sop.id || makeSopId(sop.name),
+    name: sop.name || "Untitled SOP",
+    createdAt: sop.createdAt || todayISO(),
+    archivedAt: sop.archivedAt || "",
+    ...structuredClone(defaultSopDetails),
+    ...sop,
+    checklist: Array.isArray(sop.checklist) ? sop.checklist : String(sop.checklist || defaultSopDetails.checklist.join("\n")).split("\n").map((item) => item.trim()).filter(Boolean),
+    weaknesses: Array.isArray(sop.weaknesses) ? sop.weaknesses : String(sop.weaknesses || defaultSopDetails.weaknesses.join("\n")).split("\n").map((item) => item.trim()).filter(Boolean)
+  }));
+  const sopsByName = new Map(existingSops.map((sop) => [sop.name, sop]));
+  for (const setup of setupNames) {
+    if (!sopsByName.has(setup)) {
+      const id = makeSopId(setup);
+      const sop = { id, name: setup, createdAt: todayISO(), archivedAt: "", ...structuredClone(defaultSopDetails) };
+      existingSops.push(sop);
+      sopsByName.set(setup, sop);
+    }
+  }
+  const existingAccounts = (rawState.accounts || []).map((account) => ({
+    id: account.id || makeAccountId(account.sopId || existingSops[0]?.id || "sop-main", account.name),
+    sopId: account.sopId || existingSops[0]?.id || "",
+    name: account.name || "Main Account",
+    type: account.type || "Main",
+    startingBalance: Number(account.startingBalance ?? account.currentBalance ?? 1000),
+    currentBalance: Number(account.currentBalance ?? account.startingBalance ?? 1000),
+    status: account.status || "active",
+    createdAt: account.createdAt || todayISO(),
+    archivedAt: account.archivedAt || ""
+  }));
+  for (const sop of existingSops) {
+    if (!existingAccounts.some((account) => account.sopId === sop.id)) {
+      existingAccounts.push({ id: makeAccountId(sop.id, "Main Account"), sopId: sop.id, name: "Main Account", type: "Main", startingBalance: 1000, currentBalance: 1000, status: "active", createdAt: todayISO(), archivedAt: "" });
+    }
+  }
+  const firstSop = existingSops[0];
+  const trades = (rawState.trades || []).map((trade) => {
+    const sop = existingSops.find((item) => item.id === trade.sopId) || sopsByName.get(trade.setup) || firstSop;
+    const account = existingAccounts.find((item) => item.id === trade.accountId && item.sopId === sop?.id) || existingAccounts.find((item) => item.sopId === sop?.id);
+    return { ...trade, sopId: sop?.id || "", accountId: account?.id || "" };
+  });
+  const activeSopId = existingSops.some((sop) => sop.id === rawState.activeSopId) ? rawState.activeSopId : firstSop?.id || "";
+  const activeAccount = existingAccounts.find((account) => account.id === rawState.activeAccountId && account.sopId === activeSopId) || existingAccounts.find((account) => account.sopId === activeSopId);
+  return {
+    ...rawState,
+    sops: existingSops,
+    accounts: existingAccounts,
+    trades,
+    activeSopId,
+    activeAccountId: activeAccount?.id || ""
+  };
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function activeSop() {
+  return state.sops.find((sop) => sop.id === state.activeSopId) || state.sops[0];
+}
+
+function accountsForSop(sopId = state.activeSopId) {
+  return state.accounts.filter((account) => account.sopId === sopId);
+}
+
+function activeAccount() {
+  return state.accounts.find((account) => account.id === state.activeAccountId) || accountsForSop()[0];
+}
+
+function visibleTrades() {
+  const sopId = state.activeSopId || activeSop()?.id;
+  const accountId = state.activeAccountId || activeAccount()?.id;
+  return state.trades.filter((trade) => trade.sopId === sopId && (!accountId || trade.accountId === accountId));
+}
+
+function activeSopTrades() {
+  return visibleTrades();
+}
+
+function sopTrades(sopId) {
+  return state.trades.filter((trade) => trade.sopId === sopId);
+}
+
+function accountName(id) {
+  return state.accounts.find((account) => account.id === id)?.name || "Archived Account";
+}
+
+function accountLabel(account = activeAccount()) {
+  if (!account) return "No account";
+  return `${account.name}${account.type ? ` · ${account.type}` : ""}`;
+}
+
+function sopName(id) {
+  return state.sops.find((sop) => sop.id === id)?.name || "Archived SOP";
+}
+
+function closedTrades(trades = visibleTrades()) {
+  return trades.filter((trade) => trade.status !== "open");
+}
+
+function openTrades(trades = visibleTrades()) {
+  return trades.filter((trade) => trade.status === "open");
+}
+
+function rValue(trade) {
+  return trade.risk ? trade.pnl / trade.risk : 0;
+}
+
+function formatR(value) {
+  return `${value >= 0 ? "+" : ""}${Number(value || 0).toFixed(2)}R`;
+}
+
+function metrics(trades = closedTrades()) {
+  const source = closedTrades(trades);
+  const rList = source.map(rValue);
+  const wins = rList.filter((r) => r > 0);
+  const losses = rList.filter((r) => r < 0);
+  const grossWin = wins.reduce((sum, r) => sum + r, 0);
+  const grossLoss = Math.abs(losses.reduce((sum, r) => sum + r, 0));
+  let curve = 0;
+  let peak = 0;
+  let maxDrawdown = 0;
+  for (const r of rList) {
+    curve += r;
+    peak = Math.max(peak, curve);
+    maxDrawdown = Math.min(maxDrawdown, curve - peak);
+  }
+  return {
+    count: source.length,
+    totalR: rList.reduce((sum, r) => sum + r, 0),
+    expectancy: rList.length ? rList.reduce((sum, r) => sum + r, 0) / rList.length : 0,
+    winRate: rList.length ? wins.length / rList.length : 0,
+    profitFactor: grossLoss ? grossWin / grossLoss : grossWin ? Infinity : 0,
+    maxDrawdown
+  };
+}
+
+function byDate(date) {
+  return visibleTrades().filter((trade) => trade.date === date);
+}
+
+function closedByDate(date) {
+  return closedTrades().filter((trade) => trade.date === date || trade.closedAt === date);
+}
+
+function groupBy(trades, key) {
+  return trades.reduce((map, trade) => {
+    const value = trade[key] || "Unknown";
+    map[value] ||= [];
+    map[value].push(trade);
+    return map;
+  }, {});
+}
+
+function dateRange(start, end) {
+  const days = [];
+  const cursor = new Date(`${start}T00:00:00`);
+  const last = new Date(`${end}T00:00:00`);
+  while (cursor <= last) {
+    days.push(cursor.toISOString().slice(0, 10));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return days;
+}
+
+function weekRange(date = todayISO()) {
+  const d = new Date(`${date}T00:00:00`);
+  const day = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - day);
+  const start = d.toISOString().slice(0, 10);
+  d.setDate(d.getDate() + 6);
+  return [start, d.toISOString().slice(0, 10)];
+}
+
+function monthRange(date = todayISO()) {
+  const d = new Date(`${date}T00:00:00`);
+  const start = new Date(d.getFullYear(), d.getMonth(), 1);
+  const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+  return [start.toISOString().slice(0, 10), end.toISOString().slice(0, 10)];
+}
+
+function tradesInRange(start, end) {
+  return closedTrades().filter((trade) => {
+    const date = trade.closedAt || trade.date;
+    return date >= start && date <= end;
+  });
+}
+
+function processLeakRate(trades = visibleTrades()) {
+  const source = closedTrades(trades);
+  if (!source.length) return 0;
+  const leaks = source.filter((trade) => !trade.rule || trade.grade === "C").length;
+  return leaks / source.length;
+}
+
+function streak() {
+  const days = [...new Set(closedTrades().map((trade) => trade.closedAt || trade.date))].sort();
+  let current = 0;
+  let direction = 0;
+  for (let i = days.length - 1; i >= 0; i--) {
+    const total = metrics(closedByDate(days[i])).totalR;
+    const sign = total > 0 ? 1 : total < 0 ? -1 : 0;
+    if (!direction) direction = sign;
+    if (sign === direction && sign !== 0) current += 1;
+    else break;
+  }
+  return { count: current, direction };
+}
+
+function sopProgress(sopId = state.activeSopId) {
+  const trades = sopId === state.activeSopId ? visibleTrades() : sopTrades(sopId);
+  const closed = closedTrades(trades);
+  const m = metrics(closed);
+  const screenshots = trades.filter((trade) => imageFor(trade)).length;
+  const aGrades = closed.filter((trade) => trade.grade === "A").length;
+  const followed = closed.filter((trade) => trade.rule).length;
+  return {
+    records: trades.length,
+    closed: closed.length,
+    screenshots,
+    expectancy: m.expectancy,
+    totalR: m.totalR,
+    winRate: m.winRate,
+    ruleRate: closed.length ? followed / closed.length : 0,
+    aGradeRate: closed.length ? aGrades / closed.length : 0,
+    lastUsed: trades.slice().sort((a, b) => (b.closedAt || b.date).localeCompare(a.closedAt || a.date))[0]?.date || ""
+  };
+}
+
+function sopLevel(progress) {
+  const score = progress.records + progress.screenshots * 2 + Math.round(progress.ruleRate * 10) + Math.round(progress.aGradeRate * 8);
+  if (progress.records >= 100 && progress.ruleRate >= 0.75) return { level: 5, name: "Mature", score };
+  if (progress.records >= 50 && progress.ruleRate >= 0.65) return { level: 4, name: "Refined", score };
+  if (progress.records >= 25) return { level: 3, name: "Clear", score };
+  if (progress.records >= 10) return { level: 2, name: "Tested", score };
+  return { level: 1, name: "Draft", score };
+}
+
+function sopWeaknessProfile(sopId = state.activeSopId) {
+  const closed = closedTrades(sopId === state.activeSopId ? visibleTrades() : sopTrades(sopId));
+  if (!closed.length) return "Needs more records";
+  const leaks = closed.filter((trade) => !trade.rule || trade.grade === "C");
+  const emotionRows = Object.entries(groupBy(leaks.length ? leaks : closed, "emotion"))
+    .map(([name, list]) => ({ name, count: list.length, ...metrics(list) }))
+    .sort((a, b) => b.count - a.count || a.expectancy - b.expectancy);
+  return emotionRows[0] ? `${emotionRows[0].name} is the clearest leak` : "Execution looks clean";
+}
+
+function sopUpgradeSuggestion(sopId = state.activeSopId) {
+  const sop = state.sops.find((item) => item.id === sopId);
+  const progress = sopProgress(sopId);
+  if (!progress.records) return "Collect the first clean example.";
+  if (progress.screenshots < Math.min(progress.records, 5)) return "Attach more screenshots to build evidence.";
+  if (progress.ruleRate < 0.75) return "Tighten the checklist around the repeated rule break.";
+  if ((sop?.weaknesses || []).length < 3) return "Name one more weakness after the next review.";
+  return "Refine one entry rule with your best example.";
+}
+
+function timelineGroups(trades = visibleTrades()) {
+  return trades.slice().sort((a, b) => (b.closedAt || b.date).localeCompare(a.closedAt || a.date)).reduce((groups, trade) => {
+    const day = trade.closedAt || trade.date;
+    groups[day] ||= [];
+    groups[day].push(trade);
+    return groups;
+  }, {});
+}
+
+function renderAll() {
+  applyLanguage();
+  populateStaticLabels();
+  populateSetupOptions();
+  populateSopControls();
+  populateSettings();
+  populateWorkflowForms();
+  renderHomeSummary();
+  renderHomeVisuals();
+  renderMetrics();
+  renderCharts();
+  renderInsights();
+  renderJournal();
+  renderSopJourney();
+  renderTodayOpenTrades();
+  renderAnalytics();
+  renderWorkflow();
+  renderCycles();
+  renderPlaybook();
+  applyLanguage();
+}
+
+function renderHomeSummary() {
+  const [weekStart, weekEnd] = weekRange();
+  const weekTrades = tradesInRange(weekStart, weekEnd);
+  const week = metrics(weekTrades);
+  const all = metrics();
+  const planReady = Boolean(state.dailyPlans[todayISO()]);
+  const openCount = openTrades().length;
+  const closed = closedTrades();
+  const lastTrade = [...closed].sort((a, b) => (b.closedAt || b.date).localeCompare(a.closedAt || a.date))[0];
+  const sop = activeSop();
+  const progress = sopProgress(sop?.id);
+  const level = sopLevel(progress);
+  setText("homeTodayValue", formatR(week.totalR));
+  setText("homeTodayMeta", `${planReady ? t("planReady") : t("planMissing")} | ${t("open")}: ${openCount}`);
+  setText("homeJournalValue", `Level ${level.level} ${level.name}`);
+  setText("homeJournalMeta", `${sop?.name || "SOP"} | ${progress.records} records${lastTrade ? ` | ${t("last")}: ${lastTrade.symbol}` : ""}`);
+  setText("homeReviewValue", formatR(all.expectancy));
+  setText("homeReviewMeta", `${Math.round(processLeakRate() * 100)}% ${t("processLeak")}`);
+  setText("homeSystemValue", `${state.sops.length} SOPs`);
+  setText("homeSystemMeta", `${accountsForSop().length} accounts | ${t("backupReady")}`);
+}
+
+function populateStaticLabels() {
+  document.getElementById("todayLabel").textContent = new Date().toLocaleDateString(language === "zh" ? "zh-CN" : "en", { weekday: "long", month: "long", day: "numeric" });
+  document.getElementById("guardrailText").textContent = `${t("maxDailyLoss")}: ${state.preferences.dailyMaxLossR}R`;
+  document.getElementById("guardrailMeta").textContent = `${t("maxTrades")}: ${state.preferences.maxTradesPerDay} | ${t("risk")}: ${money(state.preferences.riskPerTrade)}`;
+}
+
+function renderHomeVisuals() {
+  renderMiniSparkline("homeTodaySparkline", equitySeries());
+  const openCount = openTrades().length;
+  const closedCount = closedTrades().length;
+  const total = Math.max(openCount + closedCount, 1);
+  document.getElementById("homeJournalStatus").innerHTML = `
+    <i style="width:${Math.max((openCount / total) * 100, openCount ? 12 : 0)}%"></i>
+    <b style="width:${Math.max((closedCount / total) * 100, closedCount ? 12 : 0)}%"></b>
+  `;
+  document.getElementById("homeLeakMeter").style.setProperty("--leak", `${Math.round(processLeakRate() * 100)}%`);
+  document.getElementById("homeSystemHealth").classList.toggle("is-warning", state.sops.length < 2);
+}
+
+function renderMiniSparkline(id, values) {
+  const svg = document.getElementById(id);
+  if (!svg) return;
+  const width = 160;
+  const height = 42;
+  const pad = 4;
+  const min = Math.min(...values, 0);
+  const max = Math.max(...values, 1);
+  const spread = Math.max(max - min, 1);
+  const points = values.map((value, index) => {
+    const x = pad + (index / Math.max(values.length - 1, 1)) * (width - pad * 2);
+    const y = height - pad - ((value - min) / spread) * (height - pad * 2);
+    return `${x},${y}`;
+  }).join(" ");
+  svg.innerHTML = `<polyline points="${points}"></polyline>`;
+}
+
+function populateSetupOptions() {
+  const setupSelect = document.getElementById("setupSelect");
+  const current = setupSelect.value;
+  setupSelect.innerHTML = state.preferences.setups.map((setup) => `<option>${safe(setup)}</option>`).join("");
+  setupSelect.value = state.preferences.setups.includes(current) ? current : state.preferences.setups[0];
+  const filter = document.getElementById("setupFilter");
+  const filterValue = filter.value;
+  filter.innerHTML = `<option value="All">All setups</option>${state.preferences.setups.map((setup) => `<option>${safe(setup)}</option>`).join("")}`;
+  filter.value = ["All", ...state.preferences.setups].includes(filterValue) ? filterValue : "All";
+}
+
+function populateSopControls() {
+  const active = activeSop();
+  if (!active) return;
+  const sopOptions = state.sops.filter((sop) => !sop.archivedAt).map((sop) => `<option value="${safe(sop.id)}">${safe(sop.name)}</option>`).join("");
+  ["activeSopSelect", "tradeSopSelect"].forEach((id) => {
+    const select = document.getElementById(id);
+    if (!select) return;
+    const current = select.value;
+    select.innerHTML = sopOptions;
+    select.value = state.sops.some((sop) => sop.id === current) ? current : active.id;
+  });
+  const accounts = accountsForSop(active.id).filter((account) => !account.archivedAt);
+  if (!accounts.some((account) => account.id === state.activeAccountId)) state.activeAccountId = accounts[0]?.id || "";
+  const accountOptions = accounts.map((account) => `<option value="${safe(account.id)}">${safe(account.name)}</option>`).join("");
+  const filter = document.getElementById("accountFilterSelect");
+  if (filter) {
+    filter.innerHTML = accountOptions;
+    filter.value = state.activeAccountId || accounts[0]?.id || "";
+  }
+  const tradeAccountSelect = document.getElementById("tradeAccountSelect");
+  if (tradeAccountSelect) {
+    tradeAccountSelect.innerHTML = accountOptions;
+    tradeAccountSelect.value = state.activeAccountId || accounts[0]?.id || "";
+  }
+}
+
+function populateSettings() {
+  const form = document.getElementById("settingsForm");
+  form.defaultSymbol.value = state.preferences.defaultSymbol;
+  form.riskPerTrade.value = state.preferences.riskPerTrade;
+  form.dailyMaxLossR.value = state.preferences.dailyMaxLossR;
+  form.maxTradesPerDay.value = state.preferences.maxTradesPerDay;
+  form.setups.value = state.preferences.setups.join("\n");
+  form.dailyRules.value = state.preferences.dailyRules.join("\n");
+}
+
+function populateWorkflowForms() {
+  const day = selectedDay || todayISO();
+  const plan = state.dailyPlans[day] || {};
+  const review = state.dailyReviews[day] || {};
+  const planForm = document.getElementById("planForm");
+  const reviewForm = document.getElementById("reviewForm");
+  planForm.workflowDate.value = day;
+  planForm.bias.value = plan.bias || "";
+  planForm.levels.value = plan.levels || "";
+  planForm.allowedSetups.value = plan.allowedSetups || state.preferences.setups.slice(0, 2).join(", ");
+  planForm.maxLossR.value = plan.maxLossR ?? state.preferences.dailyMaxLossR;
+  planForm.maxTrades.value = plan.maxTrades ?? state.preferences.maxTradesPerDay;
+  reviewForm.workflowDate.value = day;
+  reviewForm.keep.value = review.keep || "";
+  reviewForm.remove.value = review.remove || "";
+  reviewForm.focus.value = review.focus || "";
+}
+
+function setWorkflowDate(day) {
+  selectedDay = day || todayISO();
+  populateWorkflowForms();
+  renderWorkflow();
+  renderCycles();
+}
+
+function renderMetrics() {
+  const m = metrics();
+  setText("expectancyMetric", formatR(m.expectancy));
+  setText("winRateMetric", `${Math.round(m.winRate * 100)}%`);
+  setText("profitFactorMetric", Number.isFinite(m.profitFactor) ? m.profitFactor.toFixed(2) : "inf");
+  setText("drawdownMetric", formatR(m.maxDrawdown));
+  setText("tradeCountLabel", `${m.count} trades`);
+  document.getElementById("expectancyMetric").closest(".metric-card").classList.toggle("negative", m.expectancy < 0);
+  document.getElementById("drawdownMetric").closest(".metric-card").classList.toggle("negative", m.maxDrawdown < 0);
+}
+
+function renderCharts() {
+  renderLineChart("equityChart", equitySeries(), { negative: false });
+  renderLineChart("drawdownChart", drawdownSeries(), { negative: true });
+}
+
+function equitySeries() {
+  let total = 0;
+  return [0, ...closedTrades().map((trade) => (total += rValue(trade)))];
+}
+
+function drawdownSeries() {
+  let total = 0;
+  let peak = 0;
+  return [0, ...closedTrades().map((trade) => {
+    total += rValue(trade);
+    peak = Math.max(peak, total);
+    return total - peak;
+  })];
+}
+
+function renderLineChart(id, values, options = {}) {
+  const svg = document.getElementById(id);
+  const width = 760;
+  const height = id === "equityChart" ? 300 : 260;
+  const pad = 32;
+  const min = Math.min(...values, 0);
+  const max = Math.max(...values, 1);
+  const spread = Math.max(max - min, 1);
+  const points = values.map((value, index) => {
+    const x = pad + (index / Math.max(values.length - 1, 1)) * (width - pad * 2);
+    const y = height - pad - ((value - min) / spread) * (height - pad * 2);
+    return { x, y, value };
+  });
+  const zeroY = height - pad - ((0 - min) / spread) * (height - pad * 2);
+  const line = points.map((p) => `${p.x},${p.y}`).join(" ");
+  const area = `${pad},${zeroY} ${line} ${width - pad},${zeroY}`;
+  const last = points.at(-1);
+  svg.innerHTML = `
+    <line class="grid-line" x1="${pad}" y1="${pad}" x2="${width - pad}" y2="${pad}"></line>
+    <text class="axis-label" x="${pad}" y="${pad - 10}">${formatR(max)}</text>
+    <line class="zero-line" x1="${pad}" y1="${zeroY}" x2="${width - pad}" y2="${zeroY}"></line>
+    <text class="axis-label" x="${pad}" y="${zeroY - 8}">0R</text>
+    <text class="axis-label" x="${pad}" y="${height - 8}">${formatR(min)}</text>
+    <polygon class="chart-area" points="${area}" fill="${options.negative ? "#d33f3f" : "#0071e3"}"></polygon>
+    <polyline class="chart-line ${options.negative ? "red" : ""}" points="${line}"></polyline>
+    ${points.map((p, index) => `<circle class="chart-dot ${index === points.length - 1 ? "last" : ""}" cx="${p.x}" cy="${p.y}" r="${index === points.length - 1 ? 5.5 : 4}"><title>${formatR(p.value)}</title></circle>`).join("")}
+    ${last ? `<circle class="chart-pulse" cx="${last.x}" cy="${last.y}" r="11"></circle>` : ""}
+  `;
+}
+
+function renderInsights() {
+  const all = metrics();
+  const [weekStart, weekEnd] = weekRange();
+  const weekTrades = tradesInRange(weekStart, weekEnd);
+  const week = metrics(weekTrades);
+  const grouped = Object.entries(groupBy(closedTrades(), "setup")).map(([name, list]) => ({ name, ...metrics(list) }));
+  const bestSetup = grouped.sort((a, b) => b.expectancy - a.expectancy)[0];
+  const worstSetup = grouped.sort((a, b) => a.expectancy - b.expectancy)[0];
+  const bestTrade = [...closedTrades()].sort((a, b) => rValue(b) - rValue(a))[0];
+  const worstTrade = [...closedTrades()].sort((a, b) => rValue(a) - rValue(b))[0];
+  const s = streak();
+  const cards = [
+    ["Week R", formatR(week.totalR), `${week.count} trades this week`],
+    ["Current Streak", s.count ? `${s.count} ${s.direction > 0 ? "winning" : "losing"} days` : "No streak", "Based on active trading days"],
+    ["Best Setup", bestSetup ? bestSetup.name : "No data", bestSetup ? formatR(bestSetup.expectancy) : "Add trades"],
+    ["Weakest Setup", worstSetup ? worstSetup.name : "No data", worstSetup ? formatR(worstSetup.expectancy) : "Add trades"],
+    ["Largest Win", bestTrade ? formatR(rValue(bestTrade)) : "0.00R", bestTrade ? bestTrade.symbol : "No trades"],
+    ["Largest Loss", worstTrade ? formatR(rValue(worstTrade)) : "0.00R", worstTrade ? worstTrade.symbol : "No trades"],
+    ["Process Leak", `${Math.round(processLeakRate() * 100)}%`, "Rule breaks, C trades, weak checklist"],
+    ["Total R", formatR(all.totalR), "All recorded trades"]
+  ];
+  if (openTrades().length) cards.unshift([t("openTrades"), String(openTrades().length), t("reviewPrompt")]);
+  document.getElementById("summaryCards").innerHTML = cards.map(([title, value, note]) => insightCard(title, value, note)).join("");
+  document.getElementById("statusGrid").innerHTML = [
+    ["Plan", state.dailyPlans[todayISO()] ? "Ready" : "Missing", "Pre-market plan"],
+    ["Open", `${openTrades(byDate(todayISO())).length}`, "In-progress trades"],
+    ["Closed", `${closedByDate(todayISO()).length}`, "Completed today"],
+    ["Review", state.dailyReviews[todayISO()] ? "Done" : "Pending", "Daily close"],
+  ].map(([title, value, note]) => `<article class="status-card"><span>${title}</span><strong>${value}</strong><small>${note}</small></article>`).join("");
+}
+
+function insightCard(title, value, note) {
+  const num = String(value);
+  const klass = num.startsWith("-") ? "negative" : num.startsWith("+") ? "positive" : "";
+  return `<article class="insight-card"><span>${safe(title)}</span><strong class="value ${klass}">${safe(value)}</strong><small>${safe(note)}</small></article>`;
+}
+
+function renderJournal() {
+  const filter = document.getElementById("setupFilter").value;
+  const scoped = visibleTrades();
+  const filtered = filter === "All" ? scoped : scoped.filter((trade) => trade.setup === filter);
+  const open = openTrades(filtered).slice().sort((a, b) => b.date.localeCompare(a.date));
+  const closed = closedTrades(filtered).slice().sort((a, b) => (b.closedAt || b.date).localeCompare(a.closedAt || a.date));
+  document.getElementById("openTradeCards").innerHTML = open.length ? open.map(tradeCard).join("") : emptyState(t("noOpenTrades"));
+  document.getElementById("tradeRows").innerHTML = closed.map(tradeRow).join("");
+  document.getElementById("mobileTradeCards").innerHTML = closed.map(tradeCard).join("");
+}
+
+function renderSopJourney() {
+  const active = activeSop();
+  if (!active) return;
+  const account = activeAccount();
+  const progress = sopProgress(active.id);
+  const level = sopLevel(progress);
+  setText("activeSopTitle", active.name);
+  setText("activeJourneyMeta", `${accountLabel(account)} | ${progress.records} records in this account`);
+  setText("activeAccountBalance", money(account?.currentBalance ?? account?.startingBalance ?? 0));
+  setText("activeAccountName", accountLabel(account));
+  document.getElementById("sopCards").innerHTML = state.sops.filter((sop) => !sop.archivedAt).map((sop) => {
+    const sopProgressValue = sopProgress(sop.id);
+    const sopLevelValue = sopLevel(sopProgressValue);
+    return `<button class="sop-card ${sop.id === state.activeSopId ? "active" : ""}" data-sop="${safe(sop.id)}" type="button">
+      <span>${safe(sop.market || "SOP")} · ${safe(sop.timeframe || "Journey")}</span>
+      <strong>${safe(sop.name)}</strong>
+      <small>Level ${sopLevelValue.level} ${sopLevelValue.name} · ${sopProgressValue.records} records</small>
+      <i style="width:${Math.min(100, sopLevelValue.level * 20)}%"></i>
+    </button>`;
+  }).join("");
+  document.getElementById("sopGrowthPanel").innerHTML = maturityPanel(active, progress, level);
+  renderAccountManager();
+  renderSopTimeline();
+  document.querySelectorAll("[data-journal-view]").forEach((button) => button.classList.toggle("active", button.dataset.journalView === journalView));
+  document.getElementById("sopTimeline").classList.toggle("hidden", journalView !== "timeline");
+  document.getElementById("journalTablePanel").classList.toggle("hidden", journalView !== "table");
+}
+
+function maturityPanel(sop, progress, level) {
+  const percent = maturityPercent(progress, level);
+  const message = progress.records
+    ? `${sop.name} is becoming clearer. Keep collecting clean evidence.`
+    : "Start with one clean record. The SOP will get clearer quietly.";
+  const why = [
+    `${progress.records} records captured in this account`,
+    `${progress.closed} closed trades available for review`,
+    `${progress.screenshots} screenshot${progress.screenshots === 1 ? "" : "s"} / chart evidence`,
+    `${Math.round(progress.ruleRate * 100)}% rule-follow rate`
+  ];
+  return `<article class="maturity-card">
+    <div>
+      <span class="tag info">SOP Maturity</span>
+      <h3>Level ${level.level} · ${safe(level.name)}</h3>
+      <p>${safe(message)}</p>
+    </div>
+    <div class="maturity-meter" aria-label="SOP maturity ${percent}%">
+      <i style="width:${percent}%"></i>
+    </div>
+    <details class="mini-disclosure">
+      <summary>Why this level?</summary>
+      <ul>${why.map((item) => `<li>${safe(item)}</li>`).join("")}</ul>
+      <p>${safe(sopUpgradeSuggestion(sop.id))}</p>
+    </details>
+  </article>`;
+}
+
+function maturityPercent(progress, level) {
+  const thresholds = [0, 10, 25, 50, 100];
+  const current = thresholds[level.level - 1] || 0;
+  const next = thresholds[level.level] || Math.max(progress.records, 100);
+  const levelBase = (level.level - 1) * 20;
+  const inLevel = Math.min(1, Math.max(0, (progress.records - current) / Math.max(next - current, 1)));
+  return Math.round(Math.min(100, levelBase + inLevel * 20));
+}
+
+function renderAccountManager() {
+  const target = document.getElementById("accountManagerPanel");
+  if (!target) return;
+  const accounts = accountsForSop().filter((account) => !account.archivedAt);
+  target.innerHTML = accounts.map((account) => `
+    <article class="account-card ${account.id === state.activeAccountId ? "active" : ""}">
+      <button class="account-select" data-account="${safe(account.id)}" type="button">
+        <span>${safe(account.type || "Account")}</span>
+        <strong>${safe(account.name)}</strong>
+        <small>${money(account.currentBalance)} current · ${money(account.startingBalance)} start</small>
+      </button>
+      <button class="text-button" data-edit-account="${safe(account.id)}" type="button">Edit</button>
+    </article>
+  `).join("") || emptyState("No accounts yet.");
+}
+
+function renderSopTimeline() {
+  const target = document.getElementById("sopTimeline");
+  if (!target) return;
+  const groups = timelineGroups(visibleTrades());
+  const days = Object.keys(groups);
+  if (!days.length) {
+    target.innerHTML = emptyState("No records in this SOP yet.");
+    return;
+  }
+  target.innerHTML = days.map((day) => `
+    <section class="timeline-day">
+      <div class="timeline-date"><strong>${safe(new Date(`${day}T00:00:00`).toLocaleDateString("en", { month: "short", day: "numeric" }))}</strong><span>${groups[day].length} records</span></div>
+      <div class="timeline-records">${groups[day].map(timelineCard).join("")}</div>
+    </section>
+  `).join("");
+}
+
+function timelineCard(trade) {
+  const img = imageFor(trade);
+  return `<article class="timeline-card ${trade.status === "open" ? "open" : ""}">
+    <div>
+      <div class="timeline-card-head">
+        <strong>${safe(trade.symbol)} ${safe(trade.direction)}</strong>
+        ${resultTag(trade)}
+      </div>
+      <p>${safe(trade.setup)} · ${safe(accountName(trade.accountId))}</p>
+    </div>
+    <div class="timeline-evidence">
+      ${img ? `<img class="thumbnail" src="${img}" alt="Chart screenshot" />` : ""}
+      ${trade.tradingViewUrl ? '<span class="tag info">TV</span>' : ""}
+      <span class="tag">${safe(trade.grade)}</span>
+      <span class="tag ${trade.rule ? "good" : "bad"}">${trade.rule ? "Followed" : "Broken"}</span>
+    </div>
+    <p class="muted">${safe(trade.status === "open" ? trade.entryPlan || "In progress" : trade.exitNote || trade.note || "Record completed.")}</p>
+    <div class="row-actions">
+      <button class="text-button" data-detail="${trade.id}">View</button>
+      <button class="text-button" data-edit="${trade.id}">${trade.status === "open" ? "Update" : "Edit"}</button>
+      ${trade.status === "open" ? `<button class="text-button" data-close-trade="${trade.id}">Close Trade</button>` : ""}
+      <button class="delete-button" data-delete="${trade.id}">Delete</button>
+    </div>
+  </article>`;
+}
+
+function renderTodayOpenTrades() {
+  const target = document.getElementById("todayOpenTradeCards");
+  if (!target) return;
+  const open = openTrades(byDate(todayISO())).slice().sort((a, b) => b.date.localeCompare(a.date));
+  target.innerHTML = open.length ? open.map(tradeCard).join("") : emptyState(t("noOpenTrades"));
+}
+
+function renderReviewInsightCards() {
+  const closed = closedTrades();
+  const target = document.getElementById("reviewInsightCards");
+  if (!target) return;
+  const sop = activeSop();
+  const progress = sopProgress(sop?.id);
+  const level = sopLevel(progress);
+  if (!closed.length) {
+    target.innerHTML = [
+      insightCard("Working", sop?.name || t("noData"), "Start collecting evidence for this SOP."),
+      insightCard("Weakness", "Not enough records", "Close trades to reveal patterns."),
+      insightCard("Upgrade", "Add first example", "Screenshot one clean execution.")
+    ].join("");
+    return;
+  }
+  const setupRows = Object.entries(groupBy(closed, "setup")).map(([name, list]) => ({ name, ...metrics(list) }));
+  const emotionRows = Object.entries(groupBy(closed, "emotion")).map(([name, list]) => ({ name, ...metrics(list) }));
+  const bestSetup = [...setupRows].sort((a, b) => b.expectancy - a.expectancy)[0];
+  const weakestEmotion = [...emotionRows].sort((a, b) => a.expectancy - b.expectancy)[0];
+  const leak = processLeakRate(closed);
+  const openCount = openTrades().length;
+  const next = openCount
+    ? [t("nextFocus"), `${openCount} ${t("open")}`, t("reviewPrompt")]
+    : leak > 0.25
+      ? [t("nextFocus"), "Process first", "Reduce rule breaks before adding size."]
+      : [t("nextFocus"), bestSetup?.name || "Repeat quality", "Only trade the setup with the cleanest evidence."];
+  target.innerHTML = [
+    insightCard("Working", bestSetup?.name || sop?.name || t("noData"), `Level ${level.level} ${level.name} · ${formatR(progress.expectancy)} expectancy`),
+    insightCard("Weakness", sopWeaknessProfile(sop?.id), weakestEmotion ? `${weakestEmotion.name} impact ${formatR(weakestEmotion.expectancy)}` : `${Math.round(leak * 100)}% ${t("processLeak")}`),
+    insightCard("Upgrade", sopUpgradeSuggestion(sop?.id), `${progress.screenshots} screenshots · ${Math.round(progress.ruleRate * 100)}% rule follow`)
+  ].join("");
+}
+
+function tradeRow(trade) {
+  const r = rValue(trade);
+  return `<tr>
+    <td>${safe(trade.date)}</td>
+    <td>${safe(trade.symbol)} ${trade.direction === "Long" ? "up" : "down"}</td>
+    <td>${safe(trade.setup)}</td>
+    <td>${resultTag(trade)}</td>
+    <td>${safe(trade.grade)}</td>
+    <td>${trade.rule ? "Yes" : "No"}</td>
+    <td>${mediaBadges(trade)}</td>
+    <td><div class="row-actions">
+      <button class="text-button" data-detail="${trade.id}">View</button>
+      <button class="text-button" data-edit="${trade.id}">Edit</button>
+      <button class="delete-button" data-delete="${trade.id}">Delete</button>
+    </div></td>
+  </tr>`;
+}
+
+function tradeCard(trade) {
+  const img = imageFor(trade);
+  return `<article class="trade-card">
+    <div class="trade-card-head"><div><strong>${safe(trade.symbol)} ${safe(trade.direction)}</strong><p>${safe(trade.date)} | ${safe(trade.setup)}</p></div>${resultTag(trade)}</div>
+    <div class="trade-card-meta"><span>${trade.status === "open" ? safe(trade.entryPlan || "In progress") : `Grade ${safe(trade.grade)} | Rule ${trade.rule ? "Yes" : "No"}`}</span>${img ? `<img class="thumbnail" src="${img}" alt="Chart screenshot" />` : ""}</div>
+    <div class="row-actions"><button class="text-button" data-detail="${trade.id}">View</button><button class="text-button" data-edit="${trade.id}">${trade.status === "open" ? "Update" : "Edit"}</button>${trade.status === "open" ? `<button class="text-button" data-close-trade="${trade.id}">Close Trade</button>` : ""}<button class="delete-button" data-delete="${trade.id}">Delete</button></div>
+  </article>`;
+}
+
+function resultTag(trade) {
+  if (trade.status === "open") return '<span class="tag info">Open</span>';
+  const r = rValue(trade);
+  return `<span class="tag ${r >= 0 ? "good" : "bad"}">${formatR(r)}</span>`;
+}
+
+function mediaBadges(trade) {
+  return `${imageFor(trade) ? '<span class="tag info">Image</span> ' : ""}${trade.tradingViewUrl ? '<span class="tag info">TV</span>' : ""}` || '<span class="muted">None</span>';
+}
+
+function imageFor(trade) {
+  return trade.imageData || trade.imageUrl || "";
+}
+
+function renderAnalytics() {
+  renderGroupedBars("setupBars", groupBy(closedTrades(), "setup"));
+  renderGroupedBars("emotionBars", groupBy(closedTrades(), "emotion"));
+  renderGroupedBars("gradeBars", groupBy(closedTrades(), "grade"));
+  renderDistribution();
+}
+
+function renderGroupedBars(id, grouped) {
+  const rows = Object.entries(grouped).map(([name, list]) => ({ name, list, ...metrics(list) })).sort((a, b) => b.expectancy - a.expectancy);
+  if (!rows.length) {
+    document.getElementById(id).innerHTML = emptyState("No data yet.");
+    return;
+  }
+  const max = Math.max(...rows.map((row) => Math.abs(row.expectancy)), 1);
+  document.getElementById(id).innerHTML = rows.map((row) => `
+    <div class="bar-row">
+      <strong>${safe(row.name)}</strong>
+      <div class="bar-track"><div class="bar-fill ${row.expectancy < 0 ? "negative" : ""}" style="width:${Math.max(Math.abs(row.expectancy) / max * 100, 6)}%"></div></div>
+      <span>${formatR(row.expectancy)} | ${row.count} | ${Math.round(row.winRate * 100)}%</span>
+    </div>
+  `).join("");
+}
+
+function renderDistribution() {
+  const bins = [-2, -1, -0.5, 0, 0.5, 1, 2, Infinity];
+  const labels = ["<-2", "-2/-1", "-1/-.5", "-.5/0", "0/.5", ".5/1", "1/2", ">2"];
+  const counts = Array(labels.length).fill(0);
+  closedTrades().forEach((trade) => {
+    const r = rValue(trade);
+    const index = bins.findIndex((bin) => r <= bin);
+    counts[Math.max(index, 0)] += 1;
+  });
+  const max = Math.max(...counts, 1);
+  document.getElementById("distributionChart").innerHTML = counts.map((count, index) => `
+    <div class="histogram-bar" style="height:${40 + count / max * 170}px"><strong>${count}</strong><span>${labels[index]}</span></div>
+  `).join("");
+}
+
+function renderWorkflow() {
+  const day = selectedDay || todayISO();
+  const tradesToday = byDate(day);
+  const closedToday = closedByDate(day);
+  const plan = state.dailyPlans[day];
+  const review = state.dailyReviews[day];
+  const status = [
+    ["Plan ready", plan ? "Yes" : "No", plan?.bias || "Save a pre-market plan."],
+    ["Open trades", String(openTrades(tradesToday).length), "In-progress execution"],
+    ["Closed", String(closedToday.length), `${formatR(metrics(closedToday).totalR)} selected day`],
+    ["Checklist quality", `${Math.round((1 - processLeakRate(closedToday)) * 100)}%`, "Closed trade quality"],
+    ["Review", review ? "Complete" : "Pending", review?.focus || "Close the loop after session"]
+  ];
+  document.getElementById("workflowStatus").innerHTML = status.map(([title, value, note]) => insightCard(title, value, note)).join("");
+}
+
+function renderCycles() {
+  const [monthStart, monthEnd] = monthRange(selectedDay);
+  const first = new Date(`${monthStart}T00:00:00`);
+  const offset = (first.getDay() + 6) % 7;
+  const days = dateRange(monthStart, monthEnd);
+  document.getElementById("calendarTitle").textContent = first.toLocaleDateString("en", { month: "long", year: "numeric" });
+  const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => `<div class="calendar-label">${d}</div>`).join("");
+  const blanks = Array(offset).fill('<button class="calendar-day empty" disabled></button>').join("");
+  const cells = days.map((day) => {
+    const m = metrics(closedByDate(day));
+    const openCount = openTrades(byDate(day)).length;
+    const review = state.dailyReviews[day] ? "Review done" : "";
+    const klass = m.totalR > 0 ? "positive" : m.totalR < 0 ? "negative" : "";
+    return `<button class="calendar-day ${klass} ${day === selectedDay ? "selected" : ""}" data-day="${day}">
+      <strong>${Number(day.slice(-2))}</strong>
+      <span>${m.count ? formatR(m.totalR) : openCount ? `${openCount} open` : "No trade"}</span>
+      <small>${m.count ? `${m.count} closed${openCount ? ` | ${openCount} open` : ""}` : review}</small>
+    </button>`;
+  }).join("");
+  document.getElementById("calendarGrid").innerHTML = labels + blanks + cells;
+  renderDayDetail(selectedDay);
+  renderCycleSummaries();
+}
+
+function renderDayDetail(day) {
+  const trades = byDate(day);
+  const closed = closedByDate(day);
+  const plan = state.dailyPlans[day];
+  const review = state.dailyReviews[day];
+  document.getElementById("dayDetailTitle").textContent = new Date(`${day}T00:00:00`).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" });
+  document.getElementById("dayDetail").innerHTML = `
+    ${insightCard("Day R", formatR(metrics(closed).totalR), `${closed.length} closed | ${openTrades(trades).length} open`)}
+    <div class="day-trade"><strong>Plan</strong><p>${safe(plan?.bias || "No plan saved.")}</p><p>${safe(plan?.levels || "")}</p></div>
+    <div class="day-trade"><strong>Review</strong><p>${safe(review?.focus || "No review saved.")}</p></div>
+    ${trades.map((trade) => `<div class="day-trade"><strong>${safe(trade.symbol)} ${trade.status === "open" ? "Open" : formatR(rValue(trade))}</strong><p>${safe(trade.setup)} | ${safe(trade.status === "open" ? trade.entryPlan || "In progress" : trade.emotion)}</p>${trade.tradingViewUrl ? `<a href="${safe(trade.tradingViewUrl)}" target="_blank" rel="noreferrer">Open Chart</a>` : ""}</div>`).join("")}
+  `;
+}
+
+function renderCycleSummaries() {
+  const [weekStart, weekEnd] = weekRange(selectedDay);
+  const [monthStart, monthEnd] = monthRange(selectedDay);
+  const weekTrades = tradesInRange(weekStart, weekEnd);
+  const monthTrades = tradesInRange(monthStart, monthEnd);
+  document.getElementById("weeklySummary").innerHTML = summaryCardsFor(weekTrades, weekStart, weekEnd).join("");
+  document.getElementById("monthlySummary").innerHTML = monthlyCards(monthTrades, monthStart, monthEnd).join("");
+}
+
+function summaryCardsFor(trades, start, end) {
+  const m = metrics(trades);
+  const setups = Object.entries(groupBy(trades, "setup")).map(([name, list]) => ({ name, ...metrics(list) }));
+  const best = setups.sort((a, b) => b.expectancy - a.expectancy)[0];
+  const weak = setups.sort((a, b) => a.expectancy - b.expectancy)[0];
+  return [
+    insightCard("Period", `${start.slice(5)} - ${end.slice(5)}`, `${trades.length} trades`),
+    insightCard("Total R", formatR(m.totalR), `${Math.round(m.winRate * 100)}% win rate`),
+    insightCard("Best Setup", best?.name || "No data", best ? formatR(best.expectancy) : "Add trades"),
+    insightCard("Weakest Setup", weak?.name || "No data", weak ? formatR(weak.expectancy) : "Add trades"),
+    insightCard("Process Leak", `${Math.round(processLeakRate(trades) * 100)}%`, "Lower is better")
+  ];
+}
+
+function monthlyCards(trades, start, end) {
+  const days = dateRange(start, end);
+  const activeDays = days.filter((day) => byDate(day).length || closedByDate(day).length);
+  const dayStats = activeDays.map((day) => ({ day, totalR: metrics(closedByDate(day)).totalR }));
+  const best = [...dayStats].sort((a, b) => b.totalR - a.totalR)[0];
+  const worst = [...dayStats].sort((a, b) => a.totalR - b.totalR)[0];
+  const reviews = days.filter((day) => state.dailyReviews[day]).length;
+  return [
+    ...summaryCardsFor(trades, start, end).slice(0, 2),
+    insightCard("Active Days", String(activeDays.length), "Days with trades"),
+    insightCard("Best Day", best ? formatR(best.totalR) : "0.00R", best?.day || "No data"),
+    insightCard("Worst Day", worst ? formatR(worst.totalR) : "0.00R", worst?.day || "No data"),
+    insightCard("Review Rate", `${Math.round(reviews / Math.max(activeDays.length, 1) * 100)}%`, "Reviewed active days")
+  ];
+}
+
+function renderPlaybook() {
+  document.getElementById("playbookGrid").innerHTML = state.sops.map((sop) => {
+    const progress = sopProgress(sop.id);
+    const level = sopLevel(progress);
+    return `<article class="play-card sop-library-card ${sop.archivedAt ? "archived" : ""}">
+      <span class="tag info">Level ${level.level} ${level.name}</span>
+      <strong>${safe(sop.name)}</strong>
+      <p>${safe(sop.market)} · ${safe(sop.timeframe)} · ${progress.records} records</p>
+      <ul>
+        ${(sop.checklist || []).slice(0, 3).map((item) => `<li>${safe(item)}</li>`).join("")}
+      </ul>
+      <div class="row-actions">
+        <button class="text-button" data-edit-sop="${safe(sop.id)}">Edit SOP</button>
+        <button class="text-button" data-add-account="${safe(sop.id)}">Add Account</button>
+      </div>
+    </article>`;
+  }).join("");
+}
+
+function openSopModal(id = "") {
+  const sop = state.sops.find((item) => item.id === id) || {};
+  openModal(id ? "Edit SOP" : "Add SOP", "SOP Library", `
+    <form class="sop-editor-form" id="sopEditorForm" data-sop-id="${safe(id)}">
+      <div class="form-row">
+        <label>SOP Name<input name="name" required value="${safe(sop.name || "")}" placeholder="Opening Drive SOP" /></label>
+        <label>Market<input name="market" value="${safe(sop.market || "Futures")}" placeholder="Futures / Forex / Crypto" /></label>
+      </div>
+      <div class="form-row">
+        <label>Timeframe<input name="timeframe" value="${safe(sop.timeframe || "Intraday")}" /></label>
+        <label>Status<select name="status"><option ${sop.status !== "archived" ? "selected" : ""}>active</option><option ${sop.status === "archived" ? "selected" : ""}>archived</option></select></label>
+      </div>
+      <label>Entry Rules<textarea name="entryRules" rows="3">${safe(sop.entryRules || defaultSopDetails.entryRules)}</textarea></label>
+      <label>Exit Rules<textarea name="exitRules" rows="3">${safe(sop.exitRules || defaultSopDetails.exitRules)}</textarea></label>
+      <label>Risk Rules<textarea name="riskRules" rows="3">${safe(sop.riskRules || defaultSopDetails.riskRules)}</textarea></label>
+      <label>No-trade Rules<textarea name="noTradeRules" rows="3">${safe(sop.noTradeRules || defaultSopDetails.noTradeRules)}</textarea></label>
+      <label>Checklist<textarea name="checklist" rows="4">${safe((sop.checklist || defaultSopDetails.checklist).join("\n"))}</textarea></label>
+      <label>Weaknesses<textarea name="weaknesses" rows="4">${safe((sop.weaknesses || defaultSopDetails.weaknesses).join("\n"))}</textarea></label>
+      <button class="primary-button" type="submit">Save SOP</button>
+    </form>
+  `);
+}
+
+function openAccountModal(sopId = state.activeSopId, accountId = "") {
+  const account = state.accounts.find((item) => item.id === accountId) || {};
+  openModal(accountId ? "Edit Account" : "Add Account", "Account", `
+    <form class="sop-editor-form" id="accountEditorForm" data-sop-id="${safe(sopId)}" data-account-id="${safe(accountId)}">
+      <label>Account Name<input name="name" required value="${safe(account.name || "")}" placeholder="ACC 1 / Prop Phase 1 / Funded" /></label>
+      <label>Type<input name="type" value="${safe(account.type || "")}" placeholder="Demo, Personal, Prop, Funded" /></label>
+      <div class="form-row">
+        <label>Starting Balance ($)<input name="startingBalance" type="number" min="0" step="1" value="${safe(account.startingBalance ?? 1000)}" /></label>
+        <label>Current Balance ($)<input name="currentBalance" type="number" min="0" step="1" value="${safe(account.currentBalance ?? account.startingBalance ?? 1000)}" /></label>
+      </div>
+      <button class="primary-button" type="submit">Save Account</button>
+    </form>
+  `);
+}
+
+function saveSopFromModal(event) {
+  event.preventDefault();
+  const form = event.target;
+  const existing = state.sops.find((sop) => sop.id === form.dataset.sopId);
+  const id = existing?.id || makeSopId(form.name.value);
+  const sop = {
+    id,
+    name: form.name.value.trim() || "Untitled SOP",
+    market: form.market.value.trim() || "Futures",
+    timeframe: form.timeframe.value.trim() || "Intraday",
+    status: form.status.value,
+    levelNotes: existing?.levelNotes || "",
+    entryRules: form.entryRules.value.trim(),
+    exitRules: form.exitRules.value.trim(),
+    riskRules: form.riskRules.value.trim(),
+    noTradeRules: form.noTradeRules.value.trim(),
+    checklist: form.checklist.value.split("\n").map((item) => item.trim()).filter(Boolean),
+    weaknesses: form.weaknesses.value.split("\n").map((item) => item.trim()).filter(Boolean),
+    createdAt: existing?.createdAt || todayISO(),
+    archivedAt: form.status.value === "archived" ? existing?.archivedAt || todayISO() : ""
+  };
+  if (existing) state.sops[state.sops.findIndex((item) => item.id === existing.id)] = sop;
+  else {
+    state.sops.push(sop);
+    state.accounts.push({ id: makeAccountId(id, "Main Account"), sopId: id, name: "Main Account", type: "Main", startingBalance: 1000, currentBalance: 1000, status: "active", createdAt: todayISO(), archivedAt: "" });
+  }
+  state.activeSopId = id;
+  state.activeAccountId = accountsForSop(id)[0]?.id || state.activeAccountId;
+  saveState();
+  closeModal();
+  renderAll();
+  toast(`${sop.name} SOP saved.`);
+}
+
+function saveAccountFromModal(event) {
+  event.preventDefault();
+  const form = event.target;
+  const sopId = form.dataset.sopId || state.activeSopId;
+  const existing = state.accounts.find((account) => account.id === form.dataset.accountId);
+  const account = {
+    id: existing?.id || makeAccountId(sopId, form.name.value),
+    sopId,
+    name: form.name.value.trim(),
+    type: form.type.value.trim() || "Account",
+    startingBalance: Number(form.startingBalance.value || 0),
+    currentBalance: Number(form.currentBalance.value || form.startingBalance.value || 0),
+    status: existing?.status || "active",
+    createdAt: existing?.createdAt || todayISO(),
+    archivedAt: existing?.archivedAt || ""
+  };
+  if (existing) state.accounts[state.accounts.findIndex((item) => item.id === existing.id)] = account;
+  else state.accounts.push(account);
+  state.activeSopId = sopId;
+  state.activeAccountId = account.id;
+  saveState();
+  closeModal();
+  renderAll();
+  toast(`${account.name} account saved.`);
+}
+
+function applyLanguage() {
+  document.documentElement.lang = language === "zh" ? "zh-CN" : "en";
+  document.querySelectorAll(".language-toggle").forEach((button) => {
+    button.setAttribute("aria-label", language === "zh" ? "Switch to English" : "切换到华文");
+    button.innerHTML = `
+      <span class="${language === "en" ? "active" : ""}">EN</span>
+      <span class="${language === "zh" ? "active" : ""}">中文</span>
+    `;
+  });
+  const homeTitle = document.querySelector(".home-hero h1");
+  const homeCopy = document.querySelector(".home-copy");
+  if (homeTitle) homeTitle.textContent = t("homeTitle");
+  if (homeCopy) homeCopy.textContent = t("homeCopy");
+  const cards = [
+    ["overview", t("today")],
+    ["journal", t("journal")],
+    ["review", t("review")],
+    ["settings", t("system")]
+  ];
+  cards.forEach(([id, label]) => {
+    const cardLabel = document.querySelector(`[data-open-module="${id}"] span`);
+    const view = document.getElementById(id);
+    if (cardLabel) cardLabel.textContent = label;
+    if (view) view.dataset.title = label;
+  });
+  const back = document.getElementById("backHomeBtn");
+  if (back) back.textContent = t("back");
+  const action = document.querySelector(".module-action");
+  if (action) action.textContent = t("logTrade");
+  if (activeModule) {
+    const view = document.getElementById(activeModule);
+    setText("moduleTitle", view?.dataset.title || t("today"));
+  }
+  translatePageText();
+}
+
+function translatePageText() {
+  const pairs = [
+    ["Command Center", "交易控制台"], ["Execution", "执行"], ["Evidence", "证据"], ["Preferences", "偏好"],
+    ["Equity", "权益"], ["R-based journey", "R 值曲线"], ["This week", "本周"], ["Operating status", "运行状态"],
+    ["Expectancy", "期望值"], ["Average edge per trade", "每笔平均优势"], ["Win Rate", "胜率"], ["Wins / closed trades", "盈利 / 已完成交易"],
+    ["Profit Factor", "盈亏比"], ["Gross wins / gross losses", "总盈利 / 总亏损"], ["Max Drawdown", "最大回撤"], ["Peak-to-trough in R", "按 R 计算的峰谷回撤"],
+    ["Pre-market", "盘前"], ["Plan today", "今日计划"], ["Workflow Date", "记录日期"], ["Market Bias", "市场倾向"], ["Key Levels", "关键价位"], ["Allowed Setups", "允许形态"],
+    ["Max Loss (R)", "最大亏损 (R)"], ["Max Trades", "最大交易数"], ["Save Plan", "保存计划"],
+    ["Daily close", "日终"], ["Review the day", "复盘当天"], ["Keep", "保留"], ["Remove", "移除"], ["Save Review", "保存复盘"],
+    ["Open Trades", "进行中交易"], ["Live execution", "执行中"], ["In progress", "进行中"], ["Closed Trades", "已完成交易"], ["Completed records", "完成记录"],
+    ["Open trade", "进行中交易"], ["Start trade", "开始交易"], ["Date", "日期"], ["Symbol", "品种"], ["Setup", "形态"], ["Direction", "方向"], ["Risk ($)", "风险 ($)"],
+    ["Account", "账户"], ["Current Balance", "当前资金"], ["SOP Journey", "SOP 旅程"], ["SOP Library", "SOP 库"], ["Add Account", "添加账户"], ["Add SOP", "添加 SOP"],
+    ["Edit Balance", "编辑资金"],
+    ["Capture Trade", "记录交易"], ["SOP Maturity", "SOP 成熟度"], ["Why this level?", "为什么是这个等级？"], ["Starting Balance ($)", "起始资金 ($)"], ["Current Balance ($)", "当前资金 ($)"],
+    ["Entry Plan", "入场计划"], ["Stop Plan", "止损计划"], ["Target Plan", "目标计划"], ["Close or add details", "结束或补充细节"],
+    ["Grade", "评分"], ["Net P&L ($)", "净盈亏 ($)"], ["Rule followed", "遵守规则"], ["Emotion", "情绪"], ["TradingView Link", "TradingView 链接"],
+    ["Chart Image URL", "图表图片链接"], ["Upload Screenshot", "上传截图"], ["Exit Note", "出场记录"], ["General Note", "一般备注"],
+    ["Review", "复盘"], ["Current read", "当前解读"],
+    ["Insights", "洞察"], ["Charts", "图表"], ["Calendar", "日历"], ["Playbook", "交易手册"], ["Drawdown", "回撤"], ["Risk pressure", "风险压力"],
+    ["Distribution", "分布"], ["R multiple spread", "R 倍数分布"], ["Setups", "形态"], ["Performance by setup", "按形态表现"],
+    ["Behavior", "行为"], ["Emotion impact", "情绪影响"], ["Quality", "质量"], ["Grade breakdown", "评分拆解"],
+    ["Day detail", "当天详情"], ["Select a day", "选择日期"], ["Weekly", "每周"], ["Cycle summary", "周期摘要"], ["Monthly", "每月"], ["Consistency", "一致性"],
+    ["Personal system", "个人系统"], ["Default Symbol", "默认品种"], ["Risk Per Trade ($)", "每笔风险 ($)"], ["Daily Max Loss (R)", "每日最大亏损 (R)"],
+    ["Max Trades Per Day", "每日最大交易数"], ["Daily Rules", "每日规则"], ["Save Preferences", "保存偏好"], ["Data", "数据"], ["Backup and restore", "备份与恢复"],
+    ["Import", "导入"], ["Backup", "备份"], ["Reset Demo", "重置演示"], ["Start Trade", "开始记录"], ["Update", "更新"], ["Edit", "编辑"], ["Delete", "删除"], ["View", "查看"]
+  ];
+  const map = new Map(language === "zh" ? pairs : pairs.map(([en, zh]) => [zh, en]));
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach((node) => {
+    const trimmed = node.nodeValue.trim();
+    if (!map.has(trimmed)) return;
+    node.nodeValue = node.nodeValue.replace(trimmed, map.get(trimmed));
+  });
+}
+
+function setText(id, text) {
+  document.getElementById(id).textContent = text;
+}
+
+function emptyState(text) {
+  return `<p class="muted">${safe(text)}</p>`;
+}
+
+async function fileToDataUrl(file) {
+  if (!file) return "";
+  const raw = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Image could not be read."));
+    reader.readAsDataURL(file);
+  });
+  return await compressImage(raw);
+}
+
+async function compressImage(dataUrl) {
+  const image = new Image();
+  image.src = dataUrl;
+  await new Promise((resolve, reject) => {
+    image.onload = resolve;
+    image.onerror = () => reject(new Error("Image could not be loaded."));
+  });
+  const maxSide = 1400;
+  const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(image.width * scale));
+  canvas.height = Math.max(1, Math.round(image.height * scale));
+  const context = canvas.getContext("2d");
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  let quality = 0.82;
+  let output = canvas.toDataURL("image/jpeg", quality);
+  while (output.length > IMAGE_LIMIT && quality > 0.42) {
+    quality -= 0.1;
+    output = canvas.toDataURL("image/jpeg", quality);
+  }
+  if (output.length > IMAGE_LIMIT) throw new Error("Image is too large. Please use a smaller screenshot.");
+  return output;
+}
+
+function resetTradeForm() {
+  const form = document.getElementById("tradeForm");
+  form.reset();
+  form.elements.id.value = "";
+  form.date.value = todayISO();
+  form.symbol.value = state.preferences.defaultSymbol;
+  form.sopId.value = state.activeSopId;
+  populateSopControls();
+  form.accountId.value = state.activeAccountId;
+  form.risk.value = state.preferences.riskPerTrade;
+  form.pnl.value = "";
+  form.entryPlan.value = "";
+  form.stopPlan.value = "";
+  form.targetPlan.value = "";
+  form.exitNote.value = "";
+  form.note.value = "";
+  document.querySelector(".advanced-fields").open = false;
+  document.getElementById("tradeFormMode").textContent = "Open trade";
+  document.getElementById("saveTradeBtn").textContent = "Start Trade";
+  document.getElementById("cancelEditBtn").classList.add("hidden");
+}
+
+function editTrade(id) {
+  const trade = state.trades.find((item) => item.id === id);
+  if (!trade) return;
+  const form = document.getElementById("tradeForm");
+  form.elements.id.value = trade.id;
+  form.date.value = trade.date;
+  form.symbol.value = trade.symbol;
+  state.activeSopId = trade.sopId || state.activeSopId;
+  const account = state.accounts.find((item) => item.id === trade.accountId);
+  state.activeAccountId = account?.id || accountsForSop(state.activeSopId)[0]?.id || state.activeAccountId;
+  populateSopControls();
+  form.sopId.value = state.activeSopId;
+  form.accountId.value = state.activeAccountId;
+  form.setup.value = trade.setup;
+  form.direction.value = trade.direction;
+  form.grade.value = trade.grade;
+  form.risk.value = trade.risk;
+  form.pnl.value = trade.status === "open" ? "" : trade.pnl;
+  form.rule.value = String(trade.rule);
+  form.emotion.value = trade.emotion;
+  form.tradingViewUrl.value = trade.tradingViewUrl || "";
+  form.imageUrl.value = trade.imageUrl || "";
+  form.entryPlan.value = trade.entryPlan || "";
+  form.stopPlan.value = trade.stopPlan || "";
+  form.targetPlan.value = trade.targetPlan || "";
+  form.exitNote.value = trade.exitNote || "";
+  form.note.value = trade.note || "";
+  for (const key of Object.keys(trade.checklist || {})) form[key].checked = Boolean(trade.checklist[key]);
+  document.querySelector(".advanced-fields").open = trade.status !== "open";
+  document.getElementById("tradeFormMode").textContent = trade.status === "open" ? "Update open trade" : "Edit closed trade";
+  document.getElementById("saveTradeBtn").textContent = trade.status === "open" ? "Update Trade" : "Save Trade";
+  document.getElementById("cancelEditBtn").classList.remove("hidden");
+  document.getElementById("captureTradeDetails").open = true;
+  openModule("journal");
+  form.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function saveTradeFromForm(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  try {
+    const imageData = await fileToDataUrl(form.imageFile.files[0]);
+    const current = form.elements.id.value ? state.trades.find((trade) => trade.id === form.elements.id.value) : {};
+    const hasResult = form.pnl.value.trim() !== "";
+    const nextStatus = hasResult ? "closed" : "open";
+    const trade = normalizeTrade({
+      ...current,
+      id: form.elements.id.value || uid(),
+      status: nextStatus,
+      date: form.date.value,
+      closedAt: nextStatus === "closed" ? current.closedAt || form.date.value : "",
+      symbol: form.symbol.value.trim().toUpperCase(),
+      sopId: form.sopId.value,
+      accountId: form.accountId.value,
+      setup: form.setup.value,
+      direction: form.direction.value,
+      grade: form.grade.value,
+      risk: Number(form.risk.value),
+      pnl: hasResult ? Number(form.pnl.value) : "",
+      rule: form.rule.value === "true",
+      emotion: form.emotion.value,
+      note: form.note.value,
+      entryPlan: form.entryPlan.value.trim(),
+      stopPlan: form.stopPlan.value.trim(),
+      targetPlan: form.targetPlan.value.trim(),
+      exitNote: form.exitNote.value.trim(),
+      tradingViewUrl: form.tradingViewUrl.value.trim(),
+      imageUrl: form.imageUrl.value.trim(),
+      imageData: imageData || current.imageData || "",
+      checklist: {
+        hasPlan: form.hasPlan.checked,
+        hasTrigger: form.hasTrigger.checked,
+        hasStop: form.hasStop.checked,
+        hasTarget: form.hasTarget.checked,
+        emotionControlled: form.emotionControlled.checked
+      }
+    });
+    const index = state.trades.findIndex((item) => item.id === trade.id);
+    if (index >= 0) state.trades[index] = trade;
+    else state.trades.push(trade);
+    state.activeSopId = trade.sopId;
+    state.activeAccountId = trade.accountId;
+    saveState();
+    resetTradeForm();
+    renderAll();
+    const progress = sopProgress(trade.sopId);
+    toast(nextStatus === "open" ? `Added to ${sopName(trade.sopId)} journey.` : `Record completed. ${progress.records} records in this SOP.`);
+  } catch (error) {
+    toast(error.message, "error");
+  }
+}
+
+function deleteTrade(id) {
+  const trade = state.trades.find((item) => item.id === id);
+  if (!trade) return;
+  if (!confirm(`Delete ${trade.symbol} ${formatR(rValue(trade))}?`)) return;
+  state.trades = state.trades.filter((item) => item.id !== id);
+  saveState();
+  renderAll();
+  toast("Trade deleted.");
+}
+
+function openCloseTradeModal(id) {
+  const trade = state.trades.find((item) => item.id === id);
+  if (!trade) return;
+  openModal("Close trade", "Result", `
+    <form class="close-trade-form" id="closeTradeForm" data-close-id="${trade.id}">
+      <div class="insight-grid">
+        ${insightCard("Symbol", trade.symbol, trade.direction)}
+        ${insightCard("Setup", trade.setup, `Risk ${money(trade.risk)}`)}
+      </div>
+      <div class="form-row">
+        <label>Net P&L ($)<input name="pnl" type="number" step="1" placeholder="240" /></label>
+        <label>${t("rResult")}<input name="rResult" type="number" step="0.01" placeholder="+1.20" /></label>
+      </div>
+      <p class="muted">${t("rHint")} ${t("pnlWins")}</p>
+      <div class="form-row">
+        <label>Rule followed<select name="rule"><option value="true">Yes</option><option value="false">No</option></select></label>
+        <label>Emotion<select name="emotion"><option>Calm</option><option>Focused</option><option>FOMO</option><option>Revenge</option><option>Hesitant</option></select></label>
+      </div>
+      <label>Exit Note<textarea name="exitNote" rows="3" placeholder="Why and how the trade ended."></textarea></label>
+      <label>Upload Screenshot<input name="imageFile" type="file" accept="image/*" /></label>
+      <button class="primary-button" type="submit">Close Trade</button>
+    </form>
+  `);
+}
+
+async function closeTradeFromModal(event) {
+  event.preventDefault();
+  const form = event.target;
+  const trade = state.trades.find((item) => item.id === form.dataset.closeId);
+  if (!trade) return;
+  try {
+    const pnlInput = form.pnl.value.trim();
+    const rInput = form.rResult.value.trim();
+    if (!pnlInput && !rInput) {
+      toast(t("needsResult"), "error");
+      return;
+    }
+    const imageData = await fileToDataUrl(form.imageFile.files[0]);
+    trade.status = "closed";
+    trade.closedAt = todayISO();
+    trade.pnl = pnlInput ? Number(pnlInput) : Number(rInput) * Number(trade.risk || 0);
+    trade.rule = form.rule.value === "true";
+    trade.emotion = form.emotion.value;
+    trade.exitNote = form.exitNote.value.trim();
+    trade.imageData = imageData || trade.imageData || "";
+    saveState();
+    closeModal();
+    renderAll();
+    const progress = sopProgress(trade.sopId);
+    toast(`${sopName(trade.sopId)} now has ${progress.records} records.`);
+  } catch (error) {
+    toast(error.message, "error");
+  }
+}
+
+function openDetail(id) {
+  const trade = state.trades.find((item) => item.id === id);
+  if (!trade) return;
+  const img = imageFor(trade);
+  openModal("Trade detail", "Journal", `
+    <div class="day-detail">
+      <div class="insight-grid">${[
+        insightCard("Symbol", trade.symbol, trade.direction),
+        insightCard("Status", trade.status === "open" ? "Open" : "Closed", trade.status === "open" ? "Not in statistics yet" : formatR(rValue(trade))),
+        insightCard("SOP", sopName(trade.sopId), accountName(trade.accountId)),
+        insightCard("Setup", trade.setup, `Grade ${trade.grade}`),
+        insightCard("Process", trade.rule ? "Followed" : "Broken", trade.emotion)
+      ].join("")}</div>
+      ${img ? `<button class="text-button" data-image="${trade.id}"><img src="${img}" alt="Chart screenshot" /></button>` : emptyState("No screenshot attached.")}
+      <p>${safe(trade.status === "open" ? trade.entryPlan || "No entry plan." : trade.exitNote || trade.note || "No note.")}</p>
+      <div class="row-actions">
+        ${trade.status === "open" ? `<button class="primary-button" data-close-trade="${trade.id}">Close Trade</button>` : ""}
+        ${trade.tradingViewUrl ? `<a class="primary-button" href="${safe(trade.tradingViewUrl)}" target="_blank" rel="noreferrer">Open Chart</a><button class="ghost-button" data-tv="${trade.id}">Embed TradingView</button>` : ""}
+      </div>
+      <div id="tvEmbed"></div>
+    </div>
+  `);
+}
+
+function openImage(id) {
+  const trade = state.trades.find((item) => item.id === id);
+  const img = trade && imageFor(trade);
+  if (!img) return;
+  openModal("Chart screenshot", "Image", `<img src="${img}" alt="Chart screenshot" />`);
+}
+
+function embedTradingView(id) {
+  const trade = state.trades.find((item) => item.id === id);
+  const target = document.getElementById("tvEmbed");
+  if (!trade?.tradingViewUrl || !target) return;
+  target.innerHTML = `<iframe class="tv-frame" title="TradingView chart" src="${safe(trade.tradingViewUrl)}"></iframe><p class="muted">If the embed is blocked, use Open Chart.</p>`;
+}
+
+function openModal(title, kicker, html) {
+  document.getElementById("modalTitle").textContent = title;
+  document.getElementById("modalKicker").textContent = kicker;
+  document.getElementById("modalBody").innerHTML = html;
+  const backdrop = document.getElementById("modalBackdrop");
+  backdrop.classList.remove("hidden");
+  backdrop.setAttribute("aria-hidden", "false");
+}
+
+function closeModal() {
+  const backdrop = document.getElementById("modalBackdrop");
+  backdrop.classList.add("hidden");
+  backdrop.setAttribute("aria-hidden", "true");
+}
+
+function toast(message, type = "info") {
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  el.textContent = message;
+  document.getElementById("toastStack").appendChild(el);
+  setTimeout(() => {
+    el.classList.add("is-leaving");
+    setTimeout(() => el.remove(), 220);
+  }, 3000);
+}
+
+function exportCsv() {
+  const headers = ["status", "date", "closedAt", "symbol", "sopName", "sopId", "accountName", "accountId", "accountStartingBalance", "accountCurrentBalance", "setup", "direction", "grade", "risk", "pnl", "r", "rule", "emotion", "entryPlan", "stopPlan", "targetPlan", "exitNote", "tradingViewUrl", "imageUrl", "note"];
+  const rows = state.trades.map((trade) => headers.map((key) => {
+    const account = state.accounts.find((item) => item.id === trade.accountId);
+    const value = key === "r"
+      ? rValue(trade).toFixed(2)
+      : key === "sopName"
+        ? sopName(trade.sopId)
+        : key === "accountName"
+          ? accountName(trade.accountId)
+          : key === "accountStartingBalance"
+            ? account?.startingBalance ?? ""
+            : key === "accountCurrentBalance"
+              ? account?.currentBalance ?? ""
+              : trade[key];
+    return `"${String(value ?? "").replaceAll('"', '""')}"`;
+  }).join(","));
+  download("trd-journey.csv", [headers.join(","), ...rows].join("\n"), "text/csv;charset=utf-8");
+}
+
+function exportJson() {
+  download("trd-journey-backup.json", JSON.stringify({ exportedAt: new Date().toISOString(), ...state }, null, 2), "application/json");
+}
+
+function download(filename, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+async function importJson(file) {
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const imported = JSON.parse(text);
+    const incoming = normalizeState(imported);
+    if (!Array.isArray(incoming.trades)) throw new Error("Invalid backup file.");
+    if (!confirm("Import will replace current local data. Continue?")) return;
+    state = incoming;
+    saveState();
+    resetTradeForm();
+    renderAll();
+    toast("Backup imported.");
+  } catch (error) {
+    toast("Invalid JSON backup. Current data was not changed.", "error");
+  }
+}
+
+function resetDemo() {
+  if (!confirm("Reset to demo data? This replaces current local data.")) return;
+  state = defaultState();
+  saveState();
+  resetTradeForm();
+  renderAll();
+  toast("Demo data restored.");
+}
+
+function openModule(id, source = null) {
+  const view = document.getElementById(id);
+  if (!view) return;
+  const shell = document.getElementById("appShell");
+  clearTimeout(interactionState.transitionTimer);
+  document.querySelectorAll(".home-card").forEach((item) => item.classList.remove("is-source", "is-dimming"));
+  const sourceCard = source?.closest?.(".home-card") || document.querySelector(`[data-open-module="${id}"]`);
+  sourceCard?.classList.add("is-source");
+  document.querySelectorAll(".home-card").forEach((item) => {
+    if (item !== sourceCard) item.classList.add("is-dimming");
+  });
+  interactionState.sourceModule = id;
+  activeModule = id;
+  shell.dataset.activeModule = id;
+  shell.classList.remove("is-closing-module");
+  shell.classList.add("is-opening-module", "is-in-module");
+  document.querySelectorAll(".view").forEach((item) => item.classList.toggle("active", item.id === id));
+  setText("moduleTitle", view.dataset.title || "Module");
+  setText("moduleKicker", view.dataset.kicker || "TRD Journey");
+  document.querySelector(".module-action").classList.toggle("hidden", id === "journal");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  interactionState.transitionTimer = setTimeout(() => {
+    shell.classList.remove("is-opening-module");
+  }, 430);
+}
+
+function closeModule() {
+  const shell = document.getElementById("appShell");
+  clearTimeout(interactionState.transitionTimer);
+  shell.classList.add("is-closing-module");
+  shell.classList.remove("is-opening-module");
+  activeModule = null;
+  shell.classList.remove("is-in-module");
+  interactionState.transitionTimer = setTimeout(() => {
+    shell.classList.remove("is-closing-module");
+    shell.removeAttribute("data-active-module");
+    document.querySelectorAll(".home-card").forEach((item) => item.classList.remove("is-source", "is-dimming"));
+    interactionState.sourceModule = null;
+  }, 360);
+}
+
+function switchLanguage() {
+  language = language === "en" ? "zh" : "en";
+  localStorage.setItem(LANGUAGE_KEY, language);
+  renderAll();
+  toast(t("languageSaved"));
+}
+
+document.querySelectorAll("[data-open-module]").forEach((button) => {
+  button.addEventListener("click", () => openModule(button.dataset.openModule, button));
+});
+
+document.querySelectorAll(".language-toggle").forEach((button) => {
+  button.addEventListener("click", switchLanguage);
+});
+
+document.getElementById("backHomeBtn").addEventListener("click", closeModule);
+
+document.getElementById("tradeForm").addEventListener("submit", saveTradeFromForm);
+document.getElementById("cancelEditBtn").addEventListener("click", resetTradeForm);
+document.getElementById("setupFilter").addEventListener("change", renderJournal);
+document.getElementById("activeSopSelect").addEventListener("change", (event) => {
+  state.activeSopId = event.target.value;
+  state.activeAccountId = accountsForSop(state.activeSopId)[0]?.id || "";
+  saveState();
+  renderAll();
+  resetTradeForm();
+});
+document.getElementById("accountFilterSelect").addEventListener("change", (event) => {
+  state.activeAccountId = event.target.value;
+  saveState();
+  renderAll();
+  resetTradeForm();
+});
+document.getElementById("tradeSopSelect").addEventListener("change", (event) => {
+  state.activeSopId = event.target.value;
+  state.activeAccountId = accountsForSop(state.activeSopId)[0]?.id || "";
+  saveState();
+  renderAll();
+  resetTradeForm();
+});
+document.getElementById("tradeAccountSelect").addEventListener("change", (event) => {
+  state.activeAccountId = event.target.value;
+  saveState();
+});
+document.getElementById("exportCsvBtn").addEventListener("click", exportCsv);
+document.getElementById("exportJsonBtn").addEventListener("click", exportJson);
+document.getElementById("importJsonInput").addEventListener("change", (event) => importJson(event.target.files[0]));
+document.getElementById("resetBtn").addEventListener("click", resetDemo);
+document.getElementById("addSopBtn").addEventListener("click", () => openSopModal());
+document.getElementById("addAccountBtn").addEventListener("click", () => openAccountModal());
+document.getElementById("journalAddSopBtn").addEventListener("click", () => openSopModal());
+document.getElementById("journalAddAccountBtn").addEventListener("click", () => openAccountModal());
+document.getElementById("modalCloseBtn").addEventListener("click", closeModal);
+document.getElementById("modalBackdrop").addEventListener("click", (event) => {
+  if (event.target.id === "modalBackdrop") closeModal();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  if (!document.getElementById("modalBackdrop").classList.contains("hidden")) closeModal();
+  else if (activeModule) closeModule();
+});
+
+document.body.addEventListener("click", (event) => {
+  const shortcut = event.target.closest("[data-view-shortcut]")?.dataset.viewShortcut;
+  const detail = event.target.closest("[data-detail]")?.dataset.detail;
+  const edit = event.target.closest("[data-edit]")?.dataset.edit;
+  const del = event.target.closest("[data-delete]")?.dataset.delete;
+  const closeTrade = event.target.closest("[data-close-trade]")?.dataset.closeTrade;
+  const sop = event.target.closest("[data-sop]")?.dataset.sop;
+  const account = event.target.closest("[data-account]")?.dataset.account;
+  const editSop = event.target.closest("[data-edit-sop]")?.dataset.editSop;
+  const addAccount = event.target.closest("[data-add-account]")?.dataset.addAccount;
+  const editAccount = event.target.closest("[data-edit-account]")?.dataset.editAccount;
+  const editActiveAccount = event.target.closest("[data-edit-active-account]");
+  const openCapture = event.target.closest("[data-open-capture]");
+  const journalViewTarget = event.target.closest("[data-journal-view]")?.dataset.journalView;
+  const day = event.target.closest("[data-day]")?.dataset.day;
+  const image = event.target.closest("[data-image]")?.dataset.image;
+  const tv = event.target.closest("[data-tv]")?.dataset.tv;
+  if (shortcut) openModule(shortcut);
+  if (detail) openDetail(detail);
+  if (edit) editTrade(edit);
+  if (del) deleteTrade(del);
+  if (closeTrade) openCloseTradeModal(closeTrade);
+  if (sop) {
+    state.activeSopId = sop;
+    state.activeAccountId = accountsForSop(sop)[0]?.id || "";
+    saveState();
+    renderAll();
+    resetTradeForm();
+  }
+  if (account) {
+    state.activeAccountId = account;
+    saveState();
+    renderAll();
+    resetTradeForm();
+  }
+  if (editSop) openSopModal(editSop);
+  if (addAccount) openAccountModal(addAccount);
+  if (editAccount) {
+    const item = state.accounts.find((entry) => entry.id === editAccount);
+    openAccountModal(item?.sopId || state.activeSopId, editAccount);
+  }
+  if (editActiveAccount) openAccountModal(state.activeSopId, state.activeAccountId);
+  if (openCapture) {
+    openModule("journal");
+    const details = document.getElementById("captureTradeDetails");
+    details.open = true;
+    details.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  if (journalViewTarget) {
+    journalView = journalViewTarget;
+    document.querySelectorAll("[data-journal-view]").forEach((button) => button.classList.toggle("active", button.dataset.journalView === journalView));
+    document.getElementById("sopTimeline").classList.toggle("hidden", journalView !== "timeline");
+    document.getElementById("journalTablePanel").classList.toggle("hidden", journalView !== "table");
+  }
+  if (day) {
+    setWorkflowDate(day);
+  }
+  if (image) openImage(image);
+  if (tv) embedTradingView(tv);
+});
+
+document.body.addEventListener("submit", (event) => {
+  if (event.target.id === "closeTradeForm") closeTradeFromModal(event);
+  if (event.target.id === "sopEditorForm") saveSopFromModal(event);
+  if (event.target.id === "accountEditorForm") saveAccountFromModal(event);
+});
+
+document.querySelectorAll("[data-review-panel]").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll("[data-review-panel]").forEach((item) => item.classList.toggle("active", item === button));
+    document.querySelectorAll(".review-panel").forEach((panel) => panel.classList.toggle("active", panel.id === `review-${button.dataset.reviewPanel}`));
+  });
+});
+
+document.querySelectorAll("#planForm [name='workflowDate'], #reviewForm [name='workflowDate']").forEach((input) => {
+  input.addEventListener("change", (event) => setWorkflowDate(event.target.value));
+});
+
+document.getElementById("planForm").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const day = form.workflowDate.value || selectedDay || todayISO();
+  selectedDay = day;
+  state.dailyPlans[day] = {
+    bias: form.bias.value.trim(),
+    levels: form.levels.value.trim(),
+    allowedSetups: form.allowedSetups.value.trim(),
+    maxLossR: Number(form.maxLossR.value),
+    maxTrades: Number(form.maxTrades.value)
+  };
+  saveState();
+  renderAll();
+  toast(`Plan saved for ${day}.`);
+});
+
+document.getElementById("reviewForm").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const day = form.workflowDate.value || selectedDay || todayISO();
+  selectedDay = day;
+  state.dailyReviews[day] = {
+    keep: form.keep.value.trim(),
+    remove: form.remove.value.trim(),
+    focus: form.focus.value.trim()
+  };
+  saveState();
+  renderAll();
+  toast(`Review saved for ${day}.`);
+});
+
+document.getElementById("settingsForm").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  state.preferences = {
+    defaultSymbol: form.defaultSymbol.value.trim().toUpperCase() || "NQ",
+    riskPerTrade: Number(form.riskPerTrade.value),
+    dailyMaxLossR: Number(form.dailyMaxLossR.value),
+    maxTradesPerDay: Number(form.maxTradesPerDay.value),
+    setups: form.setups.value.split("\n").map((item) => item.trim()).filter(Boolean),
+    dailyRules: form.dailyRules.value.split("\n").map((item) => item.trim()).filter(Boolean)
+  };
+  if (!state.preferences.setups.length) state.preferences.setups = [...defaultPreferences.setups];
+  state = ensureSopState(state);
+  saveState();
+  resetTradeForm();
+  renderAll();
+  toast("Preferences saved.");
+});
+
+saveState();
+renderAll();
+resetTradeForm();

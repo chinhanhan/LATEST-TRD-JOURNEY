@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TRD Journey</title>
+    <link rel="stylesheet" href="styles.css?v=apple-polish-1" />
+  </head>
+  <body>
+    <div class="app-shell" id="appShell">
+      <section class="home" id="home">
+        <div class="home-top">
+          <div class="brand">
+            <div class="brand-mark">T</div>
+            <div>
+              <p>TRD Journey</p>
+              <span>Trading Operating System</span>
+            </div>
+          </div>
+          <div class="home-status">
+            <strong id="guardrailText">Max daily loss: -2R</strong>
+            <span id="guardrailMeta">Max trades: 3</span>
+          </div>
+          <button class="language-toggle" type="button" aria-label="Switch language">中文</button>
+        </div>
+
+        <div class="home-hero">
+          <p class="eyebrow" id="todayLabel">Today</p>
+          <h1>Choose your next move.</h1>
+          <p class="home-copy">Plan quietly. Execute cleanly. Review what the data actually says.</p>
+        </div>
+
+        <div class="home-grid" aria-label="TRD Journey modules">
+          <button class="home-card" data-open-module="overview">
+            <span>Today</span>
+            <strong id="homeTodayValue">Ready</strong>
+            <small id="homeTodayMeta">Week status</small>
+            <svg class="home-sparkline" id="homeTodaySparkline" viewBox="0 0 160 42" aria-hidden="true"></svg>
+          </button>
+          <button class="home-card" data-open-module="journal">
+            <span>Journal</span>
+            <strong id="homeJournalValue">0 trades</strong>
+            <small id="homeJournalMeta">Log or edit execution</small>
+            <div class="home-mini-status" id="homeJournalStatus" aria-hidden="true"></div>
+          </button>
+          <button class="home-card" data-open-module="review">
+            <span>Review</span>
+            <strong id="homeReviewValue">0.00R</strong>
+            <small id="homeReviewMeta">Expectancy and behavior</small>
+            <div class="home-leak-meter" id="homeLeakMeter" aria-hidden="true"><i></i></div>
+          </button>
+          <button class="home-card" data-open-module="settings">
+            <span>System</span>
+            <strong id="homeSystemValue">Configured</strong>
+            <small id="homeSystemMeta">Preferences and backup</small>
+            <div class="home-health-dot" id="homeSystemHealth" aria-hidden="true"></div>
+          </button>
+        </div>
+      </section>
+
+      <section class="module-shell" id="moduleShell" aria-live="polite">
+        <header class="module-bar">
+          <button class="back-button" id="backHomeBtn" type="button" aria-label="Back to home">Back</button>
+          <div>
+            <p class="eyebrow" id="moduleKicker">Module</p>
+            <h2 id="moduleTitle">Today</h2>
+          </div>
+          <div class="module-actions">
+            <button class="language-toggle" type="button" aria-label="Switch language">中文</button>
+            <button class="primary-button module-action" data-view-shortcut="journal" type="button">Log Trade</button>
+          </div>
+        </header>
+
+        <main class="main">
+          <section class="view active" id="overview" data-title="Today" data-kicker="Command Center">
+            <div class="workflow-grid">
+              <form class="panel" id="planForm">
+                <div class="panel-head"><div><p class="eyebrow">Pre-market</p><h2>Plan today</h2></div></div>
+                <label>Workflow Date<input name="workflowDate" type="date" required /></label>
+                <label>Market Bias<input name="bias" placeholder="Bullish above key level" /></label>
+                <label>Key Levels<textarea name="levels" rows="3" placeholder="NQ 18950, 19080..."></textarea></label>
+                <label>Allowed Setups<input name="allowedSetups" placeholder="Opening Drive, Liquidity Sweep" /></label>
+                <div class="form-row">
+                  <label>Max Loss (R)<input name="maxLossR" type="number" step="0.25" /></label>
+                  <label>Max Trades<input name="maxTrades" type="number" min="1" step="1" /></label>
+                </div>
+                <button class="primary-button" type="submit">Save Plan</button>
+              </form>
+
+              <form class="panel" id="reviewForm">
+                <div class="panel-head"><div><p class="eyebrow">Daily close</p><h2>Review the day</h2></div></div>
+                <label>Workflow Date<input name="workflowDate" type="date" required /></label>
+                <label>Keep<textarea name="keep" rows="3"></textarea></label>
+                <label>Remove<textarea name="remove" rows="3"></textarea></label>
+                <label>Next Focus<textarea name="focus" rows="3"></textarea></label>
+                <button class="primary-button" type="submit">Save Review</button>
+              </form>
+            </div>
+
+            <section class="panel today-open-panel">
+              <div class="panel-head">
+                <div><p class="eyebrow">Open Trades</p><h2>Live execution</h2></div>
+                <button class="ghost-button" type="button" data-view-shortcut="journal">Start Trade</button>
+              </div>
+              <div class="mobile-cards always" id="todayOpenTradeCards"></div>
+            </section>
+
+            <div class="overview-grid">
+              <section class="panel chart-panel">
+                <div class="panel-head">
+                  <div>
+                    <p class="eyebrow">Equity</p>
+                    <h2>R-based journey</h2>
+                  </div>
+                  <span id="tradeCountLabel">0 trades</span>
+                </div>
+                <svg class="line-chart" id="equityChart" viewBox="0 0 760 300" role="img" aria-label="Equity curve"></svg>
+              </section>
+
+              <section class="panel">
+                <div class="panel-head">
+                  <div>
+                    <p class="eyebrow">This week</p>
+                    <h2>Operating status</h2>
+                  </div>
+                </div>
+                <div class="status-grid" id="statusGrid"></div>
+              </section>
+            </div>
+
+            <div class="metric-grid" aria-label="Performance metrics">
+              <article class="metric-card"><span>Expectancy</span><strong id="expectancyMetric">0.00R</strong><small>Average edge per trade</small></article>
+              <article class="metric-card"><span>Win Rate</span><strong id="winRateMetric">0%</strong><small>Wins / closed trades</small></article>
+              <article class="metric-card"><span>Profit Factor</span><strong id="profitFactorMetric">0.00</strong><small>Gross wins / gross losses</small></article>
+              <article class="metric-card"><span>Max Drawdown</span><strong id="drawdownMetric">0.00R</strong><small>Peak-to-trough in R</small></article>
+            </div>
+
+            <section class="panel"><div class="panel-head"><div><p class="eyebrow">Workflow</p><h2>Today status</h2></div></div><div class="insight-grid" id="workflowStatus"></div></section>
+          </section>
+
+          <section class="view" id="journal" data-title="Journal" data-kicker="Execution">
+            <section class="panel sop-workspace">
+              <div class="journey-header">
+                <div class="journey-title">
+                  <p class="eyebrow">SOP Journey</p>
+                  <h2 id="activeSopTitle">Active SOP</h2>
+                  <p id="activeJourneyMeta">One SOP. One account. One clean record at a time.</p>
+                </div>
+                <div class="journey-balance">
+                  <span>Current Balance</span>
+                  <strong id="activeAccountBalance">$1,000</strong>
+                  <small id="activeAccountName">Main Account</small>
+                  <button class="text-button balance-edit" type="button" data-edit-active-account>Edit Balance</button>
+                </div>
+                <div class="row-actions sop-controls">
+                  <select id="activeSopSelect" aria-label="Active SOP"></select>
+                  <select id="accountFilterSelect" aria-label="Active account"></select>
+                  <button class="primary-button" type="button" data-open-capture>Start Trade</button>
+                </div>
+              </div>
+
+              <div class="sop-maturity" id="sopGrowthPanel"></div>
+
+              <details class="soft-disclosure">
+                <summary>SOP Library</summary>
+                <div class="disclosure-content">
+                  <div class="row-actions">
+                    <button class="ghost-button" id="journalAddAccountBtn" type="button">Add Account</button>
+                    <button class="primary-button" id="journalAddSopBtn" type="button">Add SOP</button>
+                  </div>
+                  <div class="sop-card-grid" id="sopCards"></div>
+                  <div class="account-manager" id="accountManagerPanel"></div>
+                </div>
+              </details>
+            </section>
+
+            <section class="panel sop-timeline-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Timeline</p>
+                  <h2>SOP record trail</h2>
+                </div>
+                <div class="segment-control compact" id="journalViewToggle" aria-label="Journal view">
+                  <button class="segment active" data-journal-view="timeline" type="button">Timeline</button>
+                  <button class="segment" data-journal-view="table" type="button">Table</button>
+                </div>
+              </div>
+              <div class="sop-timeline" id="sopTimeline"></div>
+            </section>
+
+            <details class="soft-disclosure capture-disclosure" id="captureTradeDetails">
+              <summary>Capture Trade</summary>
+              <form class="panel trade-form" id="tradeForm">
+                <div class="panel-head">
+                  <div>
+                    <p class="eyebrow" id="tradeFormMode">Open trade</p>
+                    <h2>Start trade</h2>
+                  </div>
+                  <button class="ghost-button hidden" type="button" id="cancelEditBtn">Cancel</button>
+                </div>
+
+                <input type="hidden" name="id" />
+                <div class="form-row">
+                  <label>SOP<select name="sopId" id="tradeSopSelect"></select></label>
+                  <label>Account<select name="accountId" id="tradeAccountSelect"></select></label>
+                </div>
+                <div class="form-row">
+                  <label>Date<input name="date" type="date" required /></label>
+                  <label>Symbol<input name="symbol" maxlength="16" required /></label>
+                </div>
+                <label>Setup<select name="setup" id="setupSelect"></select></label>
+                <div class="form-row">
+                  <label>Direction<select name="direction"><option>Long</option><option>Short</option></select></label>
+                  <label>Risk ($)<input name="risk" type="number" min="1" step="1" required /></label>
+                </div>
+                <label>Entry Plan<textarea name="entryPlan" rows="3" placeholder="Why this trade is valid before it ends."></textarea></label>
+                <div class="form-row">
+                  <label>Stop Plan<input name="stopPlan" placeholder="Invalidation / stop idea" /></label>
+                  <label>Target Plan<input name="targetPlan" placeholder="Target / scale idea" /></label>
+                </div>
+
+                <details class="advanced-fields">
+                  <summary>Close or add details</summary>
+                  <div class="advanced-content">
+                    <div class="form-row">
+                      <label>Grade<select name="grade"><option>A</option><option>B</option><option>C</option></select></label>
+                      <label>Net P&L ($)<input name="pnl" type="number" step="1" placeholder="Leave blank while trade is open" /></label>
+                    </div>
+                    <div class="form-row">
+                      <label>Rule followed<select name="rule"><option value="true">Yes</option><option value="false">No</option></select></label>
+                      <label>Emotion<select name="emotion"><option>Calm</option><option>Focused</option><option>FOMO</option><option>Revenge</option><option>Hesitant</option></select></label>
+                    </div>
+                    <div class="checklist">
+                      <label><input type="checkbox" name="hasPlan" /> Plan</label>
+                      <label><input type="checkbox" name="hasTrigger" /> Trigger</label>
+                      <label><input type="checkbox" name="hasStop" /> Stop</label>
+                      <label><input type="checkbox" name="hasTarget" /> Target</label>
+                      <label><input type="checkbox" name="emotionControlled" /> Controlled</label>
+                    </div>
+                    <label>TradingView Link<input name="tradingViewUrl" type="url" placeholder="https://www.tradingview.com/chart/..." /></label>
+                    <label>Chart Image URL<input name="imageUrl" type="url" placeholder="https://..." /></label>
+                    <label>Upload Screenshot<input name="imageFile" type="file" accept="image/*" /></label>
+                    <label>Exit Note<textarea name="exitNote" rows="3" placeholder="Fill after the trade is closed."></textarea></label>
+                    <label>General Note<textarea name="note" rows="3"></textarea></label>
+                  </div>
+                </details>
+
+                <button class="primary-button" type="submit" id="saveTradeBtn">Start Trade</button>
+              </form>
+            </details>
+
+            <section class="entry-layout">
+
+              <section class="panel trade-table-panel journal-table-view hidden" id="journalTablePanel">
+                <div class="panel-head">
+                  <div>
+                    <p class="eyebrow">Open Trades</p>
+                    <h2>In progress</h2>
+                  </div>
+                </div>
+                <div class="mobile-cards always" id="openTradeCards"></div>
+              </section>
+
+              <section class="panel trade-table-panel">
+                <div class="panel-head">
+                  <div>
+                    <p class="eyebrow">Closed Trades</p>
+                    <h2>Completed records</h2>
+                  </div>
+                  <select id="setupFilter" aria-label="Filter setup"><option value="All">All setups</option></select>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Date</th><th>Symbol</th><th>Setup</th><th>R</th><th>Grade</th><th>Rule</th><th>Media</th><th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="tradeRows"></tbody>
+                  </table>
+                </div>
+                <div class="mobile-cards" id="mobileTradeCards"></div>
+              </section>
+            </section>
+          </section>
+
+          <section class="view" id="review" data-title="Review" data-kicker="Evidence">
+            <div class="segment-control" aria-label="Review sections">
+              <button class="segment active" data-review-panel="insights" type="button">Insights</button>
+              <button class="segment" data-review-panel="charts" type="button">Charts</button>
+              <button class="segment" data-review-panel="calendar" type="button">Calendar</button>
+              <button class="segment" data-review-panel="playbook" type="button">Playbook</button>
+            </div>
+
+            <div class="review-panel active" id="review-insights">
+              <section class="panel">
+                <div class="panel-head"><div><p class="eyebrow">Review</p><h2>Current read</h2></div></div>
+                <div class="insight-grid" id="summaryCards"></div>
+              </section>
+            </div>
+
+            <div class="review-panel" id="review-charts">
+              <div class="analytics-grid">
+                <section class="panel"><div class="panel-head"><div><p class="eyebrow">Drawdown</p><h2>Risk pressure</h2></div></div><svg class="line-chart" id="drawdownChart" viewBox="0 0 760 260"></svg></section>
+                <section class="panel"><div class="panel-head"><div><p class="eyebrow">Distribution</p><h2>R multiple spread</h2></div></div><div class="histogram" id="distributionChart"></div></section>
+              </div>
+              <section class="panel"><div class="panel-head"><div><p class="eyebrow">Setups</p><h2>Performance by setup</h2></div></div><div class="bar-list" id="setupBars"></div></section>
+              <div class="analytics-grid">
+                <section class="panel"><div class="panel-head"><div><p class="eyebrow">Behavior</p><h2>Emotion impact</h2></div></div><div class="bar-list" id="emotionBars"></div></section>
+                <section class="panel"><div class="panel-head"><div><p class="eyebrow">Quality</p><h2>Grade breakdown</h2></div></div><div class="bar-list" id="gradeBars"></div></section>
+              </div>
+            </div>
+
+            <div class="review-panel" id="review-calendar">
+              <div class="cycle-grid">
+                <section class="panel">
+                  <div class="panel-head"><div><p class="eyebrow">Calendar</p><h2 id="calendarTitle">Month</h2></div></div>
+                  <div class="calendar" id="calendarGrid"></div>
+                </section>
+                <section class="panel">
+                  <div class="panel-head"><div><p class="eyebrow">Day detail</p><h2 id="dayDetailTitle">Select a day</h2></div></div>
+                  <div id="dayDetail" class="day-detail"></div>
+                </section>
+              </div>
+              <div class="analytics-grid">
+                <section class="panel"><div class="panel-head"><div><p class="eyebrow">Weekly</p><h2>Cycle summary</h2></div></div><div class="insight-grid" id="weeklySummary"></div></section>
+                <section class="panel"><div class="panel-head"><div><p class="eyebrow">Monthly</p><h2>Consistency</h2></div></div><div class="insight-grid" id="monthlySummary"></div></section>
+              </div>
+            </div>
+
+            <div class="review-panel" id="review-playbook">
+              <section class="panel">
+                <div class="panel-head">
+                  <div><p class="eyebrow">SOP Library</p><h2>Trade only what you can explain</h2></div>
+                  <div class="row-actions">
+                    <button class="ghost-button" id="addAccountBtn" type="button">Add Account</button>
+                    <button class="primary-button" id="addSopBtn" type="button">Add SOP</button>
+                  </div>
+                </div>
+                <div class="playbook-grid" id="playbookGrid"></div>
+              </section>
+            </div>
+          </section>
+
+          <section class="view" id="settings" data-title="System" data-kicker="Preferences">
+            <form class="panel settings-form" id="settingsForm">
+              <div class="panel-head"><div><p class="eyebrow">Preferences</p><h2>Personal system</h2></div></div>
+              <div class="form-row">
+                <label>Default Symbol<input name="defaultSymbol" required /></label>
+                <label>Risk Per Trade ($)<input name="riskPerTrade" type="number" min="1" step="1" required /></label>
+              </div>
+              <div class="form-row">
+                <label>Daily Max Loss (R)<input name="dailyMaxLossR" type="number" step="0.25" required /></label>
+                <label>Max Trades Per Day<input name="maxTradesPerDay" type="number" min="1" step="1" required /></label>
+              </div>
+              <label>Setups<textarea name="setups" rows="4" placeholder="One setup per line"></textarea></label>
+              <label>Daily Rules<textarea name="dailyRules" rows="4" placeholder="One rule per line"></textarea></label>
+              <button class="primary-button" type="submit">Save Preferences</button>
+            </form>
+
+            <section class="panel">
+              <div class="panel-head"><div><p class="eyebrow">Data</p><h2>Backup and restore</h2></div></div>
+              <div class="row-actions settings-actions">
+                <button class="icon-button quiet-action" id="exportCsvBtn" aria-label="Export CSV" title="Export CSV">CSV</button>
+                <button class="icon-button" id="exportJsonBtn" aria-label="Export JSON backup" title="Export JSON">Backup</button>
+                <label class="icon-button file-button" aria-label="Import JSON backup" title="Import JSON">
+                  Import
+                  <input id="importJsonInput" type="file" accept="application/json,.json" />
+                </label>
+                <button class="icon-button danger" id="resetBtn" aria-label="Reset demo data" title="Reset demo data">Reset Demo</button>
+              </div>
+            </section>
+          </section>
+        </main>
+      </section>
+    </div>
+
+    <div class="modal-backdrop hidden" id="modalBackdrop" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-head">
+          <div><p class="eyebrow" id="modalKicker">Detail</p><h2 id="modalTitle">Trade detail</h2></div>
+          <button class="icon-button" id="modalCloseBtn" aria-label="Close modal">x</button>
+        </div>
+        <div id="modalBody"></div>
+      </div>
+    </div>
+
+    <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+    <script src="app.js?v=date-save-1"></script>
+  </body>
+</html>
