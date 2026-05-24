@@ -405,8 +405,11 @@ h3 {
   box-shadow: 0 0 0 7px var(--red-soft);
 }
 
+/* .module-shell kept for legacy compatibility but is no longer used in Phase 6 flat layout */
 .module-shell {
-  position: fixed;
+  display: none;
+}
+
 /* --- Phase 6: App Header, Bottom Dock and Collapsible Panels --- */
 
 .app-header {
