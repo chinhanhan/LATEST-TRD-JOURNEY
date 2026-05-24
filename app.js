@@ -8,6 +8,61 @@ const money = (value) => `$${Number(value || 0).toLocaleString(undefined, { maxi
 const uid = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 const safe = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[c]);
 
+function parseMarkdown(text) {
+  if (!text) return "";
+  let html = text;
+  // Bold
+  html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  // Italic
+  html = html.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+  // Highlight
+  html = html.replace(/==([^=]+)==/g, "<mark>$1</mark>");
+  
+  const lines = html.split("\n");
+  const processedLines = [];
+  let inList = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i].trim();
+    if (line.startsWith("- ")) {
+      if (!inList) { processedLines.push("<ul>"); inList = true; }
+      processedLines.push(`<li>${line.substring(2)}</li>`);
+    } else {
+      if (inList) { processedLines.push("</ul>"); inList = false; }
+      if (line.startsWith("> ")) {
+        processedLines.push(`<blockquote>${line.substring(2)}</blockquote>`);
+      } else if (line.startsWith("# ")) {
+        processedLines.push(`<h3>${line.substring(2)}</h3>`);
+      } else {
+        processedLines.push(line);
+      }
+    }
+  }
+  if (inList) processedLines.push("</ul>");
+
+  // Join back and add <br> for remaining newlines outside of blocks
+  return processedLines.join("\n").replace(/\n/g, "<br>");
+}
+
+window.insertMarkdown = function(btn, prefix, suffix) {
+  const container = btn.closest(".markdown-editor-container");
+  if (!container) return;
+  const textarea = container.querySelector("textarea");
+  if (!textarea) return;
+  
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const text = textarea.value;
+  const before = text.substring(0, start);
+  const selected = text.substring(start, end);
+  const after = text.substring(end);
+  
+  textarea.value = before + prefix + selected + suffix + after;
+  textarea.focus();
+  // Put cursor in the middle or after
+  textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+};
+
 const starterTrades = [
   { id: "1", date: "2026-05-13", symbol: "NQ", setup: "Opening Drive", direction: "Long", grade: "A", risk: 100, pnl: 230, rule: true, emotion: "Focused", note: "Clean drive after range break.", checklist: { hasPlan: true, hasTrigger: true, hasStop: true, hasTarget: true, emotionControlled: true }, tradingViewUrl: "https://www.tradingview.com/chart/" },
   { id: "2", date: "2026-05-14", symbol: "ES", setup: "Range Fade", direction: "Short", grade: "B", risk: 100, pnl: -80, rule: true, emotion: "Calm", note: "Exit respected.", checklist: { hasPlan: true, hasTrigger: true, hasStop: true, hasTarget: false, emotionControlled: true } },
@@ -957,7 +1012,7 @@ function timelineCard(trade) {
       <span class="tag">${safe(trade.grade)}</span>
       <span class="tag ${trade.rule ? "good" : "bad"}">${trade.rule ? "Followed" : "Broken"}</span>
     </div>
-    <p class="muted">${safe(trade.status === "open" ? trade.entryPlan || "In progress" : trade.exitNote || trade.note || "Record completed.")}</p>
+    <div class="muted" style="margin:8px 0; font-size:0.88rem; line-height:1.5;">${parseMarkdown(safe(trade.status === "open" ? trade.entryPlan || "In progress" : trade.exitNote || trade.note || "Record completed."))}</div>
     <div class="row-actions">
       <button class="text-button" data-detail="${trade.id}">View</button>
       <button class="text-button" data-edit="${trade.id}">${trade.status === "open" ? "Update" : "Edit"}</button>
@@ -1635,7 +1690,18 @@ function openCloseTradeModal(id) {
         <label>Rule followed<select name="rule"><option value="true">Yes</option><option value="false">No</option></select></label>
         <label>Emotion<select name="emotion"><option>Calm</option><option>Focused</option><option>FOMO</option><option>Revenge</option><option>Hesitant</option></select></label>
       </div>
-      <label>Exit Note<textarea name="exitNote" rows="3" placeholder="Why and how the trade ended."></textarea></label>
+      <label>Exit Note
+        <div class="markdown-editor-container">
+          <div class="md-toolbar">
+            <button type="button" class="md-btn" onclick="insertMarkdown(this, '**', '**')" title="Bold">B</button>
+            <button type="button" class="md-btn" onclick="insertMarkdown(this, '*', '*')" title="Italic">I</button>
+            <button type="button" class="md-btn" onclick="insertMarkdown(this, '==', '==')" title="Highlight">Hi</button>
+            <button type="button" class="md-btn" onclick="insertMarkdown(this, '- ', '')" title="List">•</button>
+            <button type="button" class="md-btn" onclick="insertMarkdown(this, '> ', '')" title="Quote">"</button>
+          </div>
+          <textarea name="exitNote" rows="3" placeholder="Why and how the trade ended."></textarea>
+        </div>
+      </label>
       <label>Upload Screenshot<input name="imageFile" type="file" accept="image/*" /></label>
       <button class="primary-button" type="submit">Close Trade</button>
     </form>
@@ -1701,7 +1767,7 @@ function openDetail(id) {
         insightCard("Process", trade.rule ? "Followed" : "Broken", trade.emotion)
       ].join("")}</div>
       ${imageHtml}
-      <p>${safe(trade.status === "open" ? trade.entryPlan || "No entry plan." : trade.exitNote || trade.note || "No note.")}</p>
+      <div class="rich-text-content" style="margin:20px 0;">${parseMarkdown(safe(trade.status === "open" ? trade.entryPlan || "No entry plan." : trade.exitNote || trade.note || "No note."))}</div>
       <div class="row-actions">
         ${trade.status === "open" ? `<button class="primary-button" data-close-trade="${trade.id}">Close Trade</button>` : ""}
         ${trade.tradingViewUrl ? `<a class="primary-button" href="${safe(trade.tradingViewUrl)}" target="_blank" rel="noreferrer">Open Chart</a><button class="ghost-button" data-tv="${trade.id}">Embed TradingView</button>` : ""}

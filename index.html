@@ -245,8 +245,30 @@
                     <label>TradingView Link<input name="tradingViewUrl" type="url" placeholder="https://www.tradingview.com/chart/..." /></label>
                     <label>Chart Image URL<input name="imageUrl" type="url" placeholder="https://..." /></label>
                     <label>Upload Screenshots<input name="imageFile" type="file" accept="image/*" multiple /></label>
-                    <label>Exit Note<textarea name="exitNote" rows="3" placeholder="Fill after the trade is closed."></textarea></label>
-                    <label>General Note<textarea name="note" rows="3"></textarea></label>
+                    <label>Exit Note
+                      <div class="markdown-editor-container">
+                        <div class="md-toolbar">
+                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '**', '**')" title="Bold">B</button>
+                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '*', '*')" title="Italic">I</button>
+                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '==', '==')" title="Highlight">Hi</button>
+                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '- ', '')" title="List">•</button>
+                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '> ', '')" title="Quote">"</button>
+                        </div>
+                        <textarea name="exitNote" rows="3" placeholder="Fill after the trade is closed."></textarea>
+                      </div>
+                    </label>
+                    <label>General Note
+                      <div class="markdown-editor-container">
+                        <div class="md-toolbar">
+                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '**', '**')" title="Bold">B</button>
+                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '*', '*')" title="Italic">I</button>
+                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '==', '==')" title="Highlight">Hi</button>
+                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '- ', '')" title="List">•</button>
+                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '> ', '')" title="Quote">"</button>
+                        </div>
+                        <textarea name="note" rows="3"></textarea>
+                      </div>
+                    </label>
                   </div>
                 </details>
 
