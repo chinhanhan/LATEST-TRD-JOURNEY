@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
+    <link rel="manifest" href="manifest.json" />
     <link rel="stylesheet" href="styles.css?v=apple-polish-1" />
   </head>
   <body>
@@ -21,7 +22,10 @@
             <strong id="guardrailText">Max daily loss: -2R</strong>
             <span id="guardrailMeta">Max trades: 3</span>
           </div>
-          <button class="language-toggle" type="button" aria-label="Switch language">中文</button>
+          <div style="display: flex; gap: 10px;">
+            <button class="theme-toggle" type="button" aria-label="Switch theme">☾</button>
+            <button class="language-toggle" type="button" aria-label="Switch language">中文</button>
+          </div>
         </div>
 
         <div class="home-hero">
@@ -66,6 +70,7 @@
             <h2 id="moduleTitle">Today</h2>
           </div>
           <div class="module-actions">
+            <button class="theme-toggle" type="button" aria-label="Switch theme">☾</button>
             <button class="language-toggle" type="button" aria-label="Switch language">中文</button>
             <button class="primary-button module-action" data-view-shortcut="journal" type="button">Log Trade</button>
           </div>
@@ -239,7 +244,7 @@
                     </div>
                     <label>TradingView Link<input name="tradingViewUrl" type="url" placeholder="https://www.tradingview.com/chart/..." /></label>
                     <label>Chart Image URL<input name="imageUrl" type="url" placeholder="https://..." /></label>
-                    <label>Upload Screenshot<input name="imageFile" type="file" accept="image/*" /></label>
+                    <label>Upload Screenshots<input name="imageFile" type="file" accept="image/*" multiple /></label>
                     <label>Exit Note<textarea name="exitNote" rows="3" placeholder="Fill after the trade is closed."></textarea></label>
                     <label>General Note<textarea name="note" rows="3"></textarea></label>
                   </div>
@@ -305,6 +310,10 @@
                 <section class="panel"><div class="panel-head"><div><p class="eyebrow">Distribution</p><h2>R multiple spread</h2></div></div><div class="histogram" id="distributionChart"></div></section>
               </div>
               <section class="panel"><div class="panel-head"><div><p class="eyebrow">Setups</p><h2>Performance by setup</h2></div></div><div class="bar-list" id="setupBars"></div></section>
+              <div class="analytics-grid">
+                <section class="panel"><div class="panel-head"><div><p class="eyebrow">Timing</p><h2>Weekday performance</h2></div></div><div class="bar-list" id="weekdayBars"></div></section>
+                <section class="panel"><div class="panel-head"><div><p class="eyebrow">Direction</p><h2>Long vs Short</h2></div></div><div class="bar-list" id="directionBars"></div></section>
+              </div>
               <div class="analytics-grid">
                 <section class="panel"><div class="panel-head"><div><p class="eyebrow">Behavior</p><h2>Emotion impact</h2></div></div><div class="bar-list" id="emotionBars"></div></section>
                 <section class="panel"><div class="panel-head"><div><p class="eyebrow">Quality</p><h2>Grade breakdown</h2></div></div><div class="bar-list" id="gradeBars"></div></section>
@@ -385,6 +394,7 @@
       </div>
     </div>
 
+    <div class="chart-tooltip hidden" id="chartTooltip" aria-hidden="true"></div>
     <div class="toast-stack" id="toastStack" aria-live="polite"></div>
     <script src="app.js?v=date-save-1"></script>
   </body>

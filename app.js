@@ -42,10 +42,12 @@ const defaultSopDetails = {
 
 let journalView = "timeline";
 
-let state = loadState();
+let state = null;
 let selectedDay = todayISO();
 let activeModule = null;
 let language = localStorage.getItem(LANGUAGE_KEY) || "en";
+let theme = localStorage.getItem("trd-journey-theme") || "light";
+document.documentElement.setAttribute("data-theme", theme);
 let interactionState = {
   sourceModule: null,
   transitionTimer: null
@@ -147,11 +149,69 @@ function defaultState() {
   return ensureSopState(base);
 }
 
-function loadState() {
+const DB_NAME = "trd-journey-db";
+const DB_VERSION = 1;
+const STORE_NAME = "app-state";
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function idbGet(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.get(key);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function idbSet(key, val) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.put(val, key);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function loadState() {
+  try {
+    const idbSaved = await idbGet(STORAGE_KEY);
+    if (idbSaved) return normalizeState(idbSaved);
+  } catch (e) {
+    console.error("IDB load failed", e);
+  }
   const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) return normalizeState(JSON.parse(saved));
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      await idbSet(STORAGE_KEY, parsed);
+      return normalizeState(parsed);
+    } catch (e) {}
+  }
   const legacy = localStorage.getItem(LEGACY_KEY);
-  if (legacy) return normalizeState({ trades: JSON.parse(legacy) });
+  if (legacy) {
+    try {
+      const parsed = { trades: JSON.parse(legacy) };
+      await idbSet(STORAGE_KEY, parsed);
+      return normalizeState(parsed);
+    } catch (e) {}
+  }
   return defaultState();
 }
 
@@ -265,8 +325,12 @@ function ensureSopState(rawState) {
   };
 }
 
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+async function saveState() {
+  try {
+    await idbSet(STORAGE_KEY, JSON.parse(JSON.stringify(state)));
+  } catch (e) {
+    console.error("IDB save failed", e);
+  }
 }
 
 function activeSop() {
@@ -498,6 +562,7 @@ function renderAll() {
   renderWorkflow();
   renderCycles();
   renderPlaybook();
+  renderThemeButtons();
   applyLanguage();
 }
 
@@ -649,31 +714,36 @@ function renderCharts() {
 
 function equitySeries() {
   let total = 0;
-  return [0, ...closedTrades().map((trade) => (total += rValue(trade)))];
+  return [{ value: 0, label: "Start" }, ...closedTrades().map((trade) => {
+    total += rValue(trade);
+    return { value: total, label: trade.date, detail: `${trade.symbol} (${formatR(rValue(trade))})` };
+  })];
 }
 
 function drawdownSeries() {
   let total = 0;
   let peak = 0;
-  return [0, ...closedTrades().map((trade) => {
+  return [{ value: 0, label: "Start" }, ...closedTrades().map((trade) => {
     total += rValue(trade);
     peak = Math.max(peak, total);
-    return total - peak;
+    return { value: total - peak, label: trade.date, detail: `${trade.symbol} DD` };
   })];
 }
 
-function renderLineChart(id, values, options = {}) {
+function renderLineChart(id, seriesData, options = {}) {
   const svg = document.getElementById(id);
   const width = 760;
   const height = id === "equityChart" ? 300 : 260;
   const pad = 32;
+  const pointsData = seriesData.map(item => typeof item === 'number' ? { value: item } : item);
+  const values = pointsData.map(item => item.value);
   const min = Math.min(...values, 0);
   const max = Math.max(...values, 1);
   const spread = Math.max(max - min, 1);
-  const points = values.map((value, index) => {
+  const points = pointsData.map((item, index) => {
     const x = pad + (index / Math.max(values.length - 1, 1)) * (width - pad * 2);
-    const y = height - pad - ((value - min) / spread) * (height - pad * 2);
-    return { x, y, value };
+    const y = height - pad - ((item.value - min) / spread) * (height - pad * 2);
+    return { x, y, ...item };
   });
   const zeroY = height - pad - ((0 - min) / spread) * (height - pad * 2);
   const line = points.map((p) => `${p.x},${p.y}`).join(" ");
@@ -687,9 +757,41 @@ function renderLineChart(id, values, options = {}) {
     <text class="axis-label" x="${pad}" y="${height - 8}">${formatR(min)}</text>
     <polygon class="chart-area" points="${area}" fill="${options.negative ? "#d33f3f" : "#0071e3"}"></polygon>
     <polyline class="chart-line ${options.negative ? "red" : ""}" points="${line}"></polyline>
-    ${points.map((p, index) => `<circle class="chart-dot ${index === points.length - 1 ? "last" : ""}" cx="${p.x}" cy="${p.y}" r="${index === points.length - 1 ? 5.5 : 4}"><title>${formatR(p.value)}</title></circle>`).join("")}
+    ${points.map((p, index) => `<circle class="chart-dot ${index === points.length - 1 ? "last" : ""}" cx="${p.x}" cy="${p.y}" r="${index === points.length - 1 ? 5.5 : 4}"></circle>`).join("")}
     ${last ? `<circle class="chart-pulse" cx="${last.x}" cy="${last.y}" r="11"></circle>` : ""}
   `;
+
+  svg.onmousemove = (e) => {
+    const rect = svg.getBoundingClientRect();
+    const mouseX = (e.clientX - rect.left) * (width / rect.width);
+    let nearest = points[0];
+    let minDist = Infinity;
+    for (const p of points) {
+      const dist = Math.abs(p.x - mouseX);
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = p;
+      }
+    }
+    const tooltip = document.getElementById("chartTooltip");
+    if (tooltip && nearest && minDist < 40) {
+      const label = nearest.label ? `<strong>${safe(nearest.label)}</strong><br>` : "";
+      const detail = nearest.detail ? `<span style="opacity:0.8">${safe(nearest.detail)}</span><br>` : "";
+      tooltip.innerHTML = `${label}${detail}Total: <strong>${formatR(nearest.value)}</strong>`;
+      const tooltipX = rect.left + (nearest.x / width) * rect.width;
+      const tooltipY = rect.top + (nearest.y / height) * rect.height;
+      tooltip.style.left = tooltipX + "px";
+      tooltip.style.top = tooltipY + "px";
+      tooltip.classList.remove("hidden");
+    } else if (tooltip) {
+      tooltip.classList.add("hidden");
+    }
+  };
+
+  svg.onmouseleave = () => {
+    const tooltip = document.getElementById("chartTooltip");
+    if (tooltip) tooltip.classList.add("hidden");
+  };
 }
 
 function renderInsights() {
@@ -938,7 +1040,9 @@ function resultTag(trade) {
 }
 
 function mediaBadges(trade) {
-  return `${imageFor(trade) ? '<span class="tag info">Image</span> ' : ""}${trade.tradingViewUrl ? '<span class="tag info">TV</span>' : ""}` || '<span class="muted">None</span>';
+  const imgCount = imagesFor(trade).length;
+  const imgBadge = imgCount > 1 ? `<span class="tag info">${imgCount} Images</span> ` : imgCount === 1 ? '<span class="tag info">Image</span> ' : "";
+  return `${imgBadge}${trade.tradingViewUrl ? '<span class="tag info">TV</span>' : ""}` || '<span class="muted">None</span>';
 }
 
 function imageFor(trade) {
@@ -949,6 +1053,17 @@ function renderAnalytics() {
   renderGroupedBars("setupBars", groupBy(closedTrades(), "setup"));
   renderGroupedBars("emotionBars", groupBy(closedTrades(), "emotion"));
   renderGroupedBars("gradeBars", groupBy(closedTrades(), "grade"));
+  
+  const weekdays = closedTrades().reduce((acc, trade) => {
+    const d = new Date(`${trade.date}T12:00:00`);
+    const day = d.toLocaleDateString("en", { weekday: "short" });
+    if (!acc[day]) acc[day] = [];
+    acc[day].push(trade);
+    return acc;
+  }, {});
+  renderGroupedBars("weekdayBars", weekdays);
+  renderGroupedBars("directionBars", groupBy(closedTrades(), "direction"));
+  
   renderDistribution();
 }
 
@@ -1011,7 +1126,13 @@ function renderCycles() {
     const m = metrics(closedByDate(day));
     const openCount = openTrades(byDate(day)).length;
     const review = state.dailyReviews[day] ? "Review done" : "";
-    const klass = m.totalR > 0 ? "positive" : m.totalR < 0 ? "negative" : "";
+    let klass = "";
+    if (m.totalR >= 3) klass = "positive-3";
+    else if (m.totalR >= 1) klass = "positive-2";
+    else if (m.totalR > 0) klass = "positive-1";
+    else if (m.totalR <= -3) klass = "negative-3";
+    else if (m.totalR <= -1) klass = "negative-2";
+    else if (m.totalR < 0) klass = "negative-1";
     return `<button class="calendar-day ${klass} ${day === selectedDay ? "selected" : ""}" data-day="${day}">
       <strong>${Number(day.slice(-2))}</strong>
       <span>${m.count ? formatR(m.totalR) : openCount ? `${openCount} open` : "No trade"}</span>
@@ -1285,6 +1406,45 @@ async function fileToDataUrl(file) {
   return await compressImage(raw);
 }
 
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSound(type) {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  
+  const now = audioCtx.currentTime;
+  if (type === 'success') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(600, now);
+    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.2, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+    osc.start(now);
+    osc.stop(now + 0.2);
+  } else if (type === 'error') {
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(200, now);
+    osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.2, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+    osc.start(now);
+    osc.stop(now + 0.2);
+  } else if (type === 'switch') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, now);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.1, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+    osc.start(now);
+    osc.stop(now + 0.05);
+  }
+}
+
 async function compressImage(dataUrl) {
   const image = new Image();
   image.src = dataUrl;
@@ -1372,7 +1532,8 @@ async function saveTradeFromForm(event) {
   event.preventDefault();
   const form = event.currentTarget;
   try {
-    const imageData = await fileToDataUrl(form.imageFile.files[0]);
+    const imagePromises = Array.from(form.imageFile.files).map(file => fileToDataUrl(file));
+    const imagesData = (await Promise.all(imagePromises)).filter(Boolean);
     const current = form.elements.id.value ? state.trades.find((trade) => trade.id === form.elements.id.value) : {};
     const hasResult = form.pnl.value.trim() !== "";
     const nextStatus = hasResult ? "closed" : "open";
@@ -1399,7 +1560,8 @@ async function saveTradeFromForm(event) {
       exitNote: form.exitNote.value.trim(),
       tradingViewUrl: form.tradingViewUrl.value.trim(),
       imageUrl: form.imageUrl.value.trim(),
-      imageData: imageData || current.imageData || "",
+      images: imagesData.length ? imagesData : (current.images || (current.imageData ? [current.imageData] : [])),
+      imageData: "",
       checklist: {
         hasPlan: form.hasPlan.checked,
         hasTrigger: form.hasTrigger.checked,
@@ -1470,14 +1632,15 @@ async function closeTradeFromModal(event) {
       toast(t("needsResult"), "error");
       return;
     }
-    const imageData = await fileToDataUrl(form.imageFile.files[0]);
+    const imagePromises = Array.from(form.imageFile.files).map(file => fileToDataUrl(file));
+    const imagesData = (await Promise.all(imagePromises)).filter(Boolean);
     trade.status = "closed";
     trade.closedAt = todayISO();
     trade.pnl = pnlInput ? Number(pnlInput) : Number(rInput) * Number(trade.risk || 0);
     trade.rule = form.rule.value === "true";
     trade.emotion = form.emotion.value;
     trade.exitNote = form.exitNote.value.trim();
-    trade.imageData = imageData || trade.imageData || "";
+    if (imagesData.length) trade.images = imagesData;
     saveState();
     closeModal();
     renderAll();
@@ -1488,10 +1651,24 @@ async function closeTradeFromModal(event) {
   }
 }
 
+function imagesFor(trade) {
+  return trade.images?.length ? trade.images : [trade.imageData || trade.imageUrl].filter(Boolean);
+}
+
 function openDetail(id) {
   const trade = state.trades.find((item) => item.id === id);
   if (!trade) return;
-  const img = imageFor(trade);
+  const imgs = imagesFor(trade);
+  let imageHtml = emptyState("No screenshot attached.");
+  if (imgs.length > 1) {
+    imageHtml = `
+      <div class="carousel-container" style="display:flex; overflow-x:auto; gap:12px; padding-bottom:8px;">
+        ${imgs.map((src, i) => `<button class="text-button" data-image="${trade.id}" data-index="${i}" style="flex-shrink:0; border:1px solid var(--hairline); border-radius:8px; overflow:hidden;"><img src="${src}" alt="Screenshot ${i+1}" style="max-height:160px; object-fit:cover;" /></button>`).join("")}
+      </div>
+    `;
+  } else if (imgs.length === 1) {
+    imageHtml = `<button class="text-button" data-image="${trade.id}" data-index="0"><img src="${imgs[0]}" alt="Chart screenshot" /></button>`;
+  }
   openModal("Trade detail", "Journal", `
     <div class="day-detail">
       <div class="insight-grid">${[
@@ -1501,7 +1678,7 @@ function openDetail(id) {
         insightCard("Setup", trade.setup, `Grade ${trade.grade}`),
         insightCard("Process", trade.rule ? "Followed" : "Broken", trade.emotion)
       ].join("")}</div>
-      ${img ? `<button class="text-button" data-image="${trade.id}"><img src="${img}" alt="Chart screenshot" /></button>` : emptyState("No screenshot attached.")}
+      ${imageHtml}
       <p>${safe(trade.status === "open" ? trade.entryPlan || "No entry plan." : trade.exitNote || trade.note || "No note.")}</p>
       <div class="row-actions">
         ${trade.status === "open" ? `<button class="primary-button" data-close-trade="${trade.id}">Close Trade</button>` : ""}
@@ -1512,11 +1689,11 @@ function openDetail(id) {
   `);
 }
 
-function openImage(id) {
+function openImage(id, index = 0) {
   const trade = state.trades.find((item) => item.id === id);
-  const img = trade && imageFor(trade);
-  if (!img) return;
-  openModal("Chart screenshot", "Image", `<img src="${img}" alt="Chart screenshot" />`);
+  const imgs = imagesFor(trade);
+  if (!imgs[index]) return;
+  openModal(`Screenshot ${index + 1} of ${imgs.length}`, "Image", `<img src="${imgs[index]}" alt="Chart screenshot" style="max-width:100%;" />`);
 }
 
 function embedTradingView(id) {
@@ -1542,6 +1719,7 @@ function closeModal() {
 }
 
 function toast(message, type = "info") {
+  playSound(type === "error" ? "error" : "success");
   const el = document.createElement("div");
   el.className = `toast ${type}`;
   el.textContent = message;
@@ -1553,7 +1731,7 @@ function toast(message, type = "info") {
 }
 
 function exportCsv() {
-  const headers = ["status", "date", "closedAt", "symbol", "sopName", "sopId", "accountName", "accountId", "accountStartingBalance", "accountCurrentBalance", "setup", "direction", "grade", "risk", "pnl", "r", "rule", "emotion", "entryPlan", "stopPlan", "targetPlan", "exitNote", "tradingViewUrl", "imageUrl", "note"];
+  const headers = ["status", "date", "closedAt", "symbol", "sopName", "sopId", "accountName", "accountId", "accountStartingBalance", "accountCurrentBalance", "setup", "direction", "grade", "risk", "pnl", "r", "rule", "emotion", "entryPlan", "stopPlan", "targetPlan", "exitNote", "tradingViewUrl", "imageUrl", "imageCount", "note"];
   const rows = state.trades.map((trade) => headers.map((key) => {
     const account = state.accounts.find((item) => item.id === trade.accountId);
     const value = key === "r"
@@ -1566,7 +1744,9 @@ function exportCsv() {
             ? account?.startingBalance ?? ""
             : key === "accountCurrentBalance"
               ? account?.currentBalance ?? ""
-              : trade[key];
+              : key === "imageCount"
+                ? imagesFor(trade).length
+                : trade[key];
     return `"${String(value ?? "").replaceAll('"', '""')}"`;
   }).join(","));
   download("trd-journey.csv", [headers.join(","), ...rows].join("\n"), "text/csv;charset=utf-8");
@@ -1655,10 +1835,26 @@ function closeModule() {
 }
 
 function switchLanguage() {
+  playSound("switch");
   language = language === "en" ? "zh" : "en";
   localStorage.setItem(LANGUAGE_KEY, language);
   renderAll();
   toast(t("languageSaved"));
+}
+
+function switchTheme() {
+  playSound("switch");
+  theme = theme === "light" ? "dark" : "light";
+  localStorage.setItem("trd-journey-theme", theme);
+  document.documentElement.setAttribute("data-theme", theme);
+  renderThemeButtons();
+  toast(theme === "dark" ? "Dark mode enabled." : "Light mode enabled.");
+}
+
+function renderThemeButtons() {
+  document.querySelectorAll(".theme-toggle").forEach((button) => {
+    button.textContent = theme === "light" ? "☾" : "☀";
+  });
 }
 
 document.querySelectorAll("[data-open-module]").forEach((button) => {
@@ -1667,6 +1863,10 @@ document.querySelectorAll("[data-open-module]").forEach((button) => {
 
 document.querySelectorAll(".language-toggle").forEach((button) => {
   button.addEventListener("click", switchLanguage);
+});
+
+document.querySelectorAll(".theme-toggle").forEach((button) => {
+  button.addEventListener("click", switchTheme);
 });
 
 document.getElementById("backHomeBtn").addEventListener("click", closeModule);
@@ -1731,7 +1931,9 @@ document.body.addEventListener("click", (event) => {
   const openCapture = event.target.closest("[data-open-capture]");
   const journalViewTarget = event.target.closest("[data-journal-view]")?.dataset.journalView;
   const day = event.target.closest("[data-day]")?.dataset.day;
-  const image = event.target.closest("[data-image]")?.dataset.image;
+  const imageEl = event.target.closest("[data-image]");
+  const image = imageEl?.dataset.image;
+  const imageIndex = imageEl?.dataset.index;
   const tv = event.target.closest("[data-tv]")?.dataset.tv;
   if (shortcut) openModule(shortcut);
   if (detail) openDetail(detail);
@@ -1773,7 +1975,7 @@ document.body.addEventListener("click", (event) => {
   if (day) {
     setWorkflowDate(day);
   }
-  if (image) openImage(image);
+  if (image) openImage(image, imageIndex ? parseInt(imageIndex, 10) : 0);
   if (tv) embedTradingView(tv);
 });
 
@@ -1845,6 +2047,15 @@ document.getElementById("settingsForm").addEventListener("submit", (event) => {
   toast("Preferences saved.");
 });
 
-saveState();
-renderAll();
-resetTradeForm();
+async function initApp() {
+  state = await loadState();
+  await saveState(); // Ensure initialized defaults or migrated data are saved
+  renderAll();
+  resetTradeForm();
+  
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js").catch((err) => console.log("SW failed", err));
+  }
+}
+
+initApp();
