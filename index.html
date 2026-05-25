@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=apple-polish-1" />
+    <link rel="stylesheet" href="styles.css?v=phase11-analytics-1" />
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -22,7 +22,22 @@
           <span id="guardrailMeta">Max trades: 3</span>
         </div>
         <div class="header-actions">
-          <button class="theme-toggle" type="button" aria-label="Switch theme">☾</button>
+          <button class="theme-toggle-btn" id="headerThemeToggleBtn" type="button" aria-label="Switch theme">
+            <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
           <button class="language-toggle" type="button" aria-label="Switch language">中文</button>
           <button class="primary-button module-action" id="headerLogTradeBtn" type="button">Log Trade</button>
         </div>
@@ -30,28 +45,36 @@
 
       <main class="main">
           <section class="view active" id="overview" data-title="Today" data-kicker="Command Center">
-            <div class="workflow-grid">
-              <form class="panel" id="planForm">
-                <div class="panel-head"><div><p class="eyebrow">Pre-market</p><h2>Plan today</h2></div></div>
-                <label>Workflow Date<input name="workflowDate" type="date" required /></label>
-                <label>Market Bias<input name="bias" placeholder="Bullish above key level" /></label>
-                <label>Key Levels<textarea name="levels" rows="3" placeholder="NQ 18950, 19080..."></textarea></label>
-                <label>Allowed Setups<input name="allowedSetups" placeholder="Opening Drive, Liquidity Sweep" /></label>
-                <div class="form-row">
-                  <label>Max Loss (R)<input name="maxLossR" type="number" step="0.25" /></label>
-                  <label>Max Trades<input name="maxTrades" type="number" min="1" step="1" /></label>
+            <div class="today-workflow-tiles">
+              <div class="workflow-tile" id="tilePlan" role="button" tabindex="0">
+                <div class="tile-icon">☀️</div>
+                <div class="tile-info">
+                  <span class="tile-kicker">Pre-market</span>
+                  <h3 class="tile-title">Today's Plan</h3>
+                  <p class="tile-status" id="statusPlanText">Not started</p>
                 </div>
-                <button class="primary-button" type="submit">Save Plan</button>
-              </form>
+                <div class="tile-arrow">→</div>
+              </div>
+              <div class="workflow-tile" id="tileReview" role="button" tabindex="0">
+                <div class="tile-icon">🌙</div>
+                <div class="tile-info">
+                  <span class="tile-kicker">Daily close</span>
+                  <h3 class="tile-title">Daily Review</h3>
+                  <p class="tile-status" id="statusReviewText">Not started</p>
+                </div>
+                <div class="tile-arrow">→</div>
+              </div>
+            </div>
 
-              <form class="panel" id="reviewForm">
-                <div class="panel-head"><div><p class="eyebrow">Daily close</p><h2>Review the day</h2></div></div>
-                <label>Workflow Date<input name="workflowDate" type="date" required /></label>
-                <label>Keep<textarea name="keep" rows="3"></textarea></label>
-                <label>Remove<textarea name="remove" rows="3"></textarea></label>
-                <label>Next Focus<textarea name="focus" rows="3"></textarea></label>
-                <button class="primary-button" type="submit">Save Review</button>
-              </form>
+            <!-- Mindfulness & Streak Achievement Banner -->
+            <div class="mindfulness-banner" id="mindfulnessBanner" style="display: none;">
+              <div class="streak-badge">
+                <span class="fire-icon">🔥</span>
+                <span class="streak-count" id="streakCount">0</span>-Trade Discipline Streak
+              </div>
+              <div class="calm-diagnostic" id="calmDiagnostic">
+                Advantage: Logging trades in Calm/Focused state increases average Win Rate.
+              </div>
             </div>
 
             <section class="panel today-open-panel">
@@ -72,6 +95,17 @@
                   <span id="tradeCountLabel">0 trades</span>
                 </div>
                 <svg class="line-chart" id="equityChart" viewBox="0 0 760 300" role="img" aria-label="Equity curve"></svg>
+                <div class="zero-state-card" id="equityZeroState" style="display: none;">
+                  <div class="zero-state-artwork">
+                    <div class="glow-orb"></div>
+                    <svg class="artwork-svg" viewBox="0 0 100 100">
+                      <path class="wave-path" d="M10,80 Q25,80 40,80 T70,80 T90,80" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"></path>
+                      <circle cx="50" cy="50" r="8" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="2"></circle>
+                    </svg>
+                  </div>
+                  <h3>No Trading Data Yet</h3>
+                  <p>Your equity curve will build dynamically as you log trades.</p>
+                </div>
               </section>
 
               <section class="panel">
@@ -85,14 +119,223 @@
               </section>
             </div>
 
-            <div class="metric-grid" aria-label="Performance metrics">
-              <article class="metric-card"><span>Expectancy</span><strong id="expectancyMetric">0.00R</strong><small>Average edge per trade</small></article>
-              <article class="metric-card"><span>Win Rate</span><strong id="winRateMetric">0%</strong><small>Wins / closed trades</small></article>
-              <article class="metric-card"><span>Profit Factor</span><strong id="profitFactorMetric">0.00</strong><small>Gross wins / gross losses</small></article>
-              <article class="metric-card"><span>Max Drawdown</span><strong id="drawdownMetric">0.00R</strong><small>Peak-to-trough in R</small></article>
+            <div class="today-dashboard-row">
+              <section class="panel rings-panel" aria-label="Risk activity rings">
+                <div class="panel-head">
+                  <div>
+                    <p class="eyebrow">Risk control</p>
+                    <h2>Activity rings</h2>
+                  </div>
+                </div>
+                <div class="rings-widget-content">
+                  <div class="rings-svg-wrap">
+                    <svg class="activity-rings" viewBox="0 0 150 150">
+                      <circle class="ring-track ring-track-outer" cx="75" cy="75" r="60" stroke-width="10"></circle>
+                      <circle class="ring-track ring-track-middle" cx="75" cy="75" r="46" stroke-width="10"></circle>
+                      <circle class="ring-track ring-track-inner" cx="75" cy="75" r="32" stroke-width="10"></circle>
+                      
+                      <circle class="ring-fill ring-fill-outer" id="ringTrades" cx="75" cy="75" r="60" stroke-width="10" stroke-linecap="round" transform="rotate(-90 75 75)"></circle>
+                      <circle class="ring-fill ring-fill-middle" id="ringLoss" cx="75" cy="75" r="46" stroke-width="10" stroke-linecap="round" transform="rotate(-90 75 75)"></circle>
+                      <circle class="ring-fill ring-fill-inner" id="ringRules" cx="75" cy="75" r="32" stroke-width="10" stroke-linecap="round" transform="rotate(-90 75 75)"></circle>
+                    </svg>
+                  </div>
+                  <div class="rings-legend">
+                    <div class="legend-item legend-outer">
+                      <span class="legend-dot"></span>
+                      <div class="legend-info">
+                        <span class="legend-label">Trades</span>
+                        <strong class="legend-val" id="legendTradesVal">0/4</strong>
+                      </div>
+                    </div>
+                    <div class="legend-item legend-middle">
+                      <span class="legend-dot"></span>
+                      <div class="legend-info">
+                        <span class="legend-label">Loss Limit</span>
+                        <strong class="legend-val" id="legendLossVal">0.00R / -2.00R</strong>
+                      </div>
+                    </div>
+                    <div class="legend-item legend-inner">
+                      <span class="legend-dot"></span>
+                      <div class="legend-info">
+                        <span class="legend-label">Rules Followed</span>
+                        <strong class="legend-val" id="legendRulesVal">100%</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="panel ios-metrics-widget" aria-label="Performance metrics">
+                <div class="panel-head">
+                  <div>
+                    <p class="eyebrow">Performance</p>
+                    <h2>Key metrics</h2>
+                  </div>
+                </div>
+                <div class="metrics-grid-compact">
+                  <div class="metric-item">
+                    <span class="metric-label">Expectancy</span>
+                    <strong class="metric-value" id="expectancyMetric">0.00R</strong>
+                    <span class="metric-desc">Average edge</span>
+                  </div>
+                  <div class="metric-item">
+                    <span class="metric-label">Win Rate</span>
+                    <strong class="metric-value" id="winRateMetric">0%</strong>
+                    <span class="metric-desc">Wins / closed</span>
+                  </div>
+                  <div class="metric-item">
+                    <span class="metric-label">Profit Factor</span>
+                    <strong class="metric-value" id="profitFactorMetric">0.00</strong>
+                    <span class="metric-desc">Gross W / L</span>
+                  </div>
+                  <div class="metric-item">
+                    <span class="metric-label">Max Drawdown</span>
+                    <strong class="metric-value" id="drawdownMetric">0.00R</strong>
+                    <span class="metric-desc">Peak-to-trough</span>
+                  </div>
+                </div>
+              </section>
             </div>
 
+
+
             <section class="panel"><div class="panel-head"><div><p class="eyebrow">Workflow</p><h2>Today status</h2></div></div><div class="insight-grid" id="workflowStatus"></div></section>
+          </section>
+
+          <section class="view" id="missions" data-title="Missions" data-kicker="Motivation">
+            <!-- XP Status Widget -->
+            <section class="panel xp-status-panel">
+              <div class="xp-rainbow-glow"></div>
+              <div class="xp-status-content">
+                <div class="xp-badge-wrap">
+                  <div class="xp-badge" id="xpLevelBadge">Lvl 1</div>
+                </div>
+                <div class="xp-details">
+                  <span class="xp-kicker" id="xpTitleLabel">Discipline Level:</span>
+                  <h2 class="xp-level-title" id="xpLevelTitle">Impulsive Novice</h2>
+                  <div class="xp-bar-container">
+                    <div class="xp-bar-fill" id="xpBarFill" style="width: 0%;"></div>
+                  </div>
+                  <span class="xp-numerical" id="xpNumerical">0 / 100 XP</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Daily Micro-Missions -->
+            <section class="panel daily-quests-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Daily habits</p>
+                  <h2>Daily Quests</h2>
+                </div>
+              </div>
+              <div class="quests-grid">
+                <div class="quest-item" id="questPlanTile">
+                  <div class="quest-icon">☀️</div>
+                  <div class="quest-info">
+                    <strong>Pre-market Plan</strong>
+                    <span>Lock in bias & levels (+10 XP)</span>
+                  </div>
+                  <div class="quest-status" id="questPlanStatus">Pending</div>
+                </div>
+                <div class="quest-item" id="questRiskTile">
+                  <div class="quest-icon">🔒</div>
+                  <div class="quest-info">
+                    <strong>Risk Control Shield</strong>
+                    <span>Daily loss & trade limit respected (+10 XP)</span>
+                  </div>
+                  <div class="quest-status" id="questRiskStatus">Pending</div>
+                </div>
+                <div class="quest-item" id="questReviewTile">
+                  <div class="quest-icon">🌙</div>
+                  <div class="quest-info">
+                    <strong>Close-out Review</strong>
+                    <span>Review the day's trades (+10 XP)</span>
+                  </div>
+                  <div class="quest-status" id="questReviewStatus">Pending</div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Epic Mission Panel -->
+            <section class="panel reward-mission-panel" id="rewardMissionPanel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Mindfulness incentive</p>
+                  <h2>Epic Reward Mission</h2>
+                </div>
+              </div>
+              
+              <!-- 1. Setup View -->
+              <div class="reward-state-view" id="rewardSetupView">
+                <p class="reward-desc">Set a self-discipline target and tie it to a real-world reward to train your trading psychology.</p>
+                <form id="rewardSetupForm" class="reward-setup-form">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <select id="rewardTargetType" required>
+                        <option value="streak">3-Trade Compliance Streak</option>
+                        <option value="streak5">5-Trade Compliance Streak</option>
+                        <option value="compliance">90% Compliance (Last 10 trades)</option>
+                        <option value="rgain">Gain 5R Multiple</option>
+                      </select>
+                      <label class="floating-label">Target Goal</label>
+                    </div>
+                    <div class="form-group">
+                      <input id="rewardNameInput" required placeholder=" " maxlength="40" />
+                      <label class="floating-label">My Reward (e.g. Steak Dinner 🥩)</label>
+                    </div>
+                  </div>
+                  <button class="primary-button" type="submit" id="btnActivateReward">Activate Mission</button>
+                </form>
+              </div>
+
+              <!-- 2. Progress View -->
+              <div class="reward-state-view hidden" id="rewardProgressView">
+                <div class="reward-progress-header">
+                  <div class="reward-goal-details">
+                    <span class="reward-goal-label">ACTIVE MISSION:</span>
+                    <strong class="reward-goal-title" id="rewardProgressGoal">Compliance Streak</strong>
+                  </div>
+                  <div class="reward-prize">
+                    <span class="prize-tag">🎁 Reward: <strong id="rewardProgressPrize">Steak Dinner</strong></span>
+                  </div>
+                </div>
+                <div class="reward-progress-bar-wrap">
+                  <div class="reward-progress-bar-fill" id="rewardProgressBarFill" style="width: 0%;"></div>
+                </div>
+                <div class="reward-progress-footer">
+                  <span class="progress-text" id="rewardProgressText">Progress: 0 / 5</span>
+                  <button class="ghost-button danger" type="button" id="btnCancelReward" style="padding: 4px 8px; font-size: 11px;">Cancel Mission</button>
+                </div>
+              </div>
+
+              <!-- 3. Completed View -->
+              <div class="reward-state-view hidden" id="rewardCompletedView">
+                <div class="reward-completed-content">
+                  <div class="reward-badge-glow">🏆</div>
+                  <h3>Mission Accomplished!</h3>
+                  <p class="reward-congrats">You stayed disciplined and achieved your goal.</p>
+                  <div class="reward-gift-box">
+                    <span class="gift-icon">🎁</span>
+                    <strong id="rewardCompletedPrize">Steak Dinner</strong>
+                  </div>
+                  <button class="primary-button reward-claim-btn" type="button" id="btnResetReward">Claim & Reset</button>
+                </div>
+              </div>
+            </section>
+
+            <!-- Achievement Hall of Fame -->
+            <section class="panel achievements-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Hall of fame</p>
+                  <h2>Redeemed Achievements</h2>
+                </div>
+              </div>
+              <div class="achievements-grid" id="achievementsGrid">
+                <!-- Achievements list will be injected here dynamically -->
+              </div>
+            </section>
           </section>
 
           <section class="view" id="journal" data-title="Journal" data-kicker="Execution">
@@ -143,90 +386,18 @@
                 </div>
               </div>
               <div class="sop-timeline" id="sopTimeline"></div>
+              <div class="zero-state-card" id="timelineZeroState" style="display: none;">
+                <div class="zero-state-artwork">
+                  <div class="glow-orb" style="background: radial-gradient(circle, rgba(52, 199, 89, 0.2) 0%, transparent 70%);"></div>
+                  <svg class="artwork-svg" viewBox="0 0 100 100">
+                    <line x1="50" y1="20" x2="50" y2="80" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4,4"></line>
+                    <circle cx="50" cy="50" r="6" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2"></circle>
+                  </svg>
+                </div>
+                <h3>Empty Journal Trail</h3>
+                <p>Log a trade using the "Log Trade" button to start your timeline.</p>
+              </div>
             </section>
-
-            <details class="soft-disclosure capture-disclosure" id="captureTradeDetails">
-              <summary>Capture Trade</summary>
-              <form class="panel trade-form" id="tradeForm">
-                <div class="panel-head">
-                  <div>
-                    <p class="eyebrow" id="tradeFormMode">Open trade</p>
-                    <h2>Start trade</h2>
-                  </div>
-                  <button class="ghost-button hidden" type="button" id="cancelEditBtn">Cancel</button>
-                </div>
-
-                <input type="hidden" name="id" />
-                <div class="form-row">
-                  <label>SOP<select name="sopId" id="tradeSopSelect"></select></label>
-                  <label>Account<select name="accountId" id="tradeAccountSelect"></select></label>
-                </div>
-                <div class="form-row">
-                  <label>Date<input name="date" type="date" required /></label>
-                  <label>Symbol<input name="symbol" maxlength="16" required /></label>
-                </div>
-                <label>Setup<select name="setup" id="setupSelect"></select></label>
-                <div class="form-row">
-                  <label>Direction<select name="direction"><option>Long</option><option>Short</option></select></label>
-                  <label>Risk ($)<input name="risk" type="number" min="1" step="1" required /></label>
-                </div>
-                <label>Entry Plan<textarea name="entryPlan" rows="3" placeholder="Why this trade is valid before it ends."></textarea></label>
-                <div class="form-row">
-                  <label>Stop Plan<input name="stopPlan" placeholder="Invalidation / stop idea" /></label>
-                  <label>Target Plan<input name="targetPlan" placeholder="Target / scale idea" /></label>
-                </div>
-
-                <details class="advanced-fields">
-                  <summary>Close or add details</summary>
-                  <div class="advanced-content">
-                    <div class="form-row">
-                      <label>Grade<select name="grade"><option>A</option><option>B</option><option>C</option></select></label>
-                      <label>Net P&L ($)<input name="pnl" type="number" step="1" placeholder="Leave blank while trade is open" /></label>
-                    </div>
-                    <div class="form-row">
-                      <label>Rule followed<select name="rule"><option value="true">Yes</option><option value="false">No</option></select></label>
-                      <label>Emotion<select name="emotion"><option>Calm</option><option>Focused</option><option>FOMO</option><option>Revenge</option><option>Hesitant</option></select></label>
-                    </div>
-                    <div class="checklist">
-                      <label><input type="checkbox" name="hasPlan" /> Plan</label>
-                      <label><input type="checkbox" name="hasTrigger" /> Trigger</label>
-                      <label><input type="checkbox" name="hasStop" /> Stop</label>
-                      <label><input type="checkbox" name="hasTarget" /> Target</label>
-                      <label><input type="checkbox" name="emotionControlled" /> Controlled</label>
-                    </div>
-                    <label>TradingView Link<input name="tradingViewUrl" type="url" placeholder="https://www.tradingview.com/chart/..." /></label>
-                    <label>Chart Image URL<input name="imageUrl" type="url" placeholder="https://..." /></label>
-                    <label>Upload Screenshots<input name="imageFile" type="file" accept="image/*" multiple /></label>
-                    <label>Exit Note
-                      <div class="markdown-editor-container">
-                        <div class="md-toolbar">
-                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '**', '**')" title="Bold">B</button>
-                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '*', '*')" title="Italic">I</button>
-                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '==', '==')" title="Highlight">Hi</button>
-                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '- ', '')" title="List">•</button>
-                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '> ', '')" title="Quote">"</button>
-                        </div>
-                        <textarea name="exitNote" rows="3" placeholder="Fill after the trade is closed."></textarea>
-                      </div>
-                    </label>
-                    <label>General Note
-                      <div class="markdown-editor-container">
-                        <div class="md-toolbar">
-                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '**', '**')" title="Bold">B</button>
-                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '*', '*')" title="Italic">I</button>
-                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '==', '==')" title="Highlight">Hi</button>
-                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '- ', '')" title="List">•</button>
-                          <button type="button" class="md-btn" onclick="insertMarkdown(this, '> ', '')" title="Quote">"</button>
-                        </div>
-                        <textarea name="note" rows="3"></textarea>
-                      </div>
-                    </label>
-                  </div>
-                </details>
-
-                <button class="primary-button" type="submit" id="saveTradeBtn">Start Trade</button>
-              </form>
-            </details>
 
             <section class="entry-layout">
 
@@ -269,13 +440,24 @@
               <button class="segment" data-review-panel="charts" type="button">Charts</button>
               <button class="segment" data-review-panel="calendar" type="button">Calendar</button>
               <button class="segment" data-review-panel="playbook" type="button">Playbook</button>
-              <button class="segment" data-review-panel="backtester" type="button">Backtester</button>
             </div>
 
             <div class="review-panel active" id="review-insights">
               <section class="panel">
                 <div class="panel-head"><div><p class="eyebrow">Review</p><h2>Current read</h2></div></div>
                 <div class="insight-grid" id="summaryCards"></div>
+              </section>
+
+              <section class="panel heatmap-panel">
+                <div class="panel-head">
+                  <div>
+                    <p class="eyebrow">Mindfulness & Consistency</p>
+                    <h2>Discipline heatmap</h2>
+                  </div>
+                </div>
+                <div class="heatmap-container" style="margin-top:14px; overflow-x:auto; padding-bottom:8px;">
+                  <div class="heatmap-grid" id="disciplineHeatmap"></div>
+                </div>
               </section>
               <section class="panel" id="insightDetailPanel" style="display:none;">
                 <div class="panel-head"><div><p class="eyebrow" id="insightDetailKicker">Detail</p><h2 id="insightDetailTitle">Metric</h2></div><button class="ghost-button" id="closeInsightDetail">Close</button></div>
@@ -330,150 +512,6 @@
               </section>
             </div>
 
-            <div class="review-panel" id="review-backtester">
-              <div class="backtester-grid">
-                <!-- Left Panel: Form & Mock List -->
-                <div class="panel" style="padding:22px;">
-                  <div class="panel-head">
-                    <div>
-                      <p class="eyebrow">Sandbox</p>
-                      <h2>SOP Backtest Sandbox</h2>
-                    </div>
-                  </div>
-                  
-                  <div class="form-row" style="margin-top:14px;">
-                    <label>SOP
-                      <select id="backtestSopSelect" style="width:100%;"></select>
-                    </label>
-                    <label>Initial Capital ($)
-                      <input id="backtestCapital" type="number" value="10000" min="100" step="100" />
-                    </label>
-                  </div>
-                  
-                  <div class="form-row">
-                    <label>Risk Mode
-                      <select id="backtestRiskMode">
-                        <option value="fixed-usd">Fixed USD ($)</option>
-                        <option value="fixed-percent">Fixed Percent (%)</option>
-                      </select>
-                    </label>
-                    <label>Risk Value
-                      <input id="backtestRiskVal" type="number" value="100" min="1" step="10" />
-                    </label>
-                  </div>
-
-                  <div class="segment-control compact" style="margin-bottom:14px; margin-top:10px;">
-                    <button class="segment active" id="btnBacktestModeBatch" type="button">Batch Input</button>
-                    <button class="segment" id="btnBacktestModeManual" type="button">Manual Input</button>
-                  </div>
-
-                  <!-- Batch Mode -->
-                  <div id="backtestBatchArea" style="display:grid; gap:10px;">
-                    <label>Batch Paste R-Multiples
-                      <textarea id="backtestBatchR" rows="3" placeholder="e.g. 2, -1, 3.5, -1, 1.5, 4, -1"></textarea>
-                    </label>
-                    <button class="primary-button" id="btnRunBatchBacktest" type="button">Generate Curve</button>
-                  </div>
-
-                  <!-- Manual Mode -->
-                  <div id="backtestManualArea" class="hidden" style="display:grid; gap:10px;">
-                    <div class="form-row">
-                      <label>R Multiple
-                        <input id="backtestManualR" type="number" step="0.1" placeholder="e.g. 2.5 or -1" />
-                      </label>
-                      <label>Setup Name (Optional)
-                        <input id="backtestManualSetup" type="text" placeholder="e.g. Breakout" />
-                      </label>
-                    </div>
-                    <button class="primary-button" id="btnAddManualMock" type="button">Add Trade</button>
-                  </div>
-
-                  <div style="margin-top:16px; display:flex; gap:10px;">
-                    <button class="ghost-button" id="btnSaveBacktest" type="button" style="flex:1;">Save Run</button>
-                    <button class="ghost-button danger" id="btnClearBacktest" type="button" style="flex:1;">Clear Sandbox</button>
-                  </div>
-
-                  <div style="margin-top:24px;">
-                    <h3 style="font-size:15px; margin-bottom:8px;">Mock Trades (<span id="backtestCount">0</span>)</h3>
-                    <div class="table-wrap compact-table" style="max-height:160px; overflow-y:auto; border:1px solid var(--hairline); border-radius:10px;">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>#</th>
-                            <th>R-Multiple</th>
-                            <th>P&L ($)</th>
-                            <th></th>
-                          </tr>
-                        </thead>
-                        <tbody id="backtestRows"></tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Right Panel: Analytics & Saved runs -->
-                <div style="display:flex; flex-direction:column; gap:20px;">
-                  <div class="panel" style="padding:22px;">
-                    <div class="panel-head">
-                      <div>
-                        <p class="eyebrow">Performance</p>
-                        <h2>Backtest Analytics</h2>
-                      </div>
-                    </div>
-                    
-                    <div class="chart-container" style="position:relative; margin:16px 0;">
-                      <svg class="line-chart" id="backtestChart" viewBox="0 0 760 260" style="height:200px; width:100%;"></svg>
-                    </div>
-
-                    <div class="metric-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px;">
-                      <article class="metric-card mini" style="padding:10px;"><span>Profit (R)</span><strong id="btMetricProfitR" style="font-size:18px;">0.00R</strong></article>
-                      <article class="metric-card mini" style="padding:10px;"><span>Profit ($)</span><strong id="btMetricProfitUSD" style="font-size:18px;">$0</strong></article>
-                      <article class="metric-card mini" style="padding:10px;"><span>Win Rate</span><strong id="btMetricWinRate" style="font-size:18px;">0%</strong></article>
-                      <article class="metric-card mini" style="padding:10px;"><span>Expectancy</span><strong id="btMetricExpectancy" style="font-size:18px;">0.00R</strong></article>
-                      <article class="metric-card mini" style="padding:10px;"><span>Max Drawdown</span><strong id="btMetricMaxDD" style="font-size:18px;">0.00R</strong></article>
-                      <article class="metric-card mini" style="padding:10px;"><span>Profit Factor</span><strong id="btMetricPF" style="font-size:18px;">0.00</strong></article>
-                    </div>
-                  </div>
-
-                  <!-- Execution Gap Contrast Panel -->
-                  <div class="panel" id="btComparePanel" style="display:none; padding:22px;">
-                    <div class="panel-head">
-                      <div>
-                        <p class="eyebrow">Execution Gap</p>
-                        <h3>Backtest vs Live Execution</h3>
-                      </div>
-                    </div>
-                    <div style="display:grid; gap:10px; margin-top:14px;">
-                      <div style="display:flex; justify-content:space-between; font-size:13px; border-bottom:1px solid var(--hairline); padding-bottom:6px;">
-                        <span>Win Rate:</span>
-                        <strong id="compWinRate">Live: 0% / BT: 0% (Gap: 0%)</strong>
-                      </div>
-                      <div style="display:flex; justify-content:space-between; font-size:13px; border-bottom:1px solid var(--hairline); padding-bottom:6px;">
-                        <span>Expectancy:</span>
-                        <strong id="compExpectancy">Live: 0R / BT: 0R (Gap: 0R)</strong>
-                      </div>
-                      <div style="display:flex; justify-content:space-between; font-size:13px;">
-                        <span>Profit Factor:</span>
-                        <strong id="compPF">Live: 0 / BT: 0</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Saved Runs panel -->
-                  <div class="panel" style="padding:22px;">
-                    <div class="panel-head">
-                      <div>
-                        <p class="eyebrow">Saved Library</p>
-                        <h3>Saved Backtests</h3>
-                      </div>
-                    </div>
-                    <div id="savedBacktestList" style="display:grid; gap:10px; margin-top:14px; max-height:180px; overflow-y:auto;">
-                      <p class="muted">No saved backtests for this SOP.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </section>
 
           <section class="view" id="settings" data-title="System" data-kicker="Preferences">
@@ -521,6 +559,10 @@
               <span class="dock-icon">✍️</span>
               <span class="dock-label">Journal</span>
             </button>
+            <button class="dock-item" data-dock-module="missions" title="Missions">
+              <span class="dock-icon">🎯</span>
+              <span class="dock-label">Missions</span>
+            </button>
             <button class="dock-item" data-dock-module="review" title="Review">
               <span class="dock-icon">📊</span>
               <span class="dock-label">Review</span>
@@ -533,18 +575,271 @@
         </nav>
       </div>
 
-    <div class="modal-backdrop hidden" id="modalBackdrop" aria-hidden="true">
-      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-        <div class="modal-head">
-          <div><p class="eyebrow" id="modalKicker">Detail</p><h2 id="modalTitle">Trade detail</h2></div>
-          <button class="icon-button" id="modalCloseBtn" aria-label="Close modal">x</button>
+    <!-- iOS Trade Detail Sheet -->
+    <div class="sheet-backdrop hidden" id="detailSheet" aria-hidden="true">
+      <div class="sheet-card" role="dialog" aria-modal="true">
+        <div class="sheet-bar"></div>
+        <div class="sheet-header">
+          <div>
+            <p class="eyebrow" id="detailSheetKicker">Detail</p>
+            <h2 id="detailSheetTitle">Trade detail</h2>
+          </div>
+          <button class="icon-button sheet-close" type="button" aria-label="Close sheet">✕</button>
         </div>
-        <div id="modalBody"></div>
+        <div class="sheet-body" id="detailSheetBody"></div>
       </div>
+    </div>
+
+    <!-- Action Bubble Menu -->
+    <div class="bubble-menu hidden" id="bubbleMenu" role="menu">
+      <button class="bubble-menu-item" id="bubbleBtnDetail" role="menuitem">
+        <span class="bubble-menu-icon">📊</span> View Detail
+      </button>
+      <button class="bubble-menu-item" id="bubbleBtnEdit" role="menuitem">
+        <span class="bubble-menu-icon">✍️</span> Edit Record
+      </button>
+      <button class="bubble-menu-item danger" id="bubbleBtnDelete" role="menuitem">
+        <span class="bubble-menu-icon">🗑️</span> Delete Record
+      </button>
+      <div class="bubble-menu-arrow"></div>
     </div>
 
     <div class="chart-tooltip hidden" id="chartTooltip" aria-hidden="true"></div>
     <div class="toast-stack" id="toastStack" aria-live="polite"></div>
-    <script src="app.js?v=date-save-1"></script>
+
+    <!-- iOS Modal Sheets -->
+    <div class="sheet-backdrop hidden" id="planSheet" aria-hidden="true">
+      <div class="sheet-card" role="dialog" aria-modal="true">
+        <div class="sheet-bar"></div>
+        <div class="sheet-header">
+          <div>
+            <p class="eyebrow">Pre-market</p>
+            <h2>Today's Plan</h2>
+          </div>
+          <button class="icon-button sheet-close" type="button" aria-label="Close sheet">✕</button>
+        </div>
+        <div class="sheet-body">
+          <form id="planForm">
+            <div class="form-group">
+              <input name="workflowDate" type="date" required placeholder=" " />
+              <label class="floating-label">Workflow Date</label>
+            </div>
+            <div class="form-group">
+              <input name="bias" placeholder=" " />
+              <label class="floating-label">Market Bias</label>
+            </div>
+            <div class="form-group">
+              <textarea name="levels" rows="3" placeholder=" "></textarea>
+              <label class="floating-label">Key Levels</label>
+            </div>
+            <div class="form-group">
+              <input name="allowedSetups" placeholder=" " />
+              <label class="floating-label">Allowed Setups</label>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <input name="maxLossR" type="number" step="0.25" placeholder=" " />
+                <label class="floating-label">Max Loss (R)</label>
+              </div>
+              <div class="form-group">
+                <input name="maxTrades" type="number" min="1" step="1" placeholder=" " />
+                <label class="floating-label">Max Trades</label>
+              </div>
+            </div>
+            <button class="primary-button" type="submit">Save Plan</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="sheet-backdrop hidden" id="reviewSheet" aria-hidden="true">
+      <div class="sheet-card" role="dialog" aria-modal="true">
+        <div class="sheet-bar"></div>
+        <div class="sheet-header">
+          <div>
+            <p class="eyebrow">Daily close</p>
+            <h2>Daily Review</h2>
+          </div>
+          <button class="icon-button sheet-close" type="button" aria-label="Close sheet">✕</button>
+        </div>
+        <div class="sheet-body">
+          <form id="reviewForm">
+            <div class="form-group">
+              <input name="workflowDate" type="date" required placeholder=" " />
+              <label class="floating-label">Workflow Date</label>
+            </div>
+            <div class="form-group">
+              <textarea name="keep" rows="3" placeholder=" "></textarea>
+              <label class="floating-label">Keep</label>
+            </div>
+            <div class="form-group">
+              <textarea name="remove" rows="3" placeholder=" "></textarea>
+              <label class="floating-label">Remove</label>
+            </div>
+            <div class="form-group">
+              <textarea name="focus" rows="3" placeholder=" "></textarea>
+              <label class="floating-label">Next Focus</label>
+            </div>
+            <button class="primary-button" type="submit">Save Review</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="sheet-backdrop hidden" id="tradeFormSheet" aria-hidden="true">
+      <div class="sheet-card" role="dialog" aria-modal="true">
+        <div class="sheet-bar"></div>
+        <div class="sheet-header">
+          <div>
+            <p class="eyebrow" id="tradeFormMode">Open trade</p>
+            <h2 id="tradeFormTitle">Start Trade</h2>
+          </div>
+          <button class="ghost-button hidden" type="button" id="cancelEditBtn">Cancel</button>
+          <button class="icon-button sheet-close" type="button" aria-label="Close sheet">✕</button>
+        </div>
+        <div class="sheet-body">
+          <form class="trade-form" id="tradeForm">
+            <input type="hidden" name="id" />
+            <div class="form-row">
+              <div class="form-group">
+                <select name="sopId" id="tradeSopSelect" required></select>
+                <label class="floating-label">SOP</label>
+              </div>
+              <div class="form-group">
+                <select name="accountId" id="tradeAccountSelect" required></select>
+                <label class="floating-label">Account</label>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <input name="date" type="date" required placeholder=" " />
+                <label class="floating-label">Date</label>
+              </div>
+              <div class="form-group">
+                <input name="symbol" maxlength="16" required placeholder=" " />
+                <label class="floating-label">Symbol</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <select name="setup" id="setupSelect" required></select>
+              <label class="floating-label">Setup</label>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <select name="direction">
+                  <option>Long</option>
+                  <option>Short</option>
+                </select>
+                <label class="floating-label">Direction</label>
+              </div>
+              <div class="form-group">
+                <input name="risk" type="number" min="1" step="1" required placeholder=" " />
+                <label class="floating-label">Risk ($)</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <textarea name="entryPlan" rows="3" placeholder=" "></textarea>
+              <label class="floating-label">Entry Plan</label>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <input name="stopPlan" placeholder=" " />
+                <label class="floating-label">Stop Plan</label>
+              </div>
+              <div class="form-group">
+                <input name="targetPlan" placeholder=" " />
+                <label class="floating-label">Target Plan</label>
+              </div>
+            </div>
+
+            <details class="advanced-fields">
+              <summary>Close or add details</summary>
+              <div class="advanced-content">
+                <div class="form-row">
+                  <div class="form-group">
+                    <select name="grade">
+                      <option>A</option>
+                      <option>B</option>
+                      <option>C</option>
+                    </select>
+                    <label class="floating-label">Grade</label>
+                  </div>
+                  <div class="form-group">
+                    <input name="pnl" type="number" step="1" placeholder=" " />
+                    <label class="floating-label">Net P&L ($)</label>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <select name="rule">
+                      <option value="true">Yes</option>
+                      <option value="false">No</option>
+                    </select>
+                    <label class="floating-label">Rule followed</label>
+                  </div>
+                  <div class="form-group">
+                    <select name="emotion">
+                      <option>Calm</option>
+                      <option>Focused</option>
+                      <option>FOMO</option>
+                      <option>Revenge</option>
+                      <option>Hesitant</option>
+                    </select>
+                    <label class="floating-label">Emotion</label>
+                  </div>
+                </div>
+                <div class="checklist">
+                  <label><input type="checkbox" name="hasPlan" /> Plan</label>
+                  <label><input type="checkbox" name="hasTrigger" /> Trigger</label>
+                  <label><input type="checkbox" name="hasStop" /> Stop</label>
+                  <label><input type="checkbox" name="hasTarget" /> Target</label>
+                  <label><input type="checkbox" name="emotionControlled" /> Controlled</label>
+                </div>
+                <div class="form-group">
+                  <input name="tradingViewUrl" type="url" placeholder=" " />
+                  <label class="floating-label">TradingView Link</label>
+                </div>
+                <div class="form-group">
+                  <input name="imageUrl" type="url" placeholder=" " />
+                  <label class="floating-label">Chart Image URL</label>
+                </div>
+                <div class="form-group">
+                  <input name="imageFile" type="file" accept="image/*" multiple placeholder=" " />
+                  <label class="floating-label">Upload Screenshots</label>
+                </div>
+                <label>Exit Note
+                  <div class="markdown-editor-container">
+                    <div class="md-toolbar">
+                      <button type="button" class="md-btn" onclick="insertMarkdown(this, '**', '**')" title="Bold">B</button>
+                      <button type="button" class="md-btn" onclick="insertMarkdown(this, '*', '*')" title="Italic">I</button>
+                      <button type="button" class="md-btn" onclick="insertMarkdown(this, '==', '==')" title="Highlight">Hi</button>
+                      <button type="button" class="md-btn" onclick="insertMarkdown(this, '- ', '')" title="List">•</button>
+                      <button type="button" class="md-btn" onclick="insertMarkdown(this, '> ', '')" title="Quote">"</button>
+                    </div>
+                    <textarea name="exitNote" rows="3" placeholder="Fill after the trade is closed."></textarea>
+                  </div>
+                </label>
+                <label>General Note
+                  <div class="markdown-editor-container">
+                    <div class="md-toolbar">
+                      <button type="button" class="md-btn" onclick="insertMarkdown(this, '**', '**')" title="Bold">B</button>
+                      <button type="button" class="md-btn" onclick="insertMarkdown(this, '*', '*')" title="Italic">I</button>
+                      <button type="button" class="md-btn" onclick="insertMarkdown(this, '==', '==')" title="Highlight">Hi</button>
+                      <button type="button" class="md-btn" onclick="insertMarkdown(this, '- ', '')" title="List">•</button>
+                      <button type="button" class="md-btn" onclick="insertMarkdown(this, '> ', '')" title="Quote">"</button>
+                    </div>
+                    <textarea name="note" rows="3"></textarea>
+                  </div>
+                </label>
+              </div>
+            </details>
+
+            <button class="primary-button" type="submit" id="saveTradeBtn">Start Trade</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js?v=phase11-analytics-1"></script>
   </body>
 </html>

@@ -281,16 +281,14 @@ function normalizeState(raw) {
     accounts: raw.accounts || [],
     activeSopId: raw.activeSopId || "",
     activeAccountId: raw.activeAccountId || "",
-    backtests: (raw.backtests || []).map(bt => ({
-      id: String(bt.id || uid()),
-      sopId: String(bt.sopId || ""),
-      sopName: String(bt.sopName || ""),
-      capital: Number(bt.capital || 10000),
-      riskMode: bt.riskMode || "fixed-usd",
-      riskVal: Number(bt.riskVal || 100),
-      trades: Array.isArray(bt.trades) ? bt.trades.map(Number) : [],
-      date: bt.date || todayISO()
-    }))
+    backtests: [],
+    rewardMission: raw.rewardMission || null,
+    experience: {
+      xp: raw.experience?.xp || 0,
+      level: raw.experience?.level || 1,
+      achievements: raw.experience?.achievements || [],
+      dailyXpLog: raw.experience?.dailyXpLog || {}
+    }
   });
 }
 
@@ -632,6 +630,16 @@ function renderAll() {
   
   // Custom panels collapse
   initCollapsiblePanels();
+  updateWorkflowTiles();
+  renderActivityRings();
+
+  // Phase 9 Mindfulness & Reward System
+  updateRewardMission();
+  updateMindfulnessBanner();
+  renderDisciplineHeatmap();
+
+  // Phase 10 Dedicated Missions View & Self-Discipline Rewards System
+  renderMissions();
 }
 
 function renderHomeSummary() {
@@ -782,12 +790,23 @@ function renderMetrics() {
   setText("profitFactorMetric", Number.isFinite(m.profitFactor) ? m.profitFactor.toFixed(2) : "inf");
   setText("drawdownMetric", formatR(m.maxDrawdown));
   setText("tradeCountLabel", `${m.count} trades`);
-  document.getElementById("expectancyMetric").closest(".metric-card").classList.toggle("negative", m.expectancy < 0);
-  document.getElementById("drawdownMetric").closest(".metric-card").classList.toggle("negative", m.maxDrawdown < 0);
+  document.getElementById("expectancyMetric")?.closest(".metric-item")?.classList.toggle("negative", m.expectancy < 0);
+  document.getElementById("drawdownMetric")?.closest(".metric-item")?.classList.toggle("negative", m.maxDrawdown < 0);
 }
 
 function renderCharts() {
-  renderLineChart("equityChart", equitySeries(), { negative: false });
+  const closedCount = closedTrades().length;
+  const chartSvg = document.getElementById("equityChart");
+  const zeroState = document.getElementById("equityZeroState");
+  
+  if (closedCount === 0) {
+    if (chartSvg) chartSvg.style.display = "none";
+    if (zeroState) zeroState.style.display = "flex";
+  } else {
+    if (chartSvg) chartSvg.style.display = "block";
+    if (zeroState) zeroState.style.display = "none";
+    renderLineChart("equityChart", equitySeries(), { negative: false });
+  }
   renderLineChart("drawdownChart", drawdownSeries(), { negative: true });
 }
 
@@ -811,6 +830,7 @@ function drawdownSeries() {
 
 function renderLineChart(id, seriesData, options = {}) {
   const svg = document.getElementById(id);
+  if (!svg) return;
   const width = 760;
   const height = id === "equityChart" ? 300 : 260;
   const pad = 32;
@@ -828,16 +848,29 @@ function renderLineChart(id, seriesData, options = {}) {
   const line = points.map((p) => `${p.x},${p.y}`).join(" ");
   const area = `${pad},${zeroY} ${line} ${width - pad},${zeroY}`;
   const last = points.at(-1);
+
+  const themeFillColor = options.negative ? "#ff453a" : "#0071e3";
+
   svg.innerHTML = `
+    <defs>
+      <linearGradient id="${id}Gradient" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${themeFillColor}" stop-opacity="0.25" />
+        <stop offset="100%" stop-color="${themeFillColor}" stop-opacity="0" />
+      </linearGradient>
+    </defs>
     <line class="grid-line" x1="${pad}" y1="${pad}" x2="${width - pad}" y2="${pad}"></line>
     <text class="axis-label" x="${pad}" y="${pad - 10}">${formatR(max)}</text>
     <line class="zero-line" x1="${pad}" y1="${zeroY}" x2="${width - pad}" y2="${zeroY}"></line>
     <text class="axis-label" x="${pad}" y="${zeroY - 8}">0R</text>
     <text class="axis-label" x="${pad}" y="${height - 8}">${formatR(min)}</text>
-    <polygon class="chart-area" points="${area}" fill="${options.negative ? "#d33f3f" : "#0071e3"}"></polygon>
+    <polygon class="chart-area-fill" points="${area}" fill="url(#${id}Gradient)"></polygon>
     <polyline class="chart-line ${options.negative ? "red" : ""}" points="${line}"></polyline>
     ${points.map((p, index) => `<circle class="chart-dot ${index === points.length - 1 ? "last" : ""}" cx="${p.x}" cy="${p.y}" r="${index === points.length - 1 ? 5.5 : 4}"></circle>`).join("")}
     ${last ? `<circle class="chart-pulse" cx="${last.x}" cy="${last.y}" r="11"></circle>` : ""}
+    
+    <!-- Hover items -->
+    <line class="chart-crosshair" id="${id}Crosshair" x1="0" y1="${pad}" x2="0" y2="${height - pad}"></line>
+    <circle class="chart-active-dot" id="${id}ActiveDot" cx="0" cy="0"></circle>
   `;
 
   svg.onmousemove = (e) => {
@@ -852,23 +885,48 @@ function renderLineChart(id, seriesData, options = {}) {
         nearest = p;
       }
     }
+    
     const tooltip = document.getElementById("chartTooltip");
-    if (tooltip && nearest && minDist < 40) {
-      const label = nearest.label ? `<strong>${safe(nearest.label)}</strong><br>` : "";
-      const detail = nearest.detail ? `<span style="opacity:0.8">${safe(nearest.detail)}</span><br>` : "";
-      tooltip.innerHTML = `${label}${detail}Total: <strong>${formatR(nearest.value)}</strong>`;
-      const tooltipX = rect.left + (nearest.x / width) * rect.width;
-      const tooltipY = rect.top + (nearest.y / height) * rect.height;
-      tooltip.style.left = tooltipX + "px";
-      tooltip.style.top = tooltipY + "px";
-      tooltip.classList.remove("hidden");
-    } else if (tooltip) {
-      tooltip.classList.add("hidden");
+    const crosshair = document.getElementById(`${id}Crosshair`);
+    const activeDot = document.getElementById(`${id}ActiveDot`);
+
+    if (nearest && minDist < 40) {
+      // Update Crosshair & Dot
+      if (crosshair) {
+        crosshair.setAttribute("x1", nearest.x);
+        crosshair.setAttribute("x2", nearest.x);
+        crosshair.style.opacity = 1;
+      }
+      if (activeDot) {
+        activeDot.setAttribute("cx", nearest.x);
+        activeDot.setAttribute("cy", nearest.y);
+        activeDot.style.opacity = 1;
+      }
+
+      // Update Tooltip
+      if (tooltip) {
+        const label = nearest.label ? `<strong>${safe(nearest.label)}</strong><br>` : "";
+        const detail = nearest.detail ? `<span style="opacity:0.8">${safe(nearest.detail)}</span><br>` : "";
+        tooltip.innerHTML = `${label}${detail}Total: <strong>${formatR(nearest.value)}</strong>`;
+        const tooltipX = rect.left + (nearest.x / width) * rect.width;
+        const tooltipY = rect.top + (nearest.y / height) * rect.height;
+        tooltip.style.left = tooltipX + "px";
+        tooltip.style.top = (tooltipY - 70) + "px"; // Hover slightly above
+        tooltip.classList.remove("hidden");
+      }
+    } else {
+      if (crosshair) crosshair.style.opacity = 0;
+      if (activeDot) activeDot.style.opacity = 0;
+      if (tooltip) tooltip.classList.add("hidden");
     }
   };
 
   svg.onmouseleave = () => {
     const tooltip = document.getElementById("chartTooltip");
+    const crosshair = document.getElementById(`${id}Crosshair`);
+    const activeDot = document.getElementById(`${id}ActiveDot`);
+    if (crosshair) crosshair.style.opacity = 0;
+    if (activeDot) activeDot.style.opacity = 0;
     if (tooltip) tooltip.classList.add("hidden");
   };
 }
@@ -1006,18 +1064,23 @@ function renderAccountManager() {
 function renderSopTimeline() {
   const target = document.getElementById("sopTimeline");
   if (!target) return;
+  const zeroState = document.getElementById("timelineZeroState");
   const groups = timelineGroups(visibleTrades());
   const days = Object.keys(groups);
+  
   if (!days.length) {
-    target.innerHTML = emptyState("No records in this SOP yet.");
-    return;
+    target.style.display = "none";
+    if (zeroState) zeroState.style.display = "flex";
+  } else {
+    target.style.display = "grid";
+    if (zeroState) zeroState.style.display = "none";
+    target.innerHTML = days.map((day) => `
+      <section class="timeline-day">
+        <div class="timeline-date"><strong>${safe(new Date(`${day}T00:00:00`).toLocaleDateString("en", { month: "short", day: "numeric" }))}</strong><span>${groups[day].length} records</span></div>
+        <div class="timeline-records">${groups[day].map(timelineCard).join("")}</div>
+      </section>
+    `).join("");
   }
-  target.innerHTML = days.map((day) => `
-    <section class="timeline-day">
-      <div class="timeline-date"><strong>${safe(new Date(`${day}T00:00:00`).toLocaleDateString("en", { month: "short", day: "numeric" }))}</strong><span>${groups[day].length} records</span></div>
-      <div class="timeline-records">${groups[day].map(timelineCard).join("")}</div>
-    </section>
-  `).join("");
 }
 
 function timelineCard(trade) {
@@ -1087,7 +1150,6 @@ function renderReviewInsightCards() {
 }
 
 function tradeRow(trade) {
-  const r = rValue(trade);
   return `<tr>
     <td>${safe(trade.date)}</td>
     <td>${safe(trade.symbol)} ${trade.direction === "Long" ? "up" : "down"}</td>
@@ -1096,20 +1158,29 @@ function tradeRow(trade) {
     <td>${safe(trade.grade)}</td>
     <td>${trade.rule ? "Yes" : "No"}</td>
     <td>${mediaBadges(trade)}</td>
-    <td><div class="row-actions">
-      <button class="text-button" data-detail="${trade.id}">View</button>
-      <button class="text-button" data-edit="${trade.id}">Edit</button>
-      <button class="delete-button" data-delete="${trade.id}">Delete</button>
-    </div></td>
+    <td>
+      <button class="ghost-button action-trigger-btn" data-trade-actions="${trade.id}" style="padding:4px 8px; min-height:auto;">•••</button>
+    </td>
   </tr>`;
 }
 
 function tradeCard(trade) {
   const img = imageFor(trade);
-  return `<article class="trade-card">
-    <div class="trade-card-head"><div><strong>${safe(trade.symbol)} ${safe(trade.direction)}</strong><p>${safe(trade.date)} | ${safe(trade.setup)}</p></div>${resultTag(trade)}</div>
-    <div class="trade-card-meta"><span>${trade.status === "open" ? safe(trade.entryPlan || "In progress") : `Grade ${safe(trade.grade)} | Rule ${trade.rule ? "Yes" : "No"}`}</span>${img ? `<img class="thumbnail" src="${img}" alt="Chart screenshot" />` : ""}</div>
-    <div class="row-actions"><button class="text-button" data-detail="${trade.id}">View</button><button class="text-button" data-edit="${trade.id}">${trade.status === "open" ? "Update" : "Edit"}</button>${trade.status === "open" ? `<button class="text-button" data-close-trade="${trade.id}">Close Trade</button>` : ""}<button class="delete-button" data-delete="${trade.id}">Delete</button></div>
+  return `<article class="trade-card" style="position:relative;">
+    <button class="ghost-button action-trigger-btn" data-trade-actions="${trade.id}" style="position:absolute; top:12px; right:12px; padding:4px 8px; min-height:auto; font-size:12px; z-index:10;">•••</button>
+    <div class="trade-card-head" style="padding-right:32px;">
+      <div><strong>${safe(trade.symbol)} ${safe(trade.direction)}</strong><p>${safe(trade.date)} | ${safe(trade.setup)}</p></div>
+      ${resultTag(trade)}
+    </div>
+    <div class="trade-card-meta" style="margin-top:8px;">
+      <span>${trade.status === "open" ? safe(trade.entryPlan || "In progress") : `Grade ${safe(trade.grade)} | Rule ${trade.rule ? "Yes" : "No"}`}</span>
+      ${img ? `<img class="thumbnail" src="${img}" alt="Chart screenshot" />` : ""}
+    </div>
+    ${trade.status === "open" ? `
+      <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+        <button class="ghost-button" data-close-trade="${trade.id}" style="padding:4px 10px; font-size:11px; min-height:auto;">Close Trade</button>
+      </div>
+    ` : ""}
   </article>`;
 }
 
@@ -1153,14 +1224,33 @@ function renderGroupedBars(id, grouped) {
     document.getElementById(id).innerHTML = emptyState("No data yet.");
     return;
   }
-  const max = Math.max(...rows.map((row) => Math.abs(row.expectancy)), 1);
-  document.getElementById(id).innerHTML = rows.map((row) => `
-    <div class="bar-row">
-      <strong>${safe(row.name)}</strong>
-      <div class="bar-track"><div class="bar-fill ${row.expectancy < 0 ? "negative" : ""}" style="width:${Math.max(Math.abs(row.expectancy) / max * 100, 6)}%"></div></div>
-      <span>${formatR(row.expectancy)} | ${row.count} | ${Math.round(row.winRate * 100)}%</span>
-    </div>
-  `).join("");
+  const totalCount = rows.reduce((sum, row) => sum + row.count, 0) || 1;
+  
+  document.getElementById(id).innerHTML = rows.map((row) => {
+    const volumePct = Math.max((row.count / totalCount) * 100, 10);
+    const winRatePct = Math.round(row.winRate * 100);
+    const isPositive = row.expectancy >= 0;
+    
+    return `
+      <div class="analytics-card">
+        <div class="card-info">
+          <div class="card-title-wrap">
+            <span class="card-name">${safe(row.name)}</span>
+            <span class="card-count">${row.count} trades</span>
+          </div>
+          <div class="card-metrics">
+            <span class="card-r-val ${isPositive ? "positive" : "negative"}">${formatR(row.expectancy)}</span>
+            <span class="card-winrate">${winRatePct}% win</span>
+          </div>
+        </div>
+        <div class="composite-bar-container">
+          <div class="bar-track-volume" style="width: ${volumePct}%" title="${row.count} trades (${Math.round(volumePct)}%)">
+            <div class="bar-fill-winrate ${isPositive ? "positive" : "negative"}" style="width: ${winRatePct}%" title="${winRatePct}% win rate"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
 }
 
 function renderDistribution() {
@@ -1714,6 +1804,19 @@ function playSound(type) {
       osc.start(now);
       osc.stop(now + 0.15);
     }
+  } else if (type === 'pop') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(400, now);
+    osc.frequency.exponentialRampToValueAtTime(120, now + 0.06);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.08, now + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+    osc.start(now);
+    osc.stop(now + 0.06);
   }
 }
 
@@ -1761,6 +1864,7 @@ function resetTradeForm() {
   document.getElementById("tradeFormMode").textContent = "Open trade";
   document.getElementById("saveTradeBtn").textContent = "Start Trade";
   document.getElementById("cancelEditBtn").classList.add("hidden");
+  closeSheet("tradeFormSheet");
 }
 
 function editTrade(id) {
@@ -1795,9 +1899,7 @@ function editTrade(id) {
   document.getElementById("tradeFormMode").textContent = trade.status === "open" ? "Update open trade" : "Edit closed trade";
   document.getElementById("saveTradeBtn").textContent = trade.status === "open" ? "Update Trade" : "Save Trade";
   document.getElementById("cancelEditBtn").classList.remove("hidden");
-  document.getElementById("captureTradeDetails").open = true;
-  openModule("journal");
-  form.scrollIntoView({ behavior: "smooth", block: "start" });
+  openSheet("tradeFormSheet");
 }
 
 async function saveTradeFromForm(event) {
@@ -1998,18 +2100,19 @@ function embedTradingView(id) {
 }
 
 function openModal(title, kicker, html) {
-  document.getElementById("modalTitle").textContent = title;
-  document.getElementById("modalKicker").textContent = kicker;
-  document.getElementById("modalBody").innerHTML = html;
-  const backdrop = document.getElementById("modalBackdrop");
-  backdrop.classList.remove("hidden");
-  backdrop.setAttribute("aria-hidden", "false");
+  const kickerEl = document.getElementById("detailSheetKicker");
+  const titleEl = document.getElementById("detailSheetTitle");
+  const bodyEl = document.getElementById("detailSheetBody");
+  
+  if (kickerEl) kickerEl.textContent = kicker;
+  if (titleEl) titleEl.textContent = title;
+  if (bodyEl) bodyEl.innerHTML = html;
+  
+  openSheet("detailSheet");
 }
 
 function closeModal() {
-  const backdrop = document.getElementById("modalBackdrop");
-  backdrop.classList.add("hidden");
-  backdrop.setAttribute("aria-hidden", "true");
+  closeSheet("detailSheet");
 }
 
 function toast(message, type = "info") {
@@ -2086,6 +2189,117 @@ function resetDemo() {
   toast("Demo data restored.");
 }
 
+function renderActivityRings() {
+  const day = todayISO();
+  
+  // 1. Filter today's trades
+  const todayTrades = state.trades.filter(t => t.date === day);
+  const totalCount = todayTrades.length;
+  
+  // 2. Rules followed percentage
+  let ruleFollowedCount = todayTrades.filter(t => t.rule).length;
+  let rulePercent = totalCount > 0 ? Math.round((ruleFollowedCount / totalCount) * 100) : 100;
+  
+  // 3. Today's total R multiple
+  let totalTodayR = todayTrades.reduce((sum, t) => sum + rValue(t), 0);
+  
+  // Daily limits from preferences
+  const maxTrades = state.preferences.maxTradesPerDay || 4;
+  const maxLossR = Math.abs(state.preferences.dailyMaxLossR || 2);
+  
+  // 4. Calculate ratios
+  const tradeRatio = Math.min(totalCount / maxTrades, 1.0);
+  const lossRatio = totalTodayR < 0 ? Math.min(Math.abs(totalTodayR) / maxLossR, 1.0) : 0;
+  const ruleRatio = rulePercent / 100;
+
+  // 5. Update circle dashes
+  // R=60 (circ = 376.99)
+  const circleTrades = document.getElementById("ringTrades");
+  if (circleTrades) {
+    const circumference = 2 * Math.PI * 60;
+    circleTrades.style.strokeDashoffset = circumference - (tradeRatio * circumference);
+  }
+  
+  // R=46 (circ = 289.02)
+  const circleLoss = document.getElementById("ringLoss");
+  if (circleLoss) {
+    const circumference = 2 * Math.PI * 46;
+    circleLoss.style.strokeDashoffset = circumference - (lossRatio * circumference);
+  }
+  
+  // R=32 (circ = 201.06)
+  const circleRules = document.getElementById("ringRules");
+  if (circleRules) {
+    const circumference = 2 * Math.PI * 32;
+    circleRules.style.strokeDashoffset = circumference - (ruleRatio * circumference);
+  }
+
+  // 6. Update Legend Values
+  setText("legendTradesVal", `${totalCount} / ${maxTrades}`);
+  setText("legendLossVal", `${totalTodayR.toFixed(2)}R / -${maxLossR.toFixed(2)}R`);
+  setText("legendRulesVal", `${rulePercent}%`);
+}
+
+function openSheet(id) {
+  const sheet = document.getElementById(id);
+  if (!sheet) return;
+  playSound("switch");
+  sheet.classList.remove("hidden");
+  // Force reflow
+  sheet.offsetWidth;
+  sheet.classList.add("active");
+  document.body.style.overflow = "hidden";
+
+  // Hide dock
+  const dock = document.querySelector(".ios-dock-container");
+  if (dock) dock.classList.add("is-hidden");
+}
+
+function closeSheet(id) {
+  const sheet = document.getElementById(id);
+  if (!sheet || sheet.classList.contains("hidden")) return;
+  playSound("switch");
+  sheet.classList.remove("active");
+  setTimeout(() => {
+    if (!sheet.classList.contains("active")) {
+      sheet.classList.add("hidden");
+    }
+  }, 400);
+  
+  const activeSheets = document.querySelectorAll(".sheet-backdrop.active");
+  if (activeSheets.length <= 1) {
+    document.body.style.overflow = "";
+    // Show dock
+    const dock = document.querySelector(".ios-dock-container");
+    if (dock) dock.classList.remove("is-hidden");
+  }
+}
+
+function updateWorkflowTiles() {
+  const day = todayISO();
+  const hasPlan = !!(state.dailyPlans[day] && state.dailyPlans[day].bias);
+  const hasReview = !!(state.dailyReviews[day] && state.dailyReviews[day].keep);
+
+  const tilePlan = document.getElementById("tilePlan");
+  const tileReview = document.getElementById("tileReview");
+
+  if (tilePlan) {
+    tilePlan.classList.toggle("is-completed", hasPlan);
+    const statusText = document.getElementById("statusPlanText");
+    if (statusText) {
+      statusText.textContent = hasPlan ? "Plan completed ✓" : "Tap to plan today";
+    }
+  }
+
+  if (tileReview) {
+    tileReview.classList.toggle("is-completed", hasReview);
+    const statusText = document.getElementById("statusReviewText");
+    if (statusText) {
+      statusText.textContent = hasReview ? "Review completed ✓" : "Tap to review day";
+    }
+  }
+}
+
 function openModule(id, source = null) {
   const view = document.getElementById(id);
   if (!view) return;
@@ -2132,18 +2346,15 @@ function switchLanguage() {
 }
 
 function switchTheme() {
-  playSound("switch");
+  playSound("pop");
   theme = theme === "light" ? "dark" : "light";
   localStorage.setItem("trd-journey-theme", theme);
   document.documentElement.setAttribute("data-theme", theme);
-  renderThemeButtons();
   toast(theme === "dark" ? "Dark mode enabled." : "Light mode enabled.");
 }
 
 function renderThemeButtons() {
-  document.querySelectorAll(".theme-toggle").forEach((button) => {
-    button.textContent = theme === "light" ? "☾" : "☀";
-  });
+  // SVG sun/moon icon auto toggles via CSS data-theme selectors, no textContent needed.
 }
 
 document.querySelectorAll("[data-open-module]").forEach((button) => {
@@ -2154,7 +2365,7 @@ document.querySelectorAll(".language-toggle").forEach((button) => {
   button.addEventListener("click", switchLanguage);
 });
 
-document.querySelectorAll(".theme-toggle").forEach((button) => {
+document.querySelectorAll(".theme-toggle, #headerThemeToggleBtn").forEach((button) => {
   button.addEventListener("click", switchTheme);
 });
 
@@ -2195,17 +2406,86 @@ document.getElementById("addSopBtn").addEventListener("click", () => openSopModa
 document.getElementById("addAccountBtn").addEventListener("click", () => openAccountModal());
 document.getElementById("journalAddSopBtn").addEventListener("click", () => openSopModal());
 document.getElementById("journalAddAccountBtn").addEventListener("click", () => openAccountModal());
-document.getElementById("modalCloseBtn").addEventListener("click", closeModal);
-document.getElementById("modalBackdrop").addEventListener("click", (event) => {
+document.getElementById("modalCloseBtn")?.addEventListener("click", closeModal);
+document.getElementById("modalBackdrop")?.addEventListener("click", (event) => {
   if (event.target.id === "modalBackdrop") closeModal();
 });
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
-  if (!document.getElementById("modalBackdrop").classList.contains("hidden")) closeModal();
-  else if (activeModule) closeModule();
+  const backdrop = document.getElementById("modalBackdrop");
+  if (backdrop && !backdrop.classList.contains("hidden")) {
+    closeModal();
+  } else if (activeModule) {
+    closeModule();
+  }
 });
 
 document.body.addEventListener("click", (event) => {
+  // Bubble Menu Item Handlers
+  const bubbleBtnDetail = event.target.closest("#bubbleBtnDetail");
+  const bubbleBtnEdit = event.target.closest("#bubbleBtnEdit");
+  const bubbleBtnDelete = event.target.closest("#bubbleBtnDelete");
+  const bubbleMenu = document.getElementById("bubbleMenu");
+
+  if (bubbleBtnDetail) {
+    const id = bubbleMenu.dataset.activeTradeId;
+    if (bubbleMenu) {
+      bubbleMenu.classList.remove("active");
+      setTimeout(() => bubbleMenu.classList.add("hidden"), 200);
+    }
+    openDetail(id);
+    return;
+  }
+  if (bubbleBtnEdit) {
+    const id = bubbleMenu.dataset.activeTradeId;
+    if (bubbleMenu) {
+      bubbleMenu.classList.remove("active");
+      setTimeout(() => bubbleMenu.classList.add("hidden"), 200);
+    }
+    editTrade(id);
+    return;
+  }
+  if (bubbleBtnDelete) {
+    const id = bubbleMenu.dataset.activeTradeId;
+    if (bubbleMenu) {
+      bubbleMenu.classList.remove("active");
+      setTimeout(() => bubbleMenu.classList.add("hidden"), 200);
+    }
+    deleteTrade(id);
+    return;
+  }
+
+  // Dismiss bubble menu when clicking outside
+  if (bubbleMenu && !event.target.closest("#bubbleMenu") && !event.target.closest("[data-trade-actions]")) {
+    if (bubbleMenu.classList.contains("active")) {
+      bubbleMenu.classList.remove("active");
+      setTimeout(() => bubbleMenu.classList.add("hidden"), 200);
+    }
+  }
+
+  // Trigger three-dot bubble menu
+  const actionsTrigger = event.target.closest("[data-trade-actions]");
+  if (actionsTrigger) {
+    event.stopPropagation();
+    const tradeId = actionsTrigger.dataset.tradeActions;
+    playSound("pop");
+    
+    if (bubbleMenu) {
+      bubbleMenu.dataset.activeTradeId = tradeId;
+      const rect = actionsTrigger.getBoundingClientRect();
+      const scrollX = window.scrollX || window.pageXOffset;
+      const scrollY = window.scrollY || window.pageYOffset;
+      
+      bubbleMenu.style.left = (rect.left + scrollX + rect.width / 2 - 75) + "px";
+      bubbleMenu.style.top = (rect.top + scrollY - 146) + "px";
+      
+      bubbleMenu.classList.remove("hidden");
+      bubbleMenu.offsetWidth; // reflow
+      bubbleMenu.classList.add("active");
+    }
+    return;
+  }
+
   const shortcut = event.target.closest("[data-view-shortcut]")?.dataset.viewShortcut;
   const detail = event.target.closest("[data-detail]")?.dataset.detail;
   const edit = event.target.closest("[data-edit]")?.dataset.edit;
@@ -2252,10 +2532,7 @@ document.body.addEventListener("click", (event) => {
   }
   if (editActiveAccount) openAccountModal(state.activeSopId, state.activeAccountId);
   if (openCapture) {
-    openModule("journal");
-    const details = document.getElementById("captureTradeDetails");
-    details.open = true;
-    details.scrollIntoView({ behavior: "smooth", block: "start" });
+    openSheet("tradeFormSheet");
   }
   if (journalViewTarget) {
     journalView = journalViewTarget;
@@ -2320,8 +2597,14 @@ document.getElementById("planForm").addEventListener("submit", (event) => {
     maxTrades: Number(form.maxTrades.value)
   };
   saveState();
+  
+  const wasAlreadyRewarded = state.experience?.dailyXpLog?.[day]?.plan === true;
+  awardXpForQuest(day, "plan");
   renderAll();
-  toast(`Plan saved for ${day}.`);
+  if (wasAlreadyRewarded) {
+    toast(`Plan saved for ${day}.`);
+  }
+  closeSheet("planSheet");
 });
 
 document.getElementById("reviewForm").addEventListener("submit", (event) => {
@@ -2335,8 +2618,28 @@ document.getElementById("reviewForm").addEventListener("submit", (event) => {
     focus: form.focus.value.trim()
   };
   saveState();
+  
+  const wasReviewRewarded = state.experience?.dailyXpLog?.[day]?.review === true;
+  awardXpForQuest(day, "review");
+  
+  // Check Risk Control Shield
+  const todayTrades = state.trades.filter(t => t.date === day);
+  const totalCount = todayTrades.length;
+  const maxTrades = state.preferences.maxTradesPerDay || 4;
+  const maxLossR = Math.abs(state.preferences.dailyMaxLossR || 2);
+  const totalTodayR = todayTrades.reduce((sum, t) => sum + rValue(t), 0);
+  const riskShieldActive = totalCount <= maxTrades && totalTodayR >= -maxLossR;
+  
+  const wasRiskRewarded = state.experience?.dailyXpLog?.[day]?.risk === true;
+  if (riskShieldActive) {
+    awardXpForQuest(day, "risk");
+  }
+  
   renderAll();
-  toast(`Review saved for ${day}.`);
+  if (wasReviewRewarded && (!riskShieldActive || wasRiskRewarded)) {
+    toast(`Review saved for ${day}.`);
+  }
+  closeSheet("reviewSheet");
 });
 
 document.getElementById("settingsForm").addEventListener("submit", (event) => {
@@ -2633,6 +2936,440 @@ function showUpdateBanner(worker) {
   setTimeout(() => banner.classList.add("show"), 100);
 }
 
+function getDisciplineStreak() {
+  const closed = closedTrades().sort((a, b) => a.date.localeCompare(b.date));
+  let streak = 0;
+  for (let i = closed.length - 1; i >= 0; i--) {
+    if (closed[i].rule === true || closed[i].rule === "true" || closed[i].rule === "Yes" || closed[i].rule === "y") {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+function updateMindfulnessBanner() {
+  const banner = document.getElementById("mindfulnessBanner");
+  if (!banner) return;
+
+  const closed = closedTrades();
+  if (closed.length === 0) {
+    banner.style.display = "none";
+    return;
+  }
+
+  const streak = getDisciplineStreak();
+  const calmTrades = closed.filter(t => t.emotion === "Calm" || t.emotion === "Focused");
+  const otherTrades = closed.filter(t => t.emotion && t.emotion !== "Calm" && t.emotion !== "Focused");
+
+  let diffText = "";
+  if (calmTrades.length > 0 && otherTrades.length > 0) {
+    const calmM = metrics(calmTrades);
+    const otherM = metrics(otherTrades);
+    const diff = Math.round((calmM.winRate - otherM.winRate) * 100);
+    if (diff > 0) {
+      diffText = `Mindfulness Advantage: Trading in a <strong>Calm & Focused</strong> state increases average Win Rate by <span style="color:var(--green); font-weight:700;">+${diff}%</span> compared to emotional trading.`;
+    } else if (diff < 0) {
+      diffText = `Mindfulness Warning: Win rate in emotional states is slightly higher. Keep centering yourself to build long-term expectancy.`;
+    } else {
+      diffText = `Mindfulness Process: Win rate is balanced. Keep focusing on process compliance.`;
+    }
+  } else {
+    diffText = `Mindfulness Process: Maintain a calm, focused mindset. Log more trades with emotional tags to unlock diagnostic comparison.`;
+  }
+
+  const streakCountEl = document.getElementById("streakCount");
+  const calmDiagnosticEl = document.getElementById("calmDiagnostic");
+  if (streakCountEl) streakCountEl.textContent = streak;
+  if (calmDiagnosticEl) calmDiagnosticEl.innerHTML = diffText;
+
+  if (streak >= 3 || (calmTrades.length > 0 && otherTrades.length > 0)) {
+    banner.style.display = "flex";
+    banner.style.flexDirection = "column";
+  } else {
+    banner.style.display = "none";
+  }
+}
+
+function updateRewardMission() {
+  const setupView = document.getElementById("rewardSetupView");
+  const progressView = document.getElementById("rewardProgressView");
+  const completedView = document.getElementById("rewardCompletedView");
+  if (!setupView || !progressView || !completedView) return;
+
+  if (!state.rewardMission) {
+    state.rewardMission = { status: "idle", rewardName: "" };
+  }
+
+  const mission = state.rewardMission;
+
+  if (mission.status === "idle") {
+    setupView.classList.remove("hidden");
+    progressView.classList.add("hidden");
+    completedView.classList.add("hidden");
+    return;
+  }
+
+  const closed = closedTrades();
+  let current = 0;
+  let target = 1;
+  let isDone = false;
+  let goalTitle = "";
+
+  if (mission.targetType === "streak") {
+    target = 3;
+    current = getDisciplineStreak();
+    goalTitle = "3-Trade Compliance Streak";
+    if (current >= target) {
+      current = target;
+      isDone = true;
+    }
+  } else if (mission.targetType === "streak5") {
+    target = 5;
+    current = getDisciplineStreak();
+    goalTitle = "5-Trade Compliance Streak";
+    if (current >= target) {
+      current = target;
+      isDone = true;
+    }
+  } else if (mission.targetType === "compliance") {
+    target = 9;
+    const last10 = closed.slice(-10);
+    current = last10.filter(t => t.rule === true || t.rule === "true" || t.rule === "Yes" || t.rule === "y").length;
+    goalTitle = "90% Compliance (Last 10 trades)";
+    if (last10.length >= 10 && current >= target) {
+      isDone = true;
+    }
+  } else if (mission.targetType === "rgain") {
+    target = 5;
+    const currentTotalR = metrics().totalR;
+    const startR = mission.startR || 0;
+    current = Math.max(0, currentTotalR - startR);
+    goalTitle = "Gain 5R Multiple";
+    if (current >= target) {
+      current = target;
+      isDone = true;
+    }
+  }
+
+  mission.currentProgress = current;
+  mission.targetProgress = target;
+
+  if (isDone && mission.status === "active") {
+    mission.status = "completed";
+    saveState();
+    playSound("success");
+  }
+
+  if (mission.status === "active") {
+    setupView.classList.add("hidden");
+    progressView.classList.remove("hidden");
+    completedView.classList.add("hidden");
+
+    const progressGoalEl = document.getElementById("rewardProgressGoal");
+    const progressPrizeEl = document.getElementById("rewardProgressPrize");
+    const progressTextEl = document.getElementById("rewardProgressText");
+    const progressBarFillEl = document.getElementById("rewardProgressBarFill");
+
+    if (progressGoalEl) progressGoalEl.textContent = goalTitle;
+    if (progressPrizeEl) progressPrizeEl.textContent = mission.rewardName;
+    
+    let progressPercentage = 0;
+    if (mission.targetType === "rgain") {
+      progressPercentage = Math.min(100, Math.round((current / target) * 100));
+      if (progressTextEl) progressTextEl.textContent = `Progress: ${current.toFixed(2)}R / ${target}R`;
+    } else if (mission.targetType === "compliance") {
+      progressPercentage = Math.min(100, Math.round((current / 10) * 100));
+      if (progressTextEl) progressTextEl.textContent = `Progress: ${current} / 10 compliant (Target: ${target})`;
+    } else {
+      progressPercentage = Math.min(100, Math.round((current / target) * 100));
+      if (progressTextEl) progressTextEl.textContent = `Progress: ${current} / ${target} trades`;
+    }
+    
+    if (progressBarFillEl) progressBarFillEl.style.width = `${progressPercentage}%`;
+
+  } else if (mission.status === "completed") {
+    setupView.classList.add("hidden");
+    progressView.classList.add("hidden");
+    completedView.classList.remove("hidden");
+
+    const completedPrizeEl = document.getElementById("rewardCompletedPrize");
+    if (completedPrizeEl) completedPrizeEl.textContent = mission.rewardName;
+  }
+}
+
+function initRewardListeners() {
+  document.getElementById("rewardSetupForm")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const type = document.getElementById("rewardTargetType").value;
+    const name = document.getElementById("rewardNameInput").value.trim();
+    if (!name) return;
+    
+    playSound("success");
+    state.rewardMission = {
+      status: "active",
+      targetType: type,
+      rewardName: name,
+      startR: metrics().totalR,
+      currentProgress: 0,
+      targetProgress: 5,
+      claimed: false
+    };
+    saveState();
+    updateRewardMission();
+    toast("Reward mission activated! Stay focused.");
+  });
+
+  document.getElementById("btnCancelReward")?.addEventListener("click", () => {
+    if (!confirm("Are you sure you want to cancel this mission? Your progress will be lost.")) return;
+    playSound("delete");
+    state.rewardMission = { status: "idle", rewardName: "" };
+    saveState();
+    updateRewardMission();
+    toast("Mission cancelled.");
+  });
+
+  document.getElementById("btnResetReward")?.addEventListener("click", () => {
+    playSound("success");
+    const mission = state.rewardMission;
+    
+    // Archive achievement
+    const newAchievement = {
+      id: uid(),
+      date: todayISO(),
+      targetType: mission.targetType,
+      rewardName: mission.rewardName,
+      goalTitle: document.getElementById("rewardProgressGoal")?.textContent || "Discipline Goal"
+    };
+    
+    if (!state.experience) {
+      state.experience = { xp: 0, level: 1, achievements: [], dailyXpLog: {} };
+    }
+    if (!state.experience.achievements) {
+      state.experience.achievements = [];
+    }
+    state.experience.achievements.push(newAchievement);
+    
+    // Reset mission
+    state.rewardMission = { status: "idle", rewardName: "" };
+    saveState();
+    
+    // Add XP!
+    addXp(100);
+    
+    renderAll();
+    toast("Congratulations! Go enjoy your reward. (+100 XP)");
+  });
+}
+
+function getDisciplineTitle(lvl) {
+  const titles = {
+    1: "Impulsive Novice",
+    2: "Rule Explorer",
+    3: "Patient Hunter",
+    4: "Calm Executor",
+    5: "Zen Master"
+  };
+  return titles[lvl] || "Zen Master";
+}
+
+function getXpProgress(xp) {
+  if (xp < 100) return { current: xp, target: 100, pct: (xp / 100) * 100, level: 1 };
+  if (xp < 300) return { current: xp - 100, target: 200, pct: ((xp - 100) / 200) * 100, level: 2 };
+  if (xp < 600) return { current: xp - 300, target: 300, pct: ((xp - 300) / 300) * 100, level: 3 };
+  if (xp < 1000) return { current: xp - 600, target: 400, pct: ((xp - 600) / 400) * 100, level: 4 };
+  return { current: 1, target: 1, pct: 100, level: 5 };
+}
+
+function addXp(amount) {
+  if (!state.experience) {
+    state.experience = { xp: 0, level: 1, achievements: [], dailyXpLog: {} };
+  }
+  const oldLevel = state.experience.level;
+  state.experience.xp += amount;
+  
+  // Calculate level
+  const progress = getXpProgress(state.experience.xp);
+  state.experience.level = progress.level;
+  
+  saveState();
+  
+  if (state.experience.level > oldLevel) {
+    playSound("success");
+    setTimeout(() => {
+      openModal(
+        "Level Up!",
+        "Discipline Center",
+        `
+        <div style="text-align:center; padding:20px; display:flex; flex-direction:column; align-items:center; gap:16px;">
+          <div class="reward-badge-glow" style="font-size:3.5rem;">🏆</div>
+          <h2 style="color:var(--green); font-size:24px; font-weight:800; margin:0;">You Levelled Up!</h2>
+          <p style="margin:0; font-size:14px;">Your discipline level is now <strong>Level ${state.experience.level}</strong></p>
+          <div class="xp-badge" style="width:80px; height:80px; font-size:1.3rem; margin:0 auto; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, #a020f0, #0071e3); color:white; border-radius:50%; font-weight:800;">Lvl ${state.experience.level}</div>
+          <h3 style="font-size:18px; font-weight:700; margin:0;">Title Unlocked: <strong>${getDisciplineTitle(state.experience.level)}</strong></h3>
+          <p class="muted" style="font-size:12px; margin:0;">Keep up the self-discipline and follow your trading rules!</p>
+          <button class="primary-button" onclick="closeModal()" style="margin-top:10px; width:100%;">Awesome</button>
+        </div>
+        `
+      );
+    }, 500);
+  }
+}
+
+function awardXpForQuest(day, questType) {
+  if (!state.experience) {
+    state.experience = { xp: 0, level: 1, achievements: [], dailyXpLog: {} };
+  }
+  if (!state.experience.dailyXpLog) {
+    state.experience.dailyXpLog = {};
+  }
+  if (!state.experience.dailyXpLog[day]) {
+    state.experience.dailyXpLog[day] = { plan: false, risk: false, review: false };
+  }
+  
+  if (state.experience.dailyXpLog[day][questType] !== true) {
+    state.experience.dailyXpLog[day][questType] = true;
+    addXp(10);
+    let questName = "";
+    if (questType === "plan") questName = "Pre-market Plan";
+    if (questType === "risk") questName = "Risk Control Shield";
+    if (questType === "review") questName = "Close-out Review";
+    toast(`Daily Quest completed: ${questName}! +10 XP`);
+  }
+}
+
+function renderMissions() {
+  const missionsView = document.getElementById("missions");
+  if (!missionsView) return;
+
+  if (!state.experience) {
+    state.experience = { xp: 0, level: 1, achievements: [], dailyXpLog: {} };
+  }
+  const exp = state.experience;
+
+  // 1. Render XP status
+  const progress = getXpProgress(exp.xp);
+  
+  setText("xpLevelBadge", `Lvl ${progress.level}`);
+  setText("xpLevelTitle", getDisciplineTitle(progress.level));
+  setText("xpNumerical", progress.level === 5 ? `${exp.xp} XP (Max Level)` : `${progress.current} / ${progress.target} XP (Total: ${exp.xp} XP)`);
+  
+  const xpBar = document.getElementById("xpBarFill");
+  if (xpBar) xpBar.style.width = `${progress.pct}%`;
+
+  // 2. Render Daily Quests
+  const day = todayISO();
+  const hasPlan = !!(state.dailyPlans[day] && state.dailyPlans[day].bias);
+  const hasReview = !!(state.dailyReviews[day] && state.dailyReviews[day].keep);
+  
+  // Risk control quest:
+  const todayTrades = state.trades.filter(t => t.date === day);
+  const totalCount = todayTrades.length;
+  const maxTrades = state.preferences.maxTradesPerDay || 4;
+  const maxLossR = Math.abs(state.preferences.dailyMaxLossR || 2);
+  let totalTodayR = todayTrades.reduce((sum, t) => sum + rValue(t), 0);
+  const riskShieldActive = totalCount <= maxTrades && totalTodayR >= -maxLossR;
+
+  // Update DOM status
+  updateQuestTile("questPlanTile", "questPlanStatus", hasPlan || (exp.dailyXpLog?.[day]?.plan));
+  updateQuestTile("questReviewTile", "questReviewStatus", hasReview || (exp.dailyXpLog?.[day]?.review));
+  updateQuestTile("questRiskTile", "questRiskStatus", (totalCount > 0 && riskShieldActive && hasReview) || (exp.dailyXpLog?.[day]?.risk));
+
+  // 3. Render Achievements List (Hall of Fame)
+  const achGrid = document.getElementById("achievementsGrid");
+  if (achGrid) {
+    const achievements = exp.achievements || [];
+    if (achievements.length === 0) {
+      achGrid.innerHTML = `
+        <div class="zero-state-card" style="grid-column: 1 / -1; width:100%; border-style:dashed;">
+          <div class="zero-state-artwork" style="width:50px; height:50px; margin-bottom:8px;">
+            <div class="glow-orb" style="width:30px; height:30px; background:radial-gradient(circle, rgba(255,215,0,0.2) 0%, transparent 70%);"></div>
+            <span style="font-size:24px; z-index:2; position:relative;">🏆</span>
+          </div>
+          <h3 style="font-size:13px; font-weight:700;">No Redeemed Rewards</h3>
+          <p style="font-size:11px; max-width:200px;">Complete Epic Reward Missions to build your self-discipline hall of fame.</p>
+        </div>
+      `;
+    } else {
+      achGrid.innerHTML = achievements.map(ach => `
+        <div class="achievement-card">
+          <div class="achievement-badge-icon">🏆</div>
+          <strong>${safe(ach.rewardName)}</strong>
+          <span class="ach-date">${ach.date}</span>
+          <span class="ach-desc">${safe(ach.goalTitle)}</span>
+        </div>
+      `).join("");
+    }
+  }
+}
+
+function updateQuestTile(tileId, statusId, isDone) {
+  const tile = document.getElementById(tileId);
+  const status = document.getElementById(statusId);
+  if (!tile || !status) return;
+
+  tile.classList.toggle("is-completed", !!isDone);
+  status.textContent = isDone ? "Completed" : "Pending";
+}
+
+function renderDisciplineHeatmap() {
+  const grid = document.getElementById("disciplineHeatmap");
+  if (!grid) return;
+  
+  grid.innerHTML = "";
+  
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const startDate = new Date(today);
+  startDate.setDate(today.getDate() - dayOfWeek - 14 * 7); // Sunday 14 weeks ago
+  
+  // Build a map of date string to trade compliance
+  const tradeMap = {};
+  closedTrades().forEach(t => {
+    const dStr = t.date; // YYYY-MM-DD
+    if (!tradeMap[dStr]) {
+      tradeMap[dStr] = { total: 0, compliant: 0 };
+    }
+    tradeMap[dStr].total++;
+    if (t.rule === true || t.rule === "true" || t.rule === "Yes" || t.rule === "y") {
+      tradeMap[dStr].compliant++;
+    }
+  });
+  
+  for (let i = 0; i < 105; i++) {
+    const current = new Date(startDate);
+    current.setDate(startDate.getDate() + i);
+    
+    const yyyy = current.getFullYear();
+    const mm = String(current.getMonth() + 1).padStart(2, '0');
+    const dd = String(current.getDate()).padStart(2, '0');
+    const dateStr = `${yyyy}-${mm}-${dd}`;
+    
+    const cell = document.createElement("div");
+    cell.className = "heatmap-cell";
+    
+    const record = tradeMap[dateStr];
+    let titleText = `${dateStr}: No trades`;
+    
+    if (record) {
+      const nonCompliant = record.total - record.compliant;
+      if (nonCompliant > 0) {
+        cell.classList.add("non-compliant");
+        titleText = `${dateStr}: ${record.total} trades (${nonCompliant} broken rules ❌)`;
+      } else {
+        cell.classList.add("compliant");
+        titleText = `${dateStr}: ${record.total} trades (All compliant! 🔥)`;
+      }
+    } else {
+      cell.classList.add("no-trade");
+    }
+    
+    cell.title = titleText;
+    grid.appendChild(cell);
+  }
+}
+
 function flipCard(id) {
   playSound("flip");
   const container = document.getElementById(`container-${id}`);
@@ -2666,321 +3403,7 @@ function drawMiniSparklineMarkup(closed) {
   </svg>`;
 }
 
-function populateBacktestSops() {
-  const select = document.getElementById("backtestSopSelect");
-  if (!select) return;
-  const activeSops = state.sops.filter(s => !s.archivedAt);
-  select.innerHTML = activeSops.map(s => `<option value="${s.id}">${safe(s.name)}</option>`).join("");
-}
 
-function calculateBacktestStats() {
-  const capitalInput = document.getElementById("backtestCapital");
-  const riskModeInput = document.getElementById("backtestRiskMode");
-  const riskValInput = document.getElementById("backtestRiskVal");
-  
-  const initialCapital = Number(capitalInput?.value || 10000);
-  const riskMode = riskModeInput?.value || "fixed-usd";
-  const riskVal = Number(riskValInput?.value || 100);
-  
-  let currentCapital = initialCapital;
-  let grossWins = 0;
-  let grossLosses = 0;
-  let winCount = 0;
-  
-  const tradeRecords = sandboxTrades.map((r, idx) => {
-    let riskAmount = 0;
-    if (riskMode === "fixed-usd") {
-      riskAmount = riskVal;
-    } else {
-      riskAmount = currentCapital * (riskVal / 100);
-    }
-    const pnl = riskAmount * r;
-    currentCapital += pnl;
-    
-    if (r > 0) {
-      winCount++;
-      grossWins += pnl;
-    } else if (r < 0) {
-      grossLosses += Math.abs(pnl);
-    }
-    
-    return {
-      index: idx + 1,
-      r,
-      pnl: Math.round(pnl)
-    };
-  });
-  
-  const profitR = sandboxTrades.reduce((a, b) => a + b, 0);
-  const profitUSD = currentCapital - initialCapital;
-  const winRate = sandboxTrades.length ? winCount / sandboxTrades.length : 0;
-  const expectancy = sandboxTrades.length ? profitR / sandboxTrades.length : 0;
-  
-  let peakR = 0;
-  let currentR = 0;
-  let maxDDR = 0;
-  sandboxTrades.forEach(r => {
-    currentR += r;
-    peakR = Math.max(peakR, currentR);
-    maxDDR = Math.max(maxDDR, peakR - currentR);
-  });
-  
-  const pf = grossLosses > 0 ? grossWins / grossLosses : 0;
-  
-  return {
-    tradeRecords,
-    profitR,
-    profitUSD: Math.round(profitUSD),
-    winRate,
-    expectancy,
-    maxDDR,
-    pf,
-    finalCapital: Math.round(currentCapital)
-  };
-}
-
-function renderBacktestTradesList(tradeRecords) {
-  const tbody = document.getElementById("backtestRows");
-  if (!tbody) return;
-  
-  if (tradeRecords.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" class="muted" style="text-align:center;">No mock trades in sandbox.</td></tr>`;
-    document.getElementById("backtestCount").textContent = "0";
-    return;
-  }
-  
-  document.getElementById("backtestCount").textContent = String(tradeRecords.length);
-  
-  tbody.innerHTML = tradeRecords.map(t => {
-    const pnlStyle = t.pnl >= 0 ? "color:var(--green); font-weight:600;" : "color:var(--red); font-weight:600;";
-    return `
-      <tr>
-        <td>#${t.index}</td>
-        <td><strong>${t.r >= 0 ? '+' : ''}${t.r}R</strong></td>
-        <td style="${pnlStyle}">${t.pnl >= 0 ? '+' : ''}$${t.pnl.toLocaleString()}</td>
-        <td style="text-align:right;">
-          <button class="text-button danger" onclick="removeMockTrade(${t.index - 1})" style="padding:2px 6px; font-size:11px;">Remove</button>
-        </td>
-      </tr>
-    `;
-  }).join("");
-}
-
-function removeMockTrade(idx) {
-  playSound("delete");
-  sandboxTrades.splice(idx, 1);
-  updateBacktesterUI();
-}
-
-function saveBacktestRun() {
-  const sopSelect = document.getElementById("backtestSopSelect");
-  const sopId = sopSelect?.value;
-  if (!sopId) {
-    toast("Please select a valid SOP first.", "error");
-    return;
-  }
-  
-  if (sandboxTrades.length === 0) {
-    toast("Add some mock trades to the sandbox first.", "error");
-    return;
-  }
-  
-  const sop = state.sops.find(s => s.id === sopId);
-  const capital = Number(document.getElementById("backtestCapital").value);
-  const riskMode = document.getElementById("backtestRiskMode").value;
-  const riskVal = Number(document.getElementById("backtestRiskVal").value);
-  
-  const newRun = {
-    id: uid(),
-    sopId,
-    sopName: sop ? sop.name : "Untitled SOP",
-    capital,
-    riskMode,
-    riskVal,
-    trades: [...sandboxTrades],
-    date: todayISO()
-  };
-  
-  if (!state.backtests) state.backtests = [];
-  state.backtests.push(newRun);
-  saveState();
-  playSound("success");
-  toast("Backtest run saved.");
-  renderSavedBacktests();
-}
-
-function renderSavedBacktests() {
-  const listDiv = document.getElementById("savedBacktestList");
-  if (!listDiv) return;
-  
-  const sopId = document.getElementById("backtestSopSelect")?.value;
-  if (!sopId) {
-    listDiv.innerHTML = `<p class="muted">Select an SOP to view saved runs.</p>`;
-    return;
-  }
-  
-  const runs = (state.backtests || []).filter(r => r.sopId === sopId);
-  if (runs.length === 0) {
-    listDiv.innerHTML = `<p class="muted">No saved backtests for this SOP.</p>`;
-    return;
-  }
-  
-  listDiv.innerHTML = runs.map(run => {
-    const profitR = run.trades.reduce((a, b) => a + b, 0);
-    const winRate = Math.round((run.trades.filter(r => r > 0).length / run.trades.length) * 100);
-    return `
-      <div class="status-card" style="display:flex; justify-content:space-between; align-items:center; padding:12px; border:1px solid var(--hairline); border-radius:12px; background:var(--paper-strong);">
-        <div style="cursor:pointer; flex-grow:1;" onclick="loadBacktestRun('${run.id}')">
-          <strong style="font-size:13px; display:block;">Run: ${run.date}</strong>
-          <span style="font-size:11px; color:var(--muted);">${run.trades.length} trades · WR: ${winRate}% · Profit: <strong>${profitR >= 0 ? '+' : ''}${profitR.toFixed(1)}R</strong></span>
-        </div>
-        <button class="text-button danger" onclick="deleteBacktestRun('${run.id}')" style="padding:4px 8px; font-size:11px; margin-left:10px;">Delete</button>
-      </div>
-    `;
-  }).join("");
-}
-
-function loadBacktestRun(id) {
-  const run = (state.backtests || []).find(r => r.id === id);
-  if (!run) return;
-  
-  playSound("switch");
-  document.getElementById("backtestCapital").value = run.capital;
-  document.getElementById("backtestRiskMode").value = run.riskMode;
-  document.getElementById("backtestRiskVal").value = run.riskVal;
-  
-  sandboxTrades = [...run.trades];
-  updateBacktesterUI();
-  toast("Saved backtest loaded into Sandbox.");
-}
-
-function deleteBacktestRun(id) {
-  if (!confirm("Delete this saved backtest run?")) return;
-  playSound("delete");
-  state.backtests = (state.backtests || []).filter(r => r.id !== id);
-  saveState();
-  toast("Backtest run deleted.");
-  renderSavedBacktests();
-}
-
-function updateBacktesterUI() {
-  const stats = calculateBacktestStats();
-  
-  // Render metrics
-  setText("btMetricProfitR", `${stats.profitR >= 0 ? '+' : ''}${stats.profitR.toFixed(2)}R`);
-  setText("btMetricProfitUSD", `${stats.profitUSD >= 0 ? '+' : ''}$${stats.profitUSD.toLocaleString()}`);
-  setText("btMetricWinRate", `${Math.round(stats.winRate * 100)}%`);
-  setText("btMetricExpectancy", `${stats.expectancy >= 0 ? '+' : ''}${stats.expectancy.toFixed(2)}R`);
-  setText("btMetricMaxDD", `${stats.maxDDR.toFixed(2)}R`);
-  setText("btMetricPF", stats.pf.toFixed(2));
-  
-  // Render trades table
-  renderBacktestTradesList(stats.tradeRecords);
-  
-  // Render Chart
-  let cumulativeR = 0;
-  const series = [{ value: 0, label: "Start" }];
-  sandboxTrades.forEach((r, idx) => {
-    cumulativeR += r;
-    series.push({ value: cumulativeR, label: `Mock #${idx + 1}`, detail: `R: ${r >= 0 ? '+' : ''}${r}R` });
-  });
-  renderLineChart("backtestChart", series, { negative: false });
-  
-  // Execution Gap Comparison
-  const sopId = document.getElementById("backtestSopSelect")?.value;
-  const comparePanel = document.getElementById("btComparePanel");
-  
-  if (sopId && comparePanel) {
-    const liveTrades = state.trades.filter(t => t.sopId === sopId && t.status === "closed");
-    if (liveTrades.length > 0) {
-      const liveM = metrics(liveTrades);
-      const wrGap = Math.round((liveM.winRate - stats.winRate) * 100);
-      const expGap = liveM.expectancy - stats.expectancy;
-      
-      document.getElementById("compWinRate").innerHTML = `Live: <strong>${Math.round(liveM.winRate * 100)}%</strong> / BT: <strong>${Math.round(stats.winRate * 100)}%</strong> (Gap: <strong style="color:${wrGap >= 0 ? 'var(--green)' : 'var(--red)'}">${wrGap >= 0 ? '+' : ''}${wrGap}%</strong>)`;
-      document.getElementById("compExpectancy").innerHTML = `Live: <strong>${formatR(liveM.expectancy)}</strong> / BT: <strong>${formatR(stats.expectancy)}</strong> (Gap: <strong style="color:${expGap >= 0 ? 'var(--green)' : 'var(--red)'}">${formatR(expGap)}</strong>)`;
-      document.getElementById("compPF").innerHTML = `Live: <strong>${liveM.profitFactor.toFixed(2)}</strong> / BT: <strong>${stats.pf.toFixed(2)}</strong>`;
-      
-      comparePanel.style.display = "block";
-    } else {
-      comparePanel.style.display = "none";
-    }
-  }
-}
-
-function runBatchBacktest() {
-  const textarea = document.getElementById("backtestBatchR");
-  if (!textarea) return;
-  const text = textarea.value.trim();
-  if (!text) {
-    toast("Enter some numbers first.", "error");
-    return;
-  }
-  
-  const parsed = text.split(/[\s,;\n\r]+/).map(item => Number(item)).filter(item => !isNaN(item));
-  if (parsed.length === 0) {
-    toast("No valid numbers found.", "error");
-    return;
-  }
-  
-  playSound("success");
-  sandboxTrades = parsed;
-  updateBacktesterUI();
-  toast(`Loaded ${parsed.length} mock trades.`);
-}
-
-function addManualMockTrade() {
-  const rInput = document.getElementById("backtestManualR");
-  const r = Number(rInput?.value || 0);
-  if (isNaN(r) || rInput?.value.trim() === "") {
-    toast("Enter a valid R-multiple.", "error");
-    return;
-  }
-  
-  playSound("switch");
-  sandboxTrades.push(r);
-  rInput.value = "";
-  updateBacktesterUI();
-  toast(`Added trade: ${r}R`);
-}
-
-function clearSandbox() {
-  if (sandboxTrades.length === 0) return;
-  if (!confirm("Clear sandbox trades?")) return;
-  playSound("delete");
-  sandboxTrades = [];
-  document.getElementById("backtestBatchR").value = "";
-  updateBacktesterUI();
-  toast("Sandbox cleared.");
-}
-
-function initBacktesterListeners() {
-  document.getElementById("btnBacktestModeBatch")?.addEventListener("click", (e) => {
-    playSound("click");
-    document.getElementById("btnBacktestModeBatch").classList.add("active");
-    document.getElementById("btnBacktestModeManual").classList.remove("active");
-    document.getElementById("backtestBatchArea").classList.remove("hidden");
-    document.getElementById("backtestManualArea").classList.add("hidden");
-  });
-  
-  document.getElementById("btnBacktestModeManual")?.addEventListener("click", (e) => {
-    playSound("click");
-    document.getElementById("btnBacktestModeManual").classList.add("active");
-    document.getElementById("btnBacktestModeBatch").classList.remove("active");
-    document.getElementById("backtestManualArea").classList.remove("hidden");
-    document.getElementById("backtestBatchArea").classList.add("hidden");
-  });
-  
-  document.getElementById("btnRunBatchBacktest")?.addEventListener("click", runBatchBacktest);
-  document.getElementById("btnAddManualMock")?.addEventListener("click", addManualMockTrade);
-  document.getElementById("btnSaveBacktest")?.addEventListener("click", saveBacktestRun);
-  document.getElementById("btnClearBacktest")?.addEventListener("click", clearSandbox);
-  
-  document.getElementById("backtestSopSelect")?.addEventListener("change", () => {
-    renderSavedBacktests();
-    updateBacktesterUI();
-  });
-}
 
 function showImportPreview(incoming) {
   const currentClosed = closedTrades();
@@ -3072,14 +3495,6 @@ function showImportPreview(incoming) {
       if (idx >= 0) state.accounts[idx] = inAcct;
       else state.accounts.push(inAcct);
     });
-    if (incoming.backtests) {
-      if (!state.backtests) state.backtests = [];
-      incoming.backtests.forEach(inBt => {
-        if (!state.backtests.some(b => b.id === inBt.id)) {
-          state.backtests.push(inBt);
-        }
-      });
-    }
     
     saveState();
     closeModal();
@@ -3186,56 +3601,89 @@ function initLayoutListeners() {
   
   // Top header "Log Trade" button
   document.getElementById("headerLogTradeBtn")?.addEventListener("click", () => {
-    openModule("journal");
-    setTimeout(() => {
-      const details = document.getElementById("captureTradeDetails");
-      if (details) {
-        details.open = true;
-        details.scrollIntoView({ behavior: "smooth", block: "start" });
+    openSheet("tradeFormSheet");
+  });
+
+  // Workflow Tiles (Plan & Review)
+  document.getElementById("tilePlan")?.addEventListener("click", () => {
+    openSheet("planSheet");
+  });
+  document.getElementById("tileReview")?.addEventListener("click", () => {
+    openSheet("reviewSheet");
+  });
+
+  // Sheet close buttons
+  document.querySelectorAll(".sheet-close").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      const backdrop = event.currentTarget.closest(".sheet-backdrop");
+      if (backdrop) closeSheet(backdrop.id);
+    });
+  });
+
+  // Sheet backdrop clicks to close (click outside card)
+  document.querySelectorAll(".sheet-backdrop").forEach((backdrop) => {
+    backdrop.addEventListener("click", (event) => {
+      if (event.target === backdrop) {
+        closeSheet(backdrop.id);
       }
-    }, 240);
+    });
+  });
+
+  // Esc key closure
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      const activeSheet = document.querySelector(".sheet-backdrop.active");
+      if (activeSheet) {
+        closeSheet(activeSheet.id);
+      }
+    }
   });
 }
 
 async function initApp() {
-  state = await loadState();
-  await saveState(); // Ensure initialized defaults or migrated data are saved
-  renderAll();
-  resetTradeForm();
-  
-  // Initial view defaults to Today tab
-  openModule("overview");
-  
-  // Phase 5 & 6 Initializations
-  initCardSpotlightHover();
-  initCalendarHover();
-  initBacktesterListeners();
-  initLayoutListeners();
-  updateStorageEstimate();
-  updateSyncStatus();
-  
-  window.addEventListener("online", updateSyncStatus);
-  window.addEventListener("offline", updateSyncStatus);
-  
-  // Register service worker with version update banner
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js").then((reg) => {
-      if (reg.waiting) {
-        showUpdateBanner(reg.waiting);
-      }
-      reg.addEventListener("updatefound", () => {
-        const newWorker = reg.installing;
-        newWorker.addEventListener("statechange", () => {
-          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-            showUpdateBanner(newWorker);
-          }
-        });
-      });
-    }).catch((err) => console.log("SW failed", err));
+  try {
+    state = await loadState();
+    await saveState(); // Ensure initialized defaults or migrated data are saved
+    renderAll();
+    resetTradeForm();
     
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      window.location.reload();
-    });
+    // Initial view defaults to Today tab
+    openModule("overview");
+    
+    // Phase 5 & 6 Initializations
+    initCardSpotlightHover();
+    initCalendarHover();
+    initRewardListeners();
+    initLayoutListeners();
+    updateStorageEstimate();
+    updateSyncStatus();
+    
+    window.addEventListener("online", updateSyncStatus);
+    window.addEventListener("offline", updateSyncStatus);
+    
+    // Register service worker with version update banner
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js").then((reg) => {
+        if (reg.waiting) {
+          showUpdateBanner(reg.waiting);
+        }
+        reg.addEventListener("updatefound", () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              showUpdateBanner(newWorker);
+            }
+          });
+        });
+      }).catch((err) => console.log("SW failed", err));
+      
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        window.location.reload();
+      });
+    }
+  } catch (err) {
+    console.error("Initialization failed:", err);
+    alert("Initialization Error:\n" + err.message + "\n\nStack:\n" + err.stack);
   }
 }
 
