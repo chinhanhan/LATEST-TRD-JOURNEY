@@ -1917,7 +1917,7 @@ async function saveTradeFromForm(event) {
       id: form.elements.id.value || uid(),
       status: nextStatus,
       date: form.date.value,
-      closedAt: nextStatus === "closed" ? current.closedAt || form.date.value : "",
+      closedAt: nextStatus === "closed" ? (current.date && current.date !== form.date.value ? form.date.value : current.closedAt || form.date.value) : "",
       symbol: form.symbol.value.trim().toUpperCase(),
       sopId: form.sopId.value,
       accountId: form.accountId.value,
