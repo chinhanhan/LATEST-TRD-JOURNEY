@@ -485,7 +485,13 @@
             <div class="review-panel" id="review-calendar">
               <div class="cycle-grid">
                 <section class="panel">
-                  <div class="panel-head"><div><p class="eyebrow">Calendar</p><h2 id="calendarTitle">Month</h2></div></div>
+                  <div class="panel-head">
+                    <div><p class="eyebrow">Calendar</p><h2 id="calendarTitle">Month</h2></div>
+                    <div style="display: flex; gap: 8px;">
+                      <button class="ghost-button" id="prevMonthBtn" type="button" aria-label="Previous month" style="padding: 4px 8px; font-size: 12px;">◀</button>
+                      <button class="ghost-button" id="nextMonthBtn" type="button" aria-label="Next month" style="padding: 4px 8px; font-size: 12px;">▶</button>
+                    </div>
+                  </div>
                   <div class="calendar" id="calendarGrid"></div>
                 </section>
                 <section class="panel">
@@ -840,6 +846,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=phase11-analytics-1"></script>
+    <script src="app.js?v=phase11-stable-fix-1"></script>
   </body>
 </html>

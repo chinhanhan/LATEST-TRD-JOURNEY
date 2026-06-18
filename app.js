@@ -3,7 +3,8 @@ const LEGACY_KEY = "trd-journey-v1";
 const LANGUAGE_KEY = "trd-journey-language";
 const IMAGE_LIMIT = 850 * 1024;
 
-const todayISO = () => new Date().toISOString().slice(0, 10);
+const localISO = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const todayISO = () => localISO(new Date());
 const money = (value) => `$${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 const uid = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 const safe = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[c]);
@@ -498,7 +499,7 @@ function dateRange(start, end) {
   const cursor = new Date(`${start}T00:00:00`);
   const last = new Date(`${end}T00:00:00`);
   while (cursor <= last) {
-    days.push(cursor.toISOString().slice(0, 10));
+    days.push(localISO(cursor));
     cursor.setDate(cursor.getDate() + 1);
   }
   return days;
@@ -508,16 +509,16 @@ function weekRange(date = todayISO()) {
   const d = new Date(`${date}T00:00:00`);
   const day = (d.getDay() + 6) % 7;
   d.setDate(d.getDate() - day);
-  const start = d.toISOString().slice(0, 10);
+  const start = localISO(d);
   d.setDate(d.getDate() + 6);
-  return [start, d.toISOString().slice(0, 10)];
+  return [start, localISO(d)];
 }
 
 function monthRange(date = todayISO()) {
   const d = new Date(`${date}T00:00:00`);
   const start = new Date(d.getFullYear(), d.getMonth(), 1);
   const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
-  return [start.toISOString().slice(0, 10), end.toISOString().slice(0, 10)];
+  return [localISO(start), localISO(end)];
 }
 
 function tradesInRange(start, end) {
@@ -2418,6 +2419,22 @@ document.addEventListener("keydown", (event) => {
   } else if (activeModule) {
     closeModule();
   }
+});
+
+document.getElementById("prevMonthBtn")?.addEventListener("click", () => {
+  const d = new Date(`${selectedDay}T00:00:00`);
+  d.setMonth(d.getMonth() - 1);
+  d.setDate(1);
+  selectedDay = localISO(d);
+  renderCycles();
+});
+
+document.getElementById("nextMonthBtn")?.addEventListener("click", () => {
+  const d = new Date(`${selectedDay}T00:00:00`);
+  d.setMonth(d.getMonth() + 1);
+  d.setDate(1);
+  selectedDay = localISO(d);
+  renderCycles();
 });
 
 document.body.addEventListener("click", (event) => {
