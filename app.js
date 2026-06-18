@@ -80,7 +80,9 @@ const defaultPreferences = {
   dailyMaxLossR: -2,
   maxTradesPerDay: 3,
   setups: ["Opening Drive", "Pullback Continuation", "Liquidity Sweep", "Range Fade", "Breakout Retest"],
-  dailyRules: ["Only A setups before 11:30", "Stop trading at -2R", "No revenge trades", "One setup, one decision"]
+  dailyRules: ["Only A setups before 11:30", "Stop trading at -2R", "No revenge trades", "One setup, one decision"],
+  backupReminder: true,
+  lastBackupAt: ""
 };
 
 const defaultSopDetails = {
@@ -757,6 +759,7 @@ function populateSettings() {
   form.maxTradesPerDay.value = state.preferences.maxTradesPerDay;
   form.setups.value = state.preferences.setups.join("\n");
   form.dailyRules.value = state.preferences.dailyRules.join("\n");
+  form.backupReminder.checked = state.preferences.backupReminder !== false;
 }
 
 function populateWorkflowForms() {
@@ -1835,11 +1838,20 @@ async function compressImage(dataUrl) {
   canvas.height = Math.max(1, Math.round(image.height * scale));
   const context = canvas.getContext("2d");
   context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  
   let quality = 0.82;
-  let output = canvas.toDataURL("image/jpeg", quality);
+  let type = "image/webp";
+  let output = canvas.toDataURL(type, quality);
+  
+  // Fallback to jpeg if webp is not supported by the browser
+  if (!output.startsWith("data:image/webp")) {
+    type = "image/jpeg";
+    output = canvas.toDataURL(type, quality);
+  }
+
   while (output.length > IMAGE_LIMIT && quality > 0.42) {
     quality -= 0.1;
-    output = canvas.toDataURL("image/jpeg", quality);
+    output = canvas.toDataURL(type, quality);
   }
   if (output.length > IMAGE_LIMIT) throw new Error("Image is too large. Please use a smaller screenshot.");
   return output;
@@ -2155,7 +2167,10 @@ function exportCsv() {
 }
 
 function exportJson() {
+  state.preferences.lastBackupAt = new Date().toISOString();
+  saveState();
   download("trd-journey-backup.json", JSON.stringify({ exportedAt: new Date().toISOString(), ...state }, null, 2), "application/json");
+  toast("Backup exported successfully.", "success");
 }
 
 function download(filename, content, type) {
@@ -2663,12 +2678,14 @@ document.getElementById("settingsForm").addEventListener("submit", (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   state.preferences = {
+    ...state.preferences,
     defaultSymbol: form.defaultSymbol.value.trim().toUpperCase() || "NQ",
     riskPerTrade: Number(form.riskPerTrade.value),
     dailyMaxLossR: Number(form.dailyMaxLossR.value),
     maxTradesPerDay: Number(form.maxTradesPerDay.value),
     setups: form.setups.value.split("\n").map((item) => item.trim()).filter(Boolean),
-    dailyRules: form.dailyRules.value.split("\n").map((item) => item.trim()).filter(Boolean)
+    dailyRules: form.dailyRules.value.split("\n").map((item) => item.trim()).filter(Boolean),
+    backupReminder: form.backupReminder.checked
   };
   if (!state.preferences.setups.length) state.preferences.setups = [...defaultPreferences.setups];
   state = ensureSopState(state);
@@ -3674,6 +3691,15 @@ async function initApp() {
     initLayoutListeners();
     updateStorageEstimate();
     updateSyncStatus();
+    
+    // Auto-backup reminder check
+    if (state.preferences.backupReminder !== false && state.trades.length >= 10) {
+      const lastBackup = state.preferences.lastBackupAt ? new Date(state.preferences.lastBackupAt) : null;
+      const daysSinceBackup = lastBackup ? (Date.now() - lastBackup.getTime()) / (1000 * 60 * 60 * 24) : Infinity;
+      if (daysSinceBackup >= 7) {
+        toast("Your data hasn't been backed up recently. Please export a backup to secure your journal.", "loss");
+      }
+    }
     
     window.addEventListener("online", updateSyncStatus);
     window.addEventListener("offline", updateSyncStatus);
