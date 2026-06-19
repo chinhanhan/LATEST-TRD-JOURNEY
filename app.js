@@ -82,6 +82,16 @@ const defaultPreferences = {
   setups: ["Opening Drive", "Pullback Continuation", "Liquidity Sweep", "Range Fade", "Breakout Retest"],
   dailyRules: ["Only A setups before 11:30", "Stop trading at -2R", "No revenge trades", "One setup, one decision"],
   backupReminder: true,
+  enableSounds: true,
+  carouselDragSensitivity: 0.18,
+  carouselSnapFriction: 0.04,
+  checklistLabels: {
+    hasPlan: "Plan",
+    hasTrigger: "Trigger",
+    hasStop: "Invalidation Stop",
+    hasTarget: "Planned Target",
+    emotionControlled: "Emotional Control"
+  },
   lastBackupAt: ""
 };
 
@@ -276,7 +286,14 @@ async function loadState() {
 function normalizeState(raw) {
   return ensureSopState({
     version: 1,
-    preferences: { ...structuredClone(defaultPreferences), ...(raw.preferences || {}) },
+    preferences: {
+      ...structuredClone(defaultPreferences),
+      ...(raw.preferences || {}),
+      checklistLabels: {
+        ...structuredClone(defaultPreferences.checklistLabels),
+        ...(raw.preferences?.checklistLabels || {})
+      }
+    },
     trades: (raw.trades || []).map(normalizeTrade),
     dailyPlans: raw.dailyPlans || {},
     dailyReviews: raw.dailyReviews || {},
@@ -321,7 +338,8 @@ function normalizeTrade(trade) {
     imageUrl: trade.imageUrl || "",
     imageData: trade.imageData || "",
     sopId: trade.sopId || "",
-    accountId: trade.accountId || ""
+    accountId: trade.accountId || "",
+    reflection: trade.reflection || ""
   };
 }
 
@@ -609,7 +627,23 @@ function timelineGroups(trades = visibleTrades()) {
   }, {});
 }
 
+function updateChecklistLabelsInUI() {
+  const labels = state.preferences.checklistLabels || defaultPreferences.checklistLabels;
+  const planEl = document.getElementById("labelHasPlanText");
+  const triggerEl = document.getElementById("labelHasTriggerText");
+  const stopEl = document.getElementById("labelHasStopText");
+  const targetEl = document.getElementById("labelHasTargetText");
+  const emotionEl = document.getElementById("labelEmotionControlledText");
+  
+  if (planEl) planEl.textContent = labels.hasPlan;
+  if (triggerEl) triggerEl.textContent = labels.hasTrigger;
+  if (stopEl) stopEl.textContent = labels.hasStop;
+  if (targetEl) targetEl.textContent = labels.hasTarget;
+  if (emotionEl) emotionEl.textContent = labels.emotionControlled;
+}
+
 function renderAll() {
+  updateChecklistLabelsInUI();
   applyLanguage();
   populateStaticLabels();
   populateSetupOptions();
@@ -628,6 +662,7 @@ function renderAll() {
   renderWorkflow();
   renderCycles();
   renderPlaybook();
+  renderReflections();
   renderThemeButtons();
   applyLanguage();
   
@@ -641,8 +676,13 @@ function renderAll() {
   updateMindfulnessBanner();
   renderDisciplineHeatmap();
 
-  // Phase 10 Dedicated Missions View & Self-Discipline Rewards System
   renderMissions();
+
+  // Initialize AnimatedList gradients and Intersection Observer
+  setTimeout(() => {
+    if (window.observeAnimatedItems) window.observeAnimatedItems();
+    if (window.initScrollListGradients) window.initScrollListGradients();
+  }, 50);
 }
 
 function renderHomeSummary() {
@@ -760,6 +800,21 @@ function populateSettings() {
   form.setups.value = state.preferences.setups.join("\n");
   form.dailyRules.value = state.preferences.dailyRules.join("\n");
   form.backupReminder.checked = state.preferences.backupReminder !== false;
+  form.enableSounds.checked = state.preferences.enableSounds !== false;
+  
+  const sens = state.preferences.carouselDragSensitivity ?? 0.18;
+  const fric = state.preferences.carouselSnapFriction ?? 0.04;
+  form.carouselDragSensitivity.value = sens;
+  form.carouselSnapFriction.value = fric;
+  document.getElementById("carouselDragSensVal").textContent = sens;
+  document.getElementById("carouselSnapFricVal").textContent = fric;
+
+  const labels = state.preferences.checklistLabels || defaultPreferences.checklistLabels;
+  form.checklistLabelPlan.value = labels.hasPlan;
+  form.checklistLabelTrigger.value = labels.hasTrigger;
+  form.checklistLabelStop.value = labels.hasStop;
+  form.checklistLabelTarget.value = labels.hasTarget;
+  form.checklistLabelEmotion.value = labels.emotionControlled;
 }
 
 function populateWorkflowForms() {
@@ -915,7 +970,7 @@ function renderLineChart(id, seriesData, options = {}) {
         const tooltipX = rect.left + (nearest.x / width) * rect.width;
         const tooltipY = rect.top + (nearest.y / height) * rect.height;
         tooltip.style.left = tooltipX + "px";
-        tooltip.style.top = (tooltipY - 70) + "px"; // Hover slightly above
+        tooltip.style.top = tooltipY + "px"; // Hover slightly above
         tooltip.classList.remove("hidden");
       }
     } else {
@@ -997,12 +1052,30 @@ function renderSopJourney() {
   document.getElementById("sopCards").innerHTML = state.sops.filter((sop) => !sop.archivedAt).map((sop) => {
     const sopProgressValue = sopProgress(sop.id);
     const sopLevelValue = sopLevel(sopProgressValue);
-    return `<button class="sop-card ${sop.id === state.activeSopId ? "active" : ""}" data-sop="${safe(sop.id)}" type="button">
-      <span>${safe(sop.market || "SOP")} · ${safe(sop.timeframe || "Journey")}</span>
-      <strong>${safe(sop.name)}</strong>
-      <small>Level ${sopLevelValue.level} ${sopLevelValue.name} · ${sopProgressValue.records} records</small>
-      <i style="width:${Math.min(100, sopLevelValue.level * 20)}%"></i>
-    </button>`;
+    const active = sop.id === state.activeSopId;
+    return `
+    <div class="sop-card ${active ? "active" : ""}" data-sop-expand="${safe(sop.id)}">
+      <div class="sop-card-header">
+        <span>${safe(sop.market || "SOP")} · ${safe(sop.timeframe || "Journey")}</span>
+        <strong>${safe(sop.name)}</strong>
+        <small>Level ${sopLevelValue.level} ${sopLevelValue.name} · ${sopProgressValue.records} records</small>
+        <i style="width:${Math.min(100, sopLevelValue.level * 20)}%"></i>
+      </div>
+      <div class="sop-card-details">
+        <div class="sop-details-section">
+          <strong>📋 Entry Rules:</strong>
+          <p>${safe(sop.entryRules || "Follow SOP guidelines.")}</p>
+        </div>
+        <div class="sop-details-section">
+          <strong>Weaknesses:</strong>
+          <p>${safe((sop.weaknesses || []).join(", ") || "None registered.")}</p>
+        </div>
+        <div class="row-actions sop-card-actions">
+          ${active ? `<button class="primary-button compact" disabled type="button">Active SOP</button>` : `<button class="primary-button compact" data-sop="${safe(sop.id)}" type="button">Select SOP</button>`}
+          <button class="ghost-button compact" data-edit-sop="${safe(sop.id)}" type="button">Edit Settings</button>
+        </div>
+      </div>
+    </div>`;
   }).join("");
   document.getElementById("sopGrowthPanel").innerHTML = maturityPanel(active, progress, level);
   renderAccountManager();
@@ -1677,6 +1750,7 @@ async function fileToDataUrl(file) {
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function playSound(type) {
+  if (state?.preferences && state.preferences.enableSounds === false) return;
   if (audioCtx.state === 'suspended') audioCtx.resume();
   const now = audioCtx.currentTime;
   
@@ -2145,7 +2219,7 @@ function toast(message, type = "info") {
 }
 
 function exportCsv() {
-  const headers = ["status", "date", "closedAt", "symbol", "sopName", "sopId", "accountName", "accountId", "accountStartingBalance", "accountCurrentBalance", "setup", "direction", "grade", "risk", "pnl", "r", "rule", "emotion", "entryPlan", "stopPlan", "targetPlan", "exitNote", "tradingViewUrl", "imageUrl", "imageCount", "note"];
+  const headers = ["status", "date", "closedAt", "symbol", "sopName", "sopId", "accountName", "accountId", "accountStartingBalance", "accountCurrentBalance", "setup", "direction", "grade", "risk", "pnl", "r", "rule", "emotion", "entryPlan", "stopPlan", "targetPlan", "exitNote", "tradingViewUrl", "imageUrl", "imageCount", "note", "reflection"];
   const rows = state.trades.map((trade) => headers.map((key) => {
     const account = state.accounts.find((item) => item.id === trade.accountId);
     const value = key === "r"
@@ -2320,22 +2394,31 @@ function openModule(id, source = null) {
   const view = document.getElementById(id);
   if (!view) return;
   
+  if (window.resetInternalSelection) window.resetInternalSelection();
   playSound("switch");
   activeModule = id;
   
-  // Toggle views
-  document.querySelectorAll(".view").forEach((item) => {
-    item.classList.toggle("active", item.id === id);
-  });
+  if (id === "landing-gallery") {
+    // Overlay mode: Keep the current view active, just show the gallery on top
+    view.classList.add("active");
+  } else {
+    // Normal mode: Hide the gallery overlay and switch the active view
+    const landing = document.getElementById("landing-gallery");
+    if (landing) landing.classList.remove("active");
+    
+    document.querySelectorAll(".view:not(#landing-gallery)").forEach((item) => {
+      item.classList.toggle("active", item.id === id);
+    });
+  }
   
   // Update Dock active states
   document.querySelectorAll(".dock-item").forEach((item) => {
-    item.classList.toggle("active", item.dataset.dockModule === id);
+    item.classList.toggle("active", item.dataset.dockModule === (id === "landing-gallery" ? activeModule : id));
   });
   
   // Trigger shimmer skeleton loaders
   const mainEl = document.querySelector(".main");
-  if (mainEl) {
+  if (mainEl && id !== "landing-gallery") {
     mainEl.classList.add("is-skeleton");
     setTimeout(() => mainEl.classList.remove("is-skeleton"), 240);
   }
@@ -2349,8 +2432,10 @@ function openModule(id, source = null) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+window.openModule = openModule;
+
 function closeModule() {
-  openModule("overview");
+  openModule("landing-gallery");
 }
 
 function switchLanguage() {
@@ -2426,15 +2511,109 @@ document.getElementById("modalCloseBtn")?.addEventListener("click", closeModal);
 document.getElementById("modalBackdrop")?.addEventListener("click", (event) => {
   if (event.target.id === "modalBackdrop") closeModal();
 });
-document.addEventListener("keydown", (event) => {
-  if (event.key !== "Escape") return;
-  const backdrop = document.getElementById("modalBackdrop");
-  if (backdrop && !backdrop.classList.contains("hidden")) {
-    closeModal();
-  } else if (activeModule) {
-    closeModule();
+// Keyboard Navigation helper for active pages (AnimatedList style)
+let internalSelectedIndex = -1;
+
+window.resetInternalSelection = function() {
+  internalSelectedIndex = -1;
+  document.querySelectorAll(".workflow-tile, .quest-item, .timeline-card").forEach(el => {
+    el.classList.remove("selected-item");
+  });
+};
+
+function handleInternalKeyDown(event) {
+  // Only handle if landing gallery is NOT active
+  const landing = document.getElementById("landing-gallery");
+  if (landing && landing.classList.contains("active")) return;
+  
+  // Ignore if modal or sheet is open
+  const modal = document.getElementById("modalBackdrop");
+  if (modal && !modal.classList.contains("hidden")) return;
+  const sheets = Array.from(document.querySelectorAll(".sheet-backdrop")).filter(s => !s.classList.contains("hidden"));
+  if (sheets.length > 0) return;
+  
+  let selector = "";
+  if (activeModule === "overview") {
+    selector = ".workflow-tile";
+  } else if (activeModule === "missions") {
+    selector = ".quest-item";
+  } else if (activeModule === "journal") {
+    selector = ".timeline-card";
   }
+  
+  if (!selector) return;
+  
+  const items = Array.from(document.querySelectorAll(selector)).filter(el => el.offsetWidth > 0); // Must be visible
+  if (items.length === 0) return;
+  
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    internalSelectedIndex = Math.min(internalSelectedIndex + 1, items.length - 1);
+    updateInternalSelection(items);
+  } else if (event.key === "ArrowUp") {
+    event.preventDefault();
+    internalSelectedIndex = Math.max(internalSelectedIndex - 1, 0);
+    updateInternalSelection(items);
+  } else if (event.key === "Enter") {
+    if (internalSelectedIndex >= 0 && internalSelectedIndex < items.length) {
+      event.preventDefault();
+      const selectedEl = items[internalSelectedIndex];
+      if (activeModule === "overview") {
+        if (!selectedEl.classList.contains("expanded")) {
+          selectedEl.querySelector(".tile-summary-header")?.click();
+        } else {
+          selectedEl.querySelector(".tile-action-btn")?.click();
+        }
+      } else if (activeModule === "missions") {
+        selectedEl.click();
+      } else if (activeModule === "journal") {
+        selectedEl.querySelector("[data-detail]")?.click();
+      }
+    }
+  }
+}
+
+function updateInternalSelection(items) {
+  items.forEach((item, idx) => {
+    item.classList.toggle("selected-item", idx === internalSelectedIndex);
+    if (idx === internalSelectedIndex) {
+      item.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  });
+}
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    const backdrop = document.getElementById("modalBackdrop");
+    if (backdrop && !backdrop.classList.contains("hidden")) {
+      closeModal();
+    } else if (activeModule) {
+      closeModule();
+    }
+    return;
+  }
+  
+  handleInternalKeyDown(event);
 });
+
+// Update internal select index on hover
+document.body.addEventListener("mouseenter", (e) => {
+  const item = e.target.closest(".workflow-tile, .quest-item, .timeline-card");
+  if (item) {
+    let selector = "";
+    if (activeModule === "overview") selector = ".workflow-tile";
+    else if (activeModule === "missions") selector = ".quest-item";
+    else if (activeModule === "journal") selector = ".timeline-card";
+    
+    if (selector && item.matches(selector)) {
+      const items = Array.from(document.querySelectorAll(selector)).filter(el => el.offsetWidth > 0);
+      internalSelectedIndex = items.indexOf(item);
+      items.forEach((el, idx) => {
+        el.classList.toggle("selected-item", idx === internalSelectedIndex);
+      });
+    }
+  }
+}, true);
 
 document.getElementById("prevMonthBtn")?.addEventListener("click", () => {
   const d = new Date(`${selectedDay}T00:00:00`);
@@ -2538,6 +2717,15 @@ document.body.addEventListener("click", (event) => {
   const tv = event.target.closest("[data-tv]")?.dataset.tv;
   const deleteSopId = event.target.closest("[data-delete-sop]")?.dataset.deleteSop;
   const insightKey = event.target.closest("[data-insight]")?.dataset.insight;
+  const sopExpand = event.target.closest("[data-sop-expand]");
+  if (sopExpand && !event.target.closest("button")) {
+    event.stopPropagation();
+    document.querySelectorAll(".sop-card").forEach((card) => {
+      if (card !== sopExpand) card.classList.remove("expanded");
+    });
+    sopExpand.classList.toggle("expanded");
+  }
+
   if (shortcut) openModule(shortcut);
   if (detail) openDetail(detail);
   if (edit) editTrade(edit);
@@ -2579,6 +2767,22 @@ document.body.addEventListener("click", (event) => {
   if (tv) embedTradingView(tv);
   if (deleteSopId) deleteSop(deleteSopId);
   if (insightKey) openInsightDetail(insightKey);
+  
+  const saveReflectionBtn = event.target.closest(".save-reflection-btn");
+  if (saveReflectionBtn) {
+    const tradeId = saveReflectionBtn.dataset.tradeId;
+    const card = saveReflectionBtn.closest(".shame-trade-card");
+    const textarea = card.querySelector("textarea");
+    const text = textarea.value.trim();
+    
+    const trade = state.trades.find(t => t.id === tradeId);
+    if (trade) {
+      trade.reflection = text;
+      saveState();
+      toast("Self-reflection saved.", "success");
+    }
+    return;
+  }
 });
 
 document.body.addEventListener("submit", (event) => {
@@ -2685,7 +2889,17 @@ document.getElementById("settingsForm").addEventListener("submit", (event) => {
     maxTradesPerDay: Number(form.maxTradesPerDay.value),
     setups: form.setups.value.split("\n").map((item) => item.trim()).filter(Boolean),
     dailyRules: form.dailyRules.value.split("\n").map((item) => item.trim()).filter(Boolean),
-    backupReminder: form.backupReminder.checked
+    backupReminder: form.backupReminder.checked,
+    enableSounds: form.enableSounds.checked,
+    carouselDragSensitivity: Number(form.carouselDragSensitivity.value),
+    carouselSnapFriction: Number(form.carouselSnapFriction.value),
+    checklistLabels: {
+      hasPlan: form.checklistLabelPlan.value.trim() || "Plan",
+      hasTrigger: form.checklistLabelTrigger.value.trim() || "Trigger",
+      hasStop: form.checklistLabelStop.value.trim() || "Invalidation Stop",
+      hasTarget: form.checklistLabelTarget.value.trim() || "Planned Target",
+      emotionControlled: form.checklistLabelEmotion.value.trim() || "Emotional Control"
+    }
   };
   if (!state.preferences.setups.length) state.preferences.setups = [...defaultPreferences.setups];
   state = ensureSopState(state);
@@ -2843,6 +3057,115 @@ function initCardSpotlightHover() {
       card.style.setProperty("--mouse-y", "-999px");
     }
   }, true);
+}
+
+function initMacDock() {
+  console.log("initMacDock: Initializing macOS smooth dock...");
+  const dock = document.querySelector(".ios-dock");
+  if (!dock) {
+    console.warn("initMacDock: .ios-dock not found!");
+    return;
+  }
+  const items = dock.querySelectorAll(".dock-item");
+  console.log(`initMacDock: Found ${items.length} dock items.`);
+  
+  const baseSize = 58;
+  const magnification = 80;
+  const distance = 150;
+  
+  let animationFrameId = null;
+  let targetWidths = Array(items.length).fill(baseSize);
+  let currentWidths = Array(items.length).fill(baseSize);
+  let isHovered = false;
+
+  const loop = () => {
+    let needsUpdate = false;
+    items.forEach((item, index) => {
+      // Lerp for smooth spring-like animation to avoid jitter
+      currentWidths[index] += (targetWidths[index] - currentWidths[index]) * 0.25;
+      
+      if (Math.abs(targetWidths[index] - currentWidths[index]) > 0.1) {
+        needsUpdate = true;
+      } else {
+        currentWidths[index] = targetWidths[index]; // Snap
+      }
+
+      item.style.width = `${currentWidths[index]}px`;
+      item.style.height = `${currentWidths[index]}px`;
+      
+      const icon = item.querySelector(".dock-icon");
+      if (icon) {
+        const targetIconSize = 24 + ((currentWidths[index] - baseSize) / (magnification - baseSize)) * 8;
+        icon.style.fontSize = `${targetIconSize}px`;
+      }
+    });
+
+    if (needsUpdate && isHovered) {
+      animationFrameId = requestAnimationFrame(loop);
+    } else {
+      animationFrameId = null;
+    }
+  };
+  
+  dock.addEventListener("mouseenter", () => {
+    isHovered = true;
+    items.forEach(item => {
+      item.classList.remove("resetting");
+      const icon = item.querySelector(".dock-icon");
+      if (icon) icon.classList.remove("resetting");
+    });
+    
+    // Jump to current bounds in case it was resetting via CSS
+    items.forEach((item, i) => {
+      const rect = item.getBoundingClientRect();
+      currentWidths[i] = rect.width;
+      targetWidths[i] = rect.width;
+    });
+    
+    if (!animationFrameId) animationFrameId = requestAnimationFrame(loop);
+  });
+  
+  dock.addEventListener("mousemove", (e) => {
+    const mouseX = e.clientX;
+    
+    items.forEach((item, index) => {
+      const rect = item.getBoundingClientRect();
+      const itemCenterX = rect.left + rect.width / 2;
+      const dist = Math.abs(mouseX - itemCenterX);
+      
+      if (dist < distance) {
+        // React bits linear mapping
+        const progress = 1 - (dist / distance);
+        targetWidths[index] = baseSize + (magnification - baseSize) * progress;
+      } else {
+        targetWidths[index] = baseSize;
+      }
+    });
+    
+    if (!animationFrameId && isHovered) {
+      animationFrameId = requestAnimationFrame(loop);
+    }
+  });
+  
+  dock.addEventListener("mouseleave", () => {
+    isHovered = false;
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+    items.forEach((item, index) => {
+      item.classList.add("resetting");
+      item.style.width = "";
+      item.style.height = "";
+      const icon = item.querySelector(".dock-icon");
+      if (icon) {
+        icon.classList.add("resetting");
+        icon.style.fontSize = "";
+      }
+      targetWidths[index] = baseSize;
+      currentWidths[index] = baseSize;
+    });
+  });
 }
 
 function initCalendarHover() {
@@ -3626,9 +3949,23 @@ function initCollapsiblePanels() {
 }
 
 function initLayoutListeners() {
+  console.log("initLayoutListeners: Initializing click and layout listeners...");
+  
+  // Carousel range sliders dynamic text updates
+  document.querySelector('[name="carouselDragSensitivity"]')?.addEventListener("input", (e) => {
+    const val = document.getElementById("carouselDragSensVal");
+    if (val) val.textContent = e.target.value;
+  });
+  document.querySelector('[name="carouselSnapFriction"]')?.addEventListener("input", (e) => {
+    const val = document.getElementById("carouselSnapFricVal");
+    if (val) val.textContent = e.target.value;
+  });
+
   // Bottom Dock navigation
   document.querySelectorAll(".dock-item").forEach((button) => {
+    console.log("initLayoutListeners: Registering click for dock item", button.dataset.dockModule);
     button.addEventListener("click", () => {
+      console.log("initLayoutListeners: Dock item clicked:", button.dataset.dockModule);
       openModule(button.dataset.dockModule, button);
     });
   });
@@ -3638,11 +3975,24 @@ function initLayoutListeners() {
     openSheet("tradeFormSheet");
   });
 
-  // Workflow Tiles (Plan & Review)
-  document.getElementById("tilePlan")?.addEventListener("click", () => {
+  // Workflow Tiles (Plan & Review) - CardNav collapsible style
+  document.querySelectorAll(".workflow-tile").forEach((tile) => {
+    tile.querySelector(".tile-summary-header")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      // Collapse other tiles
+      document.querySelectorAll(".workflow-tile").forEach((other) => {
+        if (other !== tile) other.classList.remove("expanded");
+      });
+      tile.classList.toggle("expanded");
+    });
+  });
+
+  document.getElementById("openPlanSheetBtn")?.addEventListener("click", (e) => {
+    e.stopPropagation();
     openSheet("planSheet");
   });
-  document.getElementById("tileReview")?.addEventListener("click", () => {
+  document.getElementById("openReviewSheetBtn")?.addEventListener("click", (e) => {
+    e.stopPropagation();
     openSheet("reviewSheet");
   });
 
@@ -3676,19 +4026,36 @@ function initLayoutListeners() {
 
 async function initApp() {
   try {
+    console.log("initApp: Starting application initialization...");
     state = await loadState();
+    window.state = state;
+    console.log("initApp: State loaded successfully");
     await saveState(); // Ensure initialized defaults or migrated data are saved
     renderAll();
+    console.log("initApp: Main rendering complete");
     resetTradeForm();
     
-    // Initial view defaults to Today tab
+    // Boot up the main app (overview) so the DOM is laid out behind the glass
     openModule("overview");
+    // Immediately overlay the 3D Welcome Launcher
+    openModule("landing-gallery");
+    console.log("initApp: Opened overview behind landing gallery overlay");
     
     // Phase 5 & 6 Initializations
+    if (window.initCSS3DCarousel) {
+      window.initCSS3DCarousel();
+    } else {
+      window.addEventListener('gallery-ready', () => {
+        window.initCSS3DCarousel();
+      });
+    }
+    
     initCardSpotlightHover();
     initCalendarHover();
+    initMacDock();
     initRewardListeners();
     initLayoutListeners();
+    console.log("initApp: Listeners and modules initialized successfully");
     updateStorageEstimate();
     updateSyncStatus();
     
@@ -3727,6 +4094,185 @@ async function initApp() {
   } catch (err) {
     console.error("Initialization failed:", err);
     alert("Initialization Error:\n" + err.message + "\n\nStack:\n" + err.stack);
+  }
+}
+
+// Intersection Observer for animated items (AnimatedList scale/fade transition)
+const inViewObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add("in-view");
+    } else {
+      entry.target.classList.remove("in-view");
+    }
+  });
+}, {
+  threshold: 0.1,
+  rootMargin: "0px 0px -20px 0px"
+});
+
+window.observeAnimatedItems = function() {
+  document.querySelectorAll(".timeline-card, .quest-item, .sop-card").forEach(item => {
+    item.classList.add("animated-in-view");
+    inViewObserver.observe(item);
+  });
+};
+
+// Scroll overlay gradients manager
+window.updateScrollGradients = function(containerEl) {
+  if (!containerEl) return;
+  const listEl = containerEl.querySelector(".scroll-list");
+  const topGrad = containerEl.querySelector(".top-gradient");
+  const bottomGrad = containerEl.querySelector(".bottom-gradient");
+  if (!listEl || !topGrad || !bottomGrad) return;
+  
+  const scrollTop = listEl.scrollTop;
+  const scrollHeight = listEl.scrollHeight;
+  const clientHeight = listEl.clientHeight;
+  
+  topGrad.style.opacity = String(Math.min(scrollTop / 45, 1));
+  const bottomDistance = scrollHeight - (scrollTop + clientHeight);
+  bottomGrad.style.opacity = String(scrollHeight <= clientHeight ? 0 : Math.min(bottomDistance / 45, 1));
+};
+
+window.initScrollListGradients = function() {
+  document.querySelectorAll(".scroll-list-container").forEach(container => {
+    const listEl = container.querySelector(".scroll-list");
+    if (listEl && !listEl.dataset.hasScrollBound) {
+      listEl.dataset.hasScrollBound = "true";
+      listEl.addEventListener("scroll", () => window.updateScrollGradients(container), { passive: true });
+    }
+    window.updateScrollGradients(container);
+    setTimeout(() => window.updateScrollGradients(container), 80);
+  });
+};
+
+function getRelativeOffsetTop(container, element) {
+  let offsetTop = 0;
+  let current = element;
+  while (current && current !== container && container.contains(current)) {
+    offsetTop += current.offsetTop;
+    current = current.offsetParent;
+  }
+  return offsetTop;
+}
+
+function formatFailedChecklist(checklist) {
+  if (!checklist) return "";
+  const labels = state.preferences.checklistLabels || defaultPreferences.checklistLabels;
+  const mappings = {
+    hasPlan: `No ${labels.hasPlan} 📋`,
+    hasTrigger: `No ${labels.hasTrigger} 🎯`,
+    hasStop: `No ${labels.hasStop} 🛑`,
+    hasTarget: `No ${labels.hasTarget} 🏁`,
+    emotionControlled: labels.emotionControlled.toLowerCase().includes("control") 
+      ? `Loss of ${labels.emotionControlled} 🧠` 
+      : `No ${labels.emotionControlled} 🧠`
+  };
+  const failed = [];
+  for (const [key, val] of Object.entries(checklist)) {
+    if (!val && mappings[key]) {
+      failed.push(mappings[key]);
+    }
+  }
+  return failed.map(tag => `<span class="tag" style="background: rgba(217, 74, 69, 0.1); color: var(--red); border: 1px solid rgba(217, 74, 69, 0.2); font-size: 11px; padding: 2px 8px; border-radius: 4px;">${safe(tag)}</span>`).join(" ");
+}
+
+function renderReflections() {
+  const summaryTarget = document.getElementById("shameWallSummary");
+  const listTarget = document.getElementById("shameTradesList");
+  if (!summaryTarget || !listTarget) return;
+
+  const violationTrades = state.trades.filter(t => t.rule === false);
+  violationTrades.sort((a, b) => b.date.localeCompare(a.date));
+
+  if (violationTrades.length === 0) {
+    summaryTarget.innerHTML = `
+      <div class="zero-state-card" style="padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: rgba(52, 199, 89, 0.05); border: 1px dashed rgba(52, 199, 89, 0.3); border-radius: 16px; width: 100%; box-sizing: border-box;">
+        <div style="font-size: 48px; margin-bottom: 12px;">🛡️</div>
+        <h3>Perfect Discipline!</h3>
+        <p style="color: var(--muted); font-size: 14px; margin: 0;">You have zero SOP rule violations logged. Keep up this immaculate execution standard!</p>
+      </div>
+    `;
+    listTarget.innerHTML = `<div style="text-align: center; color: var(--muted); padding: 40px 0; font-size: 14px;">No broken rules in your timeline.</div>`;
+    return;
+  }
+
+  const totalPnLLeak = violationTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+  const totalRLeak = violationTrades.reduce((sum, t) => sum + rValue(t), 0);
+  const count = violationTrades.length;
+  
+  // Find most common emotion
+  const emotions = violationTrades.map(t => t.emotion).filter(Boolean);
+  const emotionCounts = emotions.reduce((acc, emo) => {
+    acc[emo] = (acc[emo] || 0) + 1;
+    return acc;
+  }, {});
+  const topEmotion = Object.keys(emotionCounts).sort((a, b) => emotionCounts[b] - emotionCounts[a])[0] || "None";
+
+  summaryTarget.innerHTML = `
+    <div class="insight-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 14px;">
+      ${insightCard("Violations Count", `${count} trades`, `${Math.round(count / Math.max(state.trades.length, 1) * 100)}% of total trades`)}
+      ${insightCard("Total R Leakage", formatR(totalRLeak), "R multiple lost")}
+      ${insightCard("Financial Leakage", `$${totalPnLLeak.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, "Net P&L of rule breaks", "largestLoss")}
+      ${insightCard("Trigger Emotion", topEmotion, emotions.length ? `Prevalent feeling (${emotionCounts[topEmotion] || 0} times)` : "No emotion logged")}
+    </div>
+  `;
+
+  listTarget.innerHTML = violationTrades.map(t => {
+    const failedChecksHtml = formatFailedChecklist(t.checklist);
+    const pnlClass = t.pnl < 0 ? "bad" : t.pnl > 0 ? "good" : "muted";
+    
+    return `
+      <div class="shame-trade-card" data-trade-id="${t.id}">
+        <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <strong style="font-size: 16px; color: var(--ink);">${safe(t.date)} · ${safe(t.symbol)} ${safe(t.direction)}</strong>
+            <p style="font-size: 13px; color: var(--text-secondary); margin: 4px 0 0 0;">
+              Setup: <strong>${safe(t.setup)}</strong> · Account: <strong>${safe(accountName(t.accountId))}</strong>
+            </p>
+          </div>
+          <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
+            <strong class="tag ${pnlClass}" style="font-size: 14px; font-weight: 700; padding: 4px 10px; border-radius: 999px;">
+              ${t.pnl ? `${t.pnl >= 0 ? "+" : ""}$${t.pnl}` : "$0"} (${formatR(rValue(t))})
+            </strong>
+            <span style="font-size: 12px; color: var(--muted); margin-top: 4px;">Emotion: <strong style="color: var(--red);">${safe(t.emotion || "Unspecified")}</strong></span>
+          </div>
+        </div>
+        
+        ${failedChecksHtml ? `<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">${failedChecksHtml}</div>` : ""}
+        
+        <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; padding: 10px; border-radius: 10px; background: rgba(0, 0, 0, 0.02); border-left: 3px solid rgba(217, 74, 69, 0.3); margin-top: 8px;">
+          <strong>Log Note:</strong> ${safe(t.exitNote || t.note || "No execution details logged.")}
+        </div>
+        
+        <div class="reflection-editor" style="display: flex; flex-direction: column; gap: 6px; margin-top: 10px;">
+          <strong style="font-size: 13px; color: var(--ink);">🧠 自我反省与改进计划 (Self-Reflection):</strong>
+          <textarea placeholder="Write down why you broke the rule, how it felt, and what action you will take to prevent this next time..." rows="3" style="width: 100%; font-size: 13px; line-height: 1.5; padding: 10px; border-radius: 10px; border: 1px solid var(--hairline); background: white; resize: vertical; box-sizing: border-box;">${safe(t.reflection || "")}</textarea>
+          <button class="primary-button compact save-reflection-btn" data-trade-id="${t.id}" style="align-self: flex-end; width: auto; min-width: 120px; padding: 6px 14px; font-size: 12px; border-radius: 999px; background: var(--red); border: none; color: white; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px;">
+            <span>💾 Save Reflection</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function scrollSelectedItemIntoView(container, selectedItem) {
+  if (!container || !selectedItem) return;
+  const extraMargin = 50;
+  const containerScrollTop = container.scrollTop;
+  const containerHeight = container.clientHeight;
+  const itemTop = getRelativeOffsetTop(container, selectedItem);
+  const itemBottom = itemTop + selectedItem.offsetHeight;
+  
+  if (itemTop < containerScrollTop + extraMargin) {
+    container.scrollTo({ top: itemTop - extraMargin, behavior: "smooth" });
+  } else if (itemBottom > containerScrollTop + containerHeight - extraMargin) {
+    container.scrollTo({
+      top: itemBottom - containerHeight + extraMargin,
+      behavior: "smooth"
+    });
   }
 }
 

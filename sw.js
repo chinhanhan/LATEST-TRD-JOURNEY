@@ -1,9 +1,10 @@
-const CACHE_NAME = 'trd-journey-phase11-analytics-1';
+const CACHE_NAME = 'trd-journey-phase12-2';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=phase11-analytics-1',
-  './app.js?v=phase11-analytics-1',
+  './styles.css?v=phase11-dock-fix-3',
+  './gallery.js?v=phase12-2',
+  './app.js?v=phase12-2',
   './manifest.json'
 ];
 

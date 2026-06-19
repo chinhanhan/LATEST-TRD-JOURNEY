@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=phase11-analytics-1" />
+    <link rel="stylesheet" href="styles.css?v=phase11-dock-fix-3" />
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -44,26 +44,199 @@
       </header>
 
       <main class="main">
-          <section class="view active" id="overview" data-title="Today" data-kicker="Command Center">
+          <section class="view active" id="landing-gallery">
+            <div id="css3d-carousel-container">
+              <div class="css3d-carousel-wrapper" id="css3d-carousel">
+                <div class="css3d-card" data-module="overview">
+                  <div class="card-inner">
+                    <div class="card-front">
+                      <div class="card-icon">📅</div>
+                      <div class="card-text">Today</div>
+                    </div>
+                    <div class="card-back">
+                      <button class="card-back-close" aria-label="Close card">✕</button>
+                      <div class="card-back-title">Today</div>
+                      <div class="animated-list-container">
+                        <div class="animated-list-wrapper">
+                          <div class="animated-item selected" data-action="module:overview" data-index="0">
+                            <p class="item-text">📅 Open Dashboard</p>
+                            <span class="item-arrow">↗</span>
+                          </div>
+                          <div class="animated-item" data-action="click:#tilePlan .tile-summary-header" data-index="1">
+                            <p class="item-text">☀️ Pre-market Plan</p>
+                            <span class="item-arrow">↗</span>
+                          </div>
+                          <div class="animated-item" data-action="click:#tileReview .tile-summary-header" data-index="2">
+                            <p class="item-text">🌙 Close-out Review</p>
+                            <span class="item-arrow">↗</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="css3d-card" data-module="journal">
+                  <div class="card-inner">
+                    <div class="card-front">
+                      <div class="card-icon">✍️</div>
+                      <div class="card-text">Journal</div>
+                    </div>
+                    <div class="card-back">
+                      <button class="card-back-close" aria-label="Close card">✕</button>
+                      <div class="card-back-title">Journal</div>
+                      <div class="animated-list-container">
+                        <div class="animated-list-wrapper">
+                          <div class="animated-item selected" data-action="click:[data-open-capture]" data-index="0">
+                            <p class="item-text">✍️ Start Trade</p>
+                            <span class="item-arrow">↗</span>
+                          </div>
+                          <div class="animated-item" data-action="module:journal" data-index="1">
+                            <p class="item-text">📖 SOP Record Trail</p>
+                            <span class="item-arrow">↗</span>
+                          </div>
+                          <div class="animated-item" data-action="click:#journalAddSopBtn" data-index="2">
+                            <p class="item-text">➕ Add SOP</p>
+                            <span class="item-arrow">↗</span>
+                          </div>
+                          <div class="animated-item" data-action="click:#journalAddAccountBtn" data-index="3">
+                            <p class="item-text">➕ Add Account</p>
+                            <span class="item-arrow">↗</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="css3d-card" data-module="missions">
+                  <div class="card-inner">
+                    <div class="card-front">
+                      <div class="card-icon">🎯</div>
+                      <div class="card-text">Missions</div>
+                    </div>
+                    <div class="card-back">
+                      <button class="card-back-close" aria-label="Close card">✕</button>
+                      <div class="card-back-title">Missions</div>
+                      <div class="animated-list-container">
+                        <div class="animated-list-wrapper">
+                          <div class="animated-item selected" data-action="module:missions" data-index="0">
+                            <p class="item-text">🎯 Daily Quests</p>
+                            <span class="item-arrow">↗</span>
+                          </div>
+                          <div class="animated-item" data-action="scroll:#rewardMissionPanel" data-index="1">
+                            <p class="item-text">🎁 Epic Reward</p>
+                            <span class="item-arrow">↗</span>
+                          </div>
+                          <div class="animated-item" data-action="scroll:.achievements-panel" data-index="2">
+                            <p class="item-text">🏆 Achievements</p>
+                            <span class="item-arrow">↗</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="css3d-card" data-module="review">
+                  <div class="card-inner">
+                    <div class="card-front">
+                      <div class="card-icon">📊</div>
+                      <div class="card-text">Review</div>
+                    </div>
+                    <div class="card-back">
+                      <button class="card-back-close" aria-label="Close card">✕</button>
+                      <div class="card-back-title">Review</div>
+                      <div class="animated-list-container">
+                        <div class="animated-list-wrapper">
+                          <div class="animated-item selected" data-action="click:[data-review-panel='insights']" data-index="0">
+                            <p class="item-text">📊 Metrics Insights</p>
+                            <span class="item-arrow">↗</span>
+                          </div>
+                          <div class="animated-item" data-action="click:[data-review-panel='charts']" data-index="1">
+                            <p class="item-text">📈 Performance Charts</p>
+                            <span class="item-arrow">↗</span>
+                          </div>
+                          <div class="animated-item" data-action="click:[data-review-panel='calendar']" data-index="2">
+                            <p class="item-text">📅 Trading Calendar</p>
+                            <span class="item-arrow">↗</span>
+                          </div>
+                          <div class="animated-item" data-action="click:[data-review-panel='playbook']" data-index="3">
+                            <p class="item-text">📖 Strategy Playbook</p>
+                            <span class="item-arrow">↗</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="css3d-card" data-module="settings">
+                  <div class="card-inner">
+                    <div class="card-front">
+                      <div class="card-icon">⚙️</div>
+                      <div class="card-text">System</div>
+                    </div>
+                    <div class="card-back">
+                      <button class="card-back-close" aria-label="Close card">✕</button>
+                      <div class="card-back-title">System</div>
+                      <div class="animated-list-container">
+                        <div class="animated-list-wrapper">
+                          <div class="animated-item selected" data-action="module:settings" data-index="0">
+                            <p class="item-text">⚙️ Preferences</p>
+                            <span class="item-arrow">↗</span>
+                          </div>
+                          <div class="animated-item" data-action="click:#exportJsonBtn" data-index="1">
+                            <p class="item-text">📤 Export Backup</p>
+                            <span class="item-arrow">↗</span>
+                          </div>
+                          <div class="animated-item" data-action="click:#resetBtn" data-index="2">
+                            <p class="item-text">⚠️ Reset Demo Data</p>
+                            <span class="item-arrow">↗</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="landing-hint">Swipe or Drag to explore</div>
+          </section>
+          
+          <section class="view" id="overview" data-title="Today" data-kicker="Command Center">
             <div class="today-workflow-tiles">
-              <div class="workflow-tile" id="tilePlan" role="button" tabindex="0">
-                <div class="tile-icon">☀️</div>
-                <div class="tile-info">
-                  <span class="tile-kicker">Pre-market</span>
-                  <h3 class="tile-title">Today's Plan</h3>
-                  <p class="tile-status" id="statusPlanText">Not started</p>
-                </div>
-                <div class="tile-arrow">→</div>
-              </div>
-              <div class="workflow-tile" id="tileReview" role="button" tabindex="0">
-                <div class="tile-icon">🌙</div>
-                <div class="tile-info">
-                  <span class="tile-kicker">Daily close</span>
-                  <h3 class="tile-title">Daily Review</h3>
-                  <p class="tile-status" id="statusReviewText">Not started</p>
-                </div>
-                <div class="tile-arrow">→</div>
-              </div>
+               <div class="workflow-tile" id="tilePlan" role="button" tabindex="0">
+                 <div class="tile-summary-header">
+                   <div class="tile-icon">☀️</div>
+                   <div class="tile-info">
+                     <span class="tile-kicker">Pre-market</span>
+                     <h3 class="tile-title">Today's Plan</h3>
+                     <p class="tile-status" id="statusPlanText">Not started</p>
+                   </div>
+                   <div class="tile-arrow">↓</div>
+                 </div>
+                 <div class="tile-details">
+                   <div class="tile-details-content">
+                     <p>Define today's trading plan, major support/resistance levels, rules compliance targets, and your initial psychological state.</p>
+                     <button class="primary-button compact tile-action-btn" id="openPlanSheetBtn" type="button">Open Plan Checklist</button>
+                   </div>
+                 </div>
+               </div>
+               <div class="workflow-tile" id="tileReview" role="button" tabindex="0">
+                 <div class="tile-summary-header">
+                   <div class="tile-icon">🌙</div>
+                   <div class="tile-info">
+                     <span class="tile-kicker">Daily close</span>
+                     <h3 class="tile-title">Daily Review</h3>
+                     <p class="tile-status" id="statusReviewText">Not started</p>
+                   </div>
+                   <div class="tile-arrow">↓</div>
+                 </div>
+                 <div class="tile-details">
+                   <div class="tile-details-content">
+                     <p>Review the day's trades, verify compliance rate, note emotional biases, and write down mistakes to lock in learnings.</p>
+                     <button class="primary-button compact tile-action-btn" id="openReviewSheetBtn" type="button">Start Post-Market Review</button>
+                   </div>
+                 </div>
+               </div>
             </div>
 
             <!-- Mindfulness & Streak Achievement Banner -->
@@ -229,31 +402,35 @@
                   <h2>Daily Quests</h2>
                 </div>
               </div>
-              <div class="quests-grid">
-                <div class="quest-item" id="questPlanTile">
-                  <div class="quest-icon">☀️</div>
-                  <div class="quest-info">
-                    <strong>Pre-market Plan</strong>
-                    <span>Lock in bias & levels (+10 XP)</span>
+              <div class="scroll-list-container">
+                <div class="quests-grid scroll-list" id="questsList">
+                  <div class="quest-item" id="questPlanTile">
+                    <div class="quest-icon">☀️</div>
+                    <div class="quest-info">
+                      <strong>Pre-market Plan</strong>
+                      <span>Lock in bias & levels (+10 XP)</span>
+                    </div>
+                    <div class="quest-status" id="questPlanStatus">Pending</div>
                   </div>
-                  <div class="quest-status" id="questPlanStatus">Pending</div>
-                </div>
-                <div class="quest-item" id="questRiskTile">
-                  <div class="quest-icon">🔒</div>
-                  <div class="quest-info">
-                    <strong>Risk Control Shield</strong>
-                    <span>Daily loss & trade limit respected (+10 XP)</span>
+                  <div class="quest-item" id="questRiskTile">
+                    <div class="quest-icon">🔒</div>
+                    <div class="quest-info">
+                      <strong>Risk Control Shield</strong>
+                      <span>Daily loss & trade limit respected (+10 XP)</span>
+                    </div>
+                    <div class="quest-status" id="questRiskStatus">Pending</div>
                   </div>
-                  <div class="quest-status" id="questRiskStatus">Pending</div>
-                </div>
-                <div class="quest-item" id="questReviewTile">
-                  <div class="quest-icon">🌙</div>
-                  <div class="quest-info">
-                    <strong>Close-out Review</strong>
-                    <span>Review the day's trades (+10 XP)</span>
+                  <div class="quest-item" id="questReviewTile">
+                    <div class="quest-icon">🌙</div>
+                    <div class="quest-info">
+                      <strong>Close-out Review</strong>
+                      <span>Review the day's trades (+10 XP)</span>
+                    </div>
+                    <div class="quest-status" id="questReviewStatus">Pending</div>
                   </div>
-                  <div class="quest-status" id="questReviewStatus">Pending</div>
                 </div>
+                <div class="top-gradient"></div>
+                <div class="bottom-gradient"></div>
               </div>
             </section>
 
@@ -368,7 +545,11 @@
                     <button class="ghost-button" id="journalAddAccountBtn" type="button">Add Account</button>
                     <button class="primary-button" id="journalAddSopBtn" type="button">Add SOP</button>
                   </div>
-                  <div class="sop-card-grid" id="sopCards"></div>
+                  <div class="scroll-list-container">
+                    <div class="sop-card-grid scroll-list" id="sopCards"></div>
+                    <div class="top-gradient"></div>
+                    <div class="bottom-gradient"></div>
+                  </div>
                   <div class="account-manager" id="accountManagerPanel"></div>
                 </div>
               </details>
@@ -385,7 +566,11 @@
                   <button class="segment" data-journal-view="table" type="button">Table</button>
                 </div>
               </div>
-              <div class="sop-timeline" id="sopTimeline"></div>
+              <div class="scroll-list-container">
+                <div class="sop-timeline scroll-list" id="sopTimeline"></div>
+                <div class="top-gradient"></div>
+                <div class="bottom-gradient"></div>
+              </div>
               <div class="zero-state-card" id="timelineZeroState" style="display: none;">
                 <div class="zero-state-artwork">
                   <div class="glow-orb" style="background: radial-gradient(circle, rgba(52, 199, 89, 0.2) 0%, transparent 70%);"></div>
@@ -440,6 +625,7 @@
               <button class="segment" data-review-panel="charts" type="button">Charts</button>
               <button class="segment" data-review-panel="calendar" type="button">Calendar</button>
               <button class="segment" data-review-panel="playbook" type="button">Playbook</button>
+              <button class="segment" data-review-panel="reflections" type="button">Reflections</button>
             </div>
 
             <div class="review-panel active" id="review-insights">
@@ -518,6 +704,36 @@
               </section>
             </div>
 
+            <div class="review-panel" id="review-reflections">
+              <section class="panel">
+                <div class="panel-head">
+                  <div>
+                    <p class="eyebrow">Self-Reflection & Shame Wall</p>
+                    <h2>SOP Violations & Lessons</h2>
+                  </div>
+                </div>
+                <div class="shame-wall-summary" id="shameWallSummary">
+                  <!-- Dynamically rendered statistics on rule violations -->
+                </div>
+              </section>
+              
+              <section class="panel">
+                <div class="panel-head">
+                  <div>
+                    <p class="eyebrow">Violation Ledger</p>
+                    <h2>Trades with Broken Rules</h2>
+                  </div>
+                </div>
+                <div class="scroll-list-container">
+                  <div class="shame-trades-list scroll-list" id="shameTradesList">
+                    <!-- Dynamically rendered rule-broken trades and reflections -->
+                  </div>
+                  <div class="top-gradient"></div>
+                  <div class="bottom-gradient"></div>
+                </div>
+              </section>
+            </div>
+
           </section>
 
           <section class="view" id="settings" data-title="System" data-kicker="Preferences">
@@ -533,10 +749,38 @@
               </div>
               <label>Setups<textarea name="setups" rows="4" placeholder="One setup per line"></textarea></label>
               <label>Daily Rules<textarea name="dailyRules" rows="4" placeholder="One rule per line"></textarea></label>
-              <div class="form-row" style="margin-top: 8px;">
-                <label style="display: flex; align-items: center; gap: 8px; flex-direction: row; font-size: 14px; font-weight: 500;">
+              <label style="margin-top: 12px; margin-bottom: 2px; font-weight: 600; color: var(--ink);">Checklist Label Customization</label>
+              <div class="form-row" style="margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
+                <label style="flex: 1; min-width: 140px; font-size: 13px;">Plan<input name="checklistLabelPlan" required /></label>
+                <label style="flex: 1; min-width: 140px; font-size: 13px;">Trigger<input name="checklistLabelTrigger" required /></label>
+                <label style="flex: 1; min-width: 140px; font-size: 13px;">Stop<input name="checklistLabelStop" required /></label>
+                <label style="flex: 1; min-width: 140px; font-size: 13px;">Target<input name="checklistLabelTarget" required /></label>
+                <label style="flex: 1; min-width: 140px; font-size: 13px;">Emotion<input name="checklistLabelEmotion" required /></label>
+              </div>
+              <div class="form-row" style="margin-top: 8px; gap: 24px; flex-wrap: wrap; align-items: center;">
+                <label style="display: flex; align-items: center; gap: 8px; flex-direction: row; font-size: 14px; font-weight: 500; cursor: pointer; margin: 0;">
                   <input type="checkbox" name="backupReminder" style="width: 16px; height: 16px; margin: 0; cursor: pointer;" />
                   Enable 7-Day Auto-Backup Reminder
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; flex-direction: row; font-size: 14px; font-weight: 500; cursor: pointer; margin: 0;">
+                  <input type="checkbox" name="enableSounds" style="width: 16px; height: 16px; margin: 0; cursor: pointer;" />
+                  Enable System Sound Effects
+                </label>
+              </div>
+              <div class="form-row" style="margin-top: 12px; gap: 24px; flex-wrap: wrap;">
+                <label style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px;">
+                  3D Carousel Drag Sensitivity
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="range" name="carouselDragSensitivity" min="0.05" max="0.5" step="0.01" style="flex: 1; cursor: pointer; height: 6px; border-radius: 3px;" />
+                    <span id="carouselDragSensVal" style="font-size: 13px; font-weight: 600; min-width: 32px; text-align: right;">0.18</span>
+                  </div>
+                </label>
+                <label style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px;">
+                  3D Carousel Snap Friction (Dampening)
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="range" name="carouselSnapFriction" min="0.01" max="0.2" step="0.01" style="flex: 1; cursor: pointer; height: 6px; border-radius: 3px;" />
+                    <span id="carouselSnapFricVal" style="font-size: 13px; font-weight: 600; min-width: 32px; text-align: right;">0.04</span>
+                  </div>
                 </label>
               </div>
               <button class="primary-button" type="submit">Save Preferences</button>
@@ -801,11 +1045,11 @@
                   </div>
                 </div>
                 <div class="checklist">
-                  <label><input type="checkbox" name="hasPlan" /> Plan</label>
-                  <label><input type="checkbox" name="hasTrigger" /> Trigger</label>
-                  <label><input type="checkbox" name="hasStop" /> Stop</label>
-                  <label><input type="checkbox" name="hasTarget" /> Target</label>
-                  <label><input type="checkbox" name="emotionControlled" /> Controlled</label>
+                  <label><input type="checkbox" name="hasPlan" /> <span id="labelHasPlanText">Plan</span></label>
+                  <label><input type="checkbox" name="hasTrigger" /> <span id="labelHasTriggerText">Trigger</span></label>
+                  <label><input type="checkbox" name="hasStop" /> <span id="labelHasStopText">Stop</span></label>
+                  <label><input type="checkbox" name="hasTarget" /> <span id="labelHasTargetText">Target</span></label>
+                  <label><input type="checkbox" name="emotionControlled" /> <span id="labelEmotionControlledText">Controlled</span></label>
                 </div>
                 <div class="form-group">
                   <input name="tradingViewUrl" type="url" placeholder=" " />
@@ -851,7 +1095,7 @@
         </div>
       </div>
     </div>
-
-    <script src="app.js?v=phase11-stable-fix-3"></script>
+    <script type="module" src="gallery.js?v=phase12-2"></script>
+    <script defer src="app.js?v=phase12-2"></script>
   </body>
 </html>
