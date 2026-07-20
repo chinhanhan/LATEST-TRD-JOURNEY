@@ -2404,6 +2404,7 @@ function openModule(id, source = null) {
   if (window.resetInternalSelection) window.resetInternalSelection();
   playSound("switch");
   activeModule = id;
+  window.dispatchEvent(new CustomEvent('moduleChanged', { detail: { moduleId: id } }));
   
   if (id === "landing-gallery") {
     // Overlay mode: Keep the current view active, just show the gallery on top

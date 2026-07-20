@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=phase13-bento-fix-9" />
+    <link rel="stylesheet" href="styles.css?v=phase25-no-shadow-bleed" />
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -39,12 +39,38 @@
             </svg>
           </button>
           <button class="language-toggle" type="button" aria-label="Switch language">中文</button>
-          <button class="primary-button module-action" id="headerLogTradeBtn" type="button">Log Trade</button>
+          <button class="primary-button module-action pill-button" id="headerLogTradeBtn" type="button">
+            <span class="label-stack">
+              <span class="pill-label">Log Trade</span>
+              <span class="pill-label-hover" aria-hidden="true">Log Trade</span>
+            </span>
+          </button>
+
+          <!-- Integrated StaggeredMenu Toggle Button -->
+          <button id="staggeredMenuToggle" class="sm-toggle pill-button" type="button" aria-label="Open menu" aria-expanded="false">
+            <span class="sm-toggle-textWrap" aria-hidden="true">
+              <span class="sm-toggle-textInner" id="smToggleTextInner">
+                <span class="sm-toggle-line">Menu</span>
+                <span class="sm-toggle-line">Close</span>
+              </span>
+            </span>
+            <span class="sm-icon" id="smIcon">
+              <span class="sm-icon-line"></span>
+              <span class="sm-icon-line sm-icon-line-v"></span>
+            </span>
+          </button>
         </div>
       </header>
 
       <main class="main">
           <section class="view active" id="landing-gallery">
+            <!-- LaserFlow Ambient Background & Interactive Mouse Reveal Mask -->
+            <div class="laser-flow-bg-wrapper" id="laserFlowBgWrapper">
+              <canvas class="laser-flow-canvas" id="laserFlowCanvas"></canvas>
+              <div class="laser-flow-reveal-layer" id="laserFlowRevealLayer"></div>
+              <div class="laser-flow-dark-overlay"></div>
+            </div>
+
             <!-- Top Dynamic Island Hub -->
             <div class="dynamic-island-hub" id="dynamicIslandHub">
               <div class="island-pill guardrail-pill" title="Max Daily Loss Guardrail">
@@ -57,8 +83,11 @@
                 <span class="pill-text" id="islandStreak">5 Trades</span>
               </div>
               <div class="island-divider"></div>
-              <button class="island-action-btn" type="button" onclick="window.triggerBentoAction('open-capture')" title="Log Trade">
-                <span>+ Log Trade</span>
+              <button class="island-action-btn pill-button" type="button" onclick="window.triggerBentoAction('open-capture')" title="Log Trade">
+                <span class="label-stack">
+                  <span class="pill-label">+ Log Trade</span>
+                  <span class="pill-label-hover" aria-hidden="true">+ Log Trade</span>
+                </span>
               </button>
             </div>
 
@@ -761,31 +790,62 @@
           </section>
         </main>
         
-        <!-- iOS Bottom Dock Navigation -->
-        <nav class="ios-dock-container">
-          <div class="ios-dock">
-            <button class="dock-item active" data-dock-module="overview" title="Today">
-              <span class="dock-icon">📅</span>
-              <span class="dock-label">Today</span>
-            </button>
-            <button class="dock-item" data-dock-module="journal" title="Journal">
-              <span class="dock-icon">✍️</span>
-              <span class="dock-label">Journal</span>
-            </button>
-            <button class="dock-item" data-dock-module="missions" title="Missions">
-              <span class="dock-icon">🎯</span>
-              <span class="dock-label">Missions</span>
-            </button>
-            <button class="dock-item" data-dock-module="review" title="Review">
-              <span class="dock-icon">📊</span>
-              <span class="dock-label">Review</span>
-            </button>
-            <button class="dock-item" data-dock-module="settings" title="System">
-              <span class="dock-icon">⚙️</span>
-              <span class="dock-label">System</span>
-            </button>
+        <!-- React Bits Inspired StaggeredMenu Drawer & Toggle Button -->
+        <div id="staggeredMenuWrapper" class="staggered-menu-wrapper" data-position="right">
+          <!-- Staggered Underlay Layers -->
+          <div id="staggeredPrelayers" class="sm-prelayers" aria-hidden="true">
+            <div class="sm-prelayer sm-prelayer-1"></div>
+            <div class="sm-prelayer sm-prelayer-2"></div>
           </div>
-        </nav>
+
+          <!-- Staggered Slide-out Menu Panel -->
+          <aside id="staggeredMenuPanel" class="staggered-menu-panel" aria-hidden="true">
+            <div class="sm-panel-inner">
+              <ul class="sm-panel-list" role="list" data-numbering="true">
+                <li class="sm-panel-itemWrap">
+                  <a class="sm-panel-item" data-module="overview" href="#">
+                    <span class="sm-panel-itemLabel">📅 Today</span>
+                  </a>
+                </li>
+                <li class="sm-panel-itemWrap">
+                  <a class="sm-panel-item" data-module="journal" href="#">
+                    <span class="sm-panel-itemLabel">✍️ Journal</span>
+                  </a>
+                </li>
+                <li class="sm-panel-itemWrap">
+                  <a class="sm-panel-item" data-module="missions" href="#">
+                    <span class="sm-panel-itemLabel">🎯 Missions</span>
+                  </a>
+                </li>
+                <li class="sm-panel-itemWrap">
+                  <a class="sm-panel-item" data-module="review" href="#">
+                    <span class="sm-panel-itemLabel">📊 Review</span>
+                  </a>
+                </li>
+                <li class="sm-panel-itemWrap">
+                  <a class="sm-panel-item" data-module="settings" href="#">
+                    <span class="sm-panel-itemLabel">⚙️ System</span>
+                  </a>
+                </li>
+              </ul>
+
+              <div class="sm-socials" aria-label="Quick Actions">
+                <h3 class="sm-socials-title">Quick Actions</h3>
+                <ul class="sm-socials-list" role="list">
+                  <li class="sm-socials-item">
+                    <a href="#" onclick="if(window.openSheet) window.openSheet('tradeFormSheet'); return false;" class="sm-socials-link">+ Log Trade</a>
+                  </li>
+                  <li class="sm-socials-item">
+                    <a href="#" onclick="if(window.openSopModal) window.openSopModal(); return false;" class="sm-socials-link">SOP Rules</a>
+                  </li>
+                  <li class="sm-socials-item">
+                    <a href="#" onclick="if(window.openAccountModal) window.openAccountModal(); return false;" class="sm-socials-link">Accounts</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
 
     <!-- iOS Trade Detail Sheet -->
@@ -1047,12 +1107,18 @@
               </div>
             </details>
 
-            <button class="primary-button" type="submit" id="saveTradeBtn">Start Trade</button>
+            <button class="primary-button pill-button" type="submit" id="saveTradeBtn">
+              <span class="label-stack">
+                <span class="pill-label">Start Trade</span>
+                <span class="pill-label-hover" aria-hidden="true">Start Trade</span>
+              </span>
+            </button>
           </form>
         </div>
       </div>
     </div>
-    <script type="module" src="gallery.js?v=phase13-bento-fix-9"></script>
-    <script defer src="app.js?v=phase13-bento-fix-9"></script>
+    <canvas id="clickSparkCanvas" class="click-spark-canvas"></canvas>
+    <script type="module" src="gallery.js?v=phase25-no-shadow-bleed"></script>
+    <script defer src="app.js?v=phase25-no-shadow-bleed"></script>
   </body>
 </html>

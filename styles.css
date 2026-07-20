@@ -947,6 +947,84 @@ h3 {
   box-shadow: 0 12px 26px rgba(0, 113, 227, 0.22);
 }
 
+/* === React Bits PillNav Liquid Bubble & Text Roll-Up Button Hover Effect === */
+.pill-button {
+  position: relative;
+  overflow: hidden !important;
+  border-radius: 9999px !important;
+  cursor: pointer;
+  box-sizing: border-box;
+  isolation: isolate;
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.pill-button::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -25px;
+  width: 200%;
+  height: 200%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #38BDF8 0%, #3B82F6 50%, #8B5CF6 100%);
+  transform: translate(-50%, 100%) scale(0);
+  transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.pill-button:hover::before {
+  transform: translate(-50%, -20%) scale(1.4);
+}
+
+.pill-button .label-stack {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.pill-button .pill-label {
+  display: inline-block;
+  line-height: 1.2;
+  transform: translateY(0);
+  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.35s ease;
+  will-change: transform, opacity;
+}
+
+.pill-button .pill-label-hover {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+  color: #FFFFFF;
+  font-weight: 750;
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.35s ease;
+  will-change: transform, opacity;
+}
+
+.pill-button:hover .pill-label {
+  transform: translateY(-120%);
+  opacity: 0;
+}
+
+.pill-button:hover .pill-label-hover {
+  transform: translateY(0);
+  opacity: 1;
+}
+
 .primary-button:hover {
   background: #0077ed;
   transform: translateY(-1px);
@@ -4442,7 +4520,7 @@ body, .panel, .workflow-tile, .metric-item, .dock-item, .app-header, input, sele
   width: 100vw;
   height: 100vh;
   z-index: 2000;
-  background: transparent;
+  background: #0a0812;
   display: flex !important;
   flex-direction: column;
   justify-content: center;
@@ -4456,6 +4534,371 @@ body, .panel, .workflow-tile, .metric-item, .dock-item, .app-header, input, sele
 #landing-gallery.active {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* === React Bits Inspired LaserFlow & Interactive Mouse Reveal Layer === */
+.laser-flow-bg-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background-color: #090810;
+  --mx: -9999px;
+  --my: -9999px;
+}
+
+.laser-flow-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.75;
+  display: block;
+}
+
+.laser-flow-dark-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(9, 8, 16, 0.35) 0%, rgba(6, 5, 12, 0.88) 100%);
+  pointer-events: none;
+}
+
+.laser-flow-reveal-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(ellipse at 50% 0%, rgba(123, 97, 255, 0.3) 0%, rgba(59, 130, 246, 0.22) 45%, rgba(0, 0, 0, 0) 80%),
+    radial-gradient(circle at var(--mx) var(--my), rgba(56, 189, 248, 0.45) 0%, rgba(139, 92, 246, 0.25) 140px, rgba(0, 0, 0, 0) 320px);
+  mix-blend-mode: screen;
+  opacity: 0.95;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,1) 0px, rgba(255,255,255,0.95) 80px, rgba(255,255,255,0.5) 180px, rgba(255,255,255,0) 300px);
+  mask-image: radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,1) 0px, rgba(255,255,255,0.95) 80px, rgba(255,255,255,0.5) 180px, rgba(255,255,255,0) 300px);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  transition: opacity 0.3s ease;
+}
+
+/* === React Bits ClickSpark Canvas Overlay === */
+.click-spark-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 99999;
+  user-select: none;
+}
+
+/* === React Bits Inspired StaggeredMenu Drawer & Floating Toggle Button === */
+.staggered-menu-wrapper {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 4000;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Integrated Staggered Menu Toggle Button in Header */
+.sm-toggle {
+  position: relative;
+  z-index: 4100;
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 16px;
+  background: var(--blue);
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  box-shadow: 0 12px 26px rgba(0, 113, 227, 0.22);
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s ease, box-shadow 0.3s ease;
+}
+
+[data-theme="light"] .sm-toggle {
+  background: var(--blue);
+  color: #FFFFFF;
+}
+
+.sm-toggle:hover {
+  transform: translateY(-1px);
+  background: #0077ed;
+  box-shadow: 0 16px 34px rgba(0, 113, 227, 0.26);
+}
+
+.sm-toggle:hover {
+  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.sm-toggle-textWrap {
+  position: relative;
+  display: inline-block;
+  height: 18px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sm-toggle-textInner {
+  display: flex;
+  flex-direction: column;
+  line-height: 18px;
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.sm-toggle-line {
+  display: block;
+  height: 18px;
+  line-height: 18px;
+}
+
+.sm-icon {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.sm-icon-line {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transform: translate(-50%, -50%);
+  transition: transform 0.3s ease;
+}
+
+.sm-icon-line-v {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+/* Staggered Underlay Prelayers */
+.sm-prelayers {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: clamp(300px, 40vw, 440px);
+  pointer-events: none;
+  z-index: 4005;
+}
+
+.sm-prelayer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 100%;
+  transform: translateX(100%);
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  will-change: transform;
+  visibility: hidden;
+}
+
+.sm-prelayer-1 {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.75), rgba(59, 130, 246, 0.75));
+  backdrop-filter: blur(20px);
+}
+
+.sm-prelayer-2 {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.82), rgba(99, 102, 241, 0.82));
+  backdrop-filter: blur(24px);
+}
+
+/* Staggered Main Glass Panel Drawer */
+.staggered-menu-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: clamp(300px, 40vw, 440px);
+  background: rgba(12, 10, 22, 0.92);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: none;
+  padding: 5.5rem 2.5rem 2.5rem 2.5rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  z-index: 4010;
+  pointer-events: auto;
+  transform: translateX(100%);
+  transition: transform 0.55s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease;
+  will-change: transform;
+  visibility: hidden;
+}
+
+[data-theme="light"] .staggered-menu-panel {
+  background: rgba(255, 255, 255, 0.95);
+  border-left: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+/* Open State Classes */
+.staggered-menu-wrapper.is-open .sm-prelayer {
+  visibility: visible;
+}
+
+.staggered-menu-wrapper.is-open .sm-prelayer-1 {
+  transform: translateX(0);
+  transition-delay: 0s;
+}
+
+.staggered-menu-wrapper.is-open .sm-prelayer-2 {
+  transform: translateX(0);
+  transition-delay: 0.08s;
+}
+
+.staggered-menu-wrapper.is-open .staggered-menu-panel {
+  transform: translateX(0);
+  transition-delay: 0.16s;
+  visibility: visible;
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.45);
+}
+
+.staggered-menu-wrapper.is-open .sm-icon {
+  transform: rotate(225deg);
+}
+
+.staggered-menu-wrapper.is-open .sm-toggle-textInner {
+  transform: translateY(-18px);
+}
+
+/* Staggered Panel List & Items */
+.sm-panel-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sm-panel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  counter-reset: smItem;
+}
+
+.sm-panel-itemWrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.sm-panel-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #FFFFFF;
+  font-size: 2.2rem;
+  font-weight: 800;
+  text-decoration: none;
+  letter-spacing: -0.5px;
+  padding: 8px 0;
+  transform: translateY(120%) rotate(6deg);
+  opacity: 0;
+  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s ease, color 0.2s ease;
+}
+
+[data-theme="light"] .sm-panel-item {
+  color: #0F172A;
+}
+
+.staggered-menu-wrapper.is-open .sm-panel-item {
+  transform: translateY(0) rotate(0deg);
+  opacity: 1;
+}
+
+.staggered-menu-wrapper.is-open .sm-panel-itemWrap:nth-child(1) .sm-panel-item { transition-delay: 0.22s; }
+.staggered-menu-wrapper.is-open .sm-panel-itemWrap:nth-child(2) .sm-panel-item { transition-delay: 0.28s; }
+.staggered-menu-wrapper.is-open .sm-panel-itemWrap:nth-child(3) .sm-panel-item { transition-delay: 0.34s; }
+.staggered-menu-wrapper.is-open .sm-panel-itemWrap:nth-child(4) .sm-panel-item { transition-delay: 0.40s; }
+.staggered-menu-wrapper.is-open .sm-panel-itemWrap:nth-child(5) .sm-panel-item { transition-delay: 0.46s; }
+
+.sm-panel-item:hover {
+  color: #38BDF8 !important;
+  transform: translateX(6px) !important;
+}
+
+.sm-panel-item::after {
+  counter-increment: smItem;
+  content: "0" counter(smItem);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #38BDF8;
+  opacity: 0.85;
+}
+
+/* Quick Actions Section inside StaggeredMenu */
+.sm-socials {
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.sm-socials-title {
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #38BDF8;
+}
+
+.sm-socials-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.sm-socials-link {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.25s ease;
+}
+
+.sm-socials-link:hover {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38BDF8;
+  color: #FFFFFF;
+  transform: translateY(-2px);
 }
 
 #css3d-carousel-container,
@@ -4637,28 +5080,36 @@ body, .panel, .workflow-tile, .metric-item, .dock-item, .app-header, input, sele
   z-index: 40 !important;
 }
 
-/* Card Front: Apple TV 3D block face */
+/* Card Front: Apple TV 3D block face with Ultra-Premium Glass Refraction */
 .card-front {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(36px) saturate(180%);
+  -webkit-backdrop-filter: blur(36px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 
+    0 16px 45px rgba(0, 0, 0, 0.35), 
+    inset 0 1.5px 1.5px rgba(255, 255, 255, 0.4),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), 
+              box-shadow 0.3s cubic-bezier(0.25, 1, 0.5, 1), 
+              border-color 0.3s ease;
 }
 
 [data-theme="dark"] .card-front {
-  background: rgba(40, 40, 48, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 12px 45px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  background: rgba(26, 24, 38, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 
+    0 18px 50px rgba(0, 0, 0, 0.65), 
+    inset 0 1.5px 1.5px rgba(255, 255, 255, 0.22),
+    inset 0 -1px 1.5px rgba(0, 0, 0, 0.5);
 }
 
 .css3d-card:hover {
-  transform: translateY(-6px) scale(1.05);
+  transform: translateY(-8px) scale(1.04);
   z-index: 20;
 }
 
@@ -4667,38 +5118,101 @@ body, .panel, .workflow-tile, .metric-item, .dock-item, .app-header, input, sele
   transition: transform 0.1s ease !important;
 }
 
-.css3d-card.expanded {
-  z-index: 50;
-  transform: scale(1.15);
+/* Card-Specific Ambient Neon Rim Glow on Hover */
+.css3d-card[data-module="overview"]:hover .card-front {
+  box-shadow: 0 28px 75px rgba(59, 130, 246, 0.35), inset 0 1.5px 2px rgba(255, 255, 255, 0.5);
+  border-color: rgba(147, 197, 253, 0.5);
 }
 
-.css3d-card:hover .card-front {
-  box-shadow: 0 24px 70px rgba(0, 113, 227, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.45);
-  border-color: rgba(255, 255, 255, 0.4);
+.css3d-card[data-module="journal"]:hover .card-front {
+  box-shadow: 0 28px 75px rgba(244, 114, 182, 0.35), inset 0 1.5px 2px rgba(255, 255, 255, 0.5);
+  border-color: rgba(249, 168, 212, 0.5);
 }
 
-[data-theme="dark"] .css3d-card:hover .card-front {
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.25);
+.css3d-card[data-module="missions"]:hover .card-front {
+  box-shadow: 0 28px 75px rgba(245, 158, 11, 0.35), inset 0 1.5px 2px rgba(255, 255, 255, 0.5);
+  border-color: rgba(253, 230, 138, 0.5);
 }
 
-/* Multi-layer depth separation for 3D parallax pop */
+.css3d-card[data-module="review"]:hover .card-front {
+  box-shadow: 0 28px 75px rgba(14, 165, 233, 0.35), inset 0 1.5px 2px rgba(255, 255, 255, 0.5);
+  border-color: rgba(186, 230, 253, 0.5);
+}
+
+.css3d-card[data-module="settings"]:hover .card-front {
+  box-shadow: 0 28px 75px rgba(16, 185, 129, 0.35), inset 0 1.5px 2px rgba(255, 255, 255, 0.5);
+  border-color: rgba(167, 243, 208, 0.5);
+}
+
+/* Multi-layer 3D depth separation & High-Contrast Typography for spatial pop */
 .css3d-card .card-icon {
-  font-size: 82px;
-  margin-bottom: 20px;
-  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.25));
-  transform: translateZ(42px);
+  font-size: 44px;
+  margin-bottom: 8px;
+  transform: translateZ(24px);
+  filter: drop-shadow(0 6px 16px rgba(0,0,0,0.4));
   transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.css3d-card:hover .card-icon {
+  transform: translateZ(42px) scale(1.12);
 }
 
 .css3d-card .card-text {
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  color: var(--text-primary);
-  text-shadow: 0 4px 14px rgba(0,0,0,0.15);
-  transform: translateZ(26px);
+  font-size: 22px;
+  font-weight: 800;
+  color: #FFFFFF !important;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.75), 0 0 20px rgba(255, 255, 255, 0.2);
+  transform: translateZ(16px);
   transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.css3d-card:hover .card-text {
+  transform: translateZ(28px);
+  color: #FFFFFF !important;
+}
+
+.css3d-card .bento-subtext {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.88) !important;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
+  margin-top: 5px;
+  transform: translateZ(12px);
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.css3d-card:hover .bento-subtext {
+  transform: translateZ(20px);
+  color: #FFFFFF !important;
+}
+
+.css3d-card .bento-badge-row {
+  transform: translateZ(18px);
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.css3d-card:hover .bento-badge-row {
+  transform: translateZ(32px);
+}
+
+.css3d-card .spotlight-kicker,
+.css3d-card .bento-badge {
+  color: #FFFFFF !important;
+  font-weight: 750;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+}
+
+#bentoEquityStat {
+  color: #38BDF8 !important;
+  font-weight: 800;
+  text-shadow: 0 0 14px rgba(56, 189, 248, 0.7);
+}
+
+.carousel-instruction {
+  color: rgba(255, 255, 255, 0.82) !important;
+  font-weight: 650;
+  letter-spacing: 1.5px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }
 
 /* Card Back: Detailed Actions List */
