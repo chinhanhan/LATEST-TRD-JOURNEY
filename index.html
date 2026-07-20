@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=phase11-dock-fix-3" />
+    <link rel="stylesheet" href="styles.css?v=phase13-bento-fix-9" />
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -45,160 +45,117 @@
 
       <main class="main">
           <section class="view active" id="landing-gallery">
-            <div id="css3d-carousel-container">
-              <div class="css3d-carousel-wrapper" id="css3d-carousel">
-                <div class="css3d-card" data-module="overview">
+            <!-- Top Dynamic Island Hub -->
+            <div class="dynamic-island-hub" id="dynamicIslandHub">
+              <div class="island-pill guardrail-pill" title="Max Daily Loss Guardrail">
+                <span class="pill-dot warning"></span>
+                <span class="pill-text" id="islandGuardrail">Max Loss: -2R</span>
+              </div>
+              <div class="island-divider"></div>
+              <div class="island-pill streak-pill" title="Discipline Streak">
+                <span class="streak-fire">🔥</span>
+                <span class="pill-text" id="islandStreak">5 Trades</span>
+              </div>
+              <div class="island-divider"></div>
+              <button class="island-action-btn" type="button" onclick="window.triggerBentoAction('open-capture')" title="Log Trade">
+                <span>+ Log Trade</span>
+              </button>
+            </div>
+
+            <!-- visionOS 2.0 Spatial Liquid Glass Bento Grid -->
+            <div class="visionos-bento-container" id="css3d-carousel-container">
+              <div class="visionos-bento-grid" id="css3d-carousel">
+                
+                <!-- Bento Card 1: Today (2 columns) -->
+                <div class="css3d-card bento-card bento-wide" data-module="overview" onclick="window.openModule('overview')">
                   <div class="card-inner">
+                    <div class="card-glare"></div>
                     <div class="card-front">
+                      <div class="bento-badge-row">
+                        <span class="bento-date-tag">JUL 20</span>
+                        <span class="bento-status-chip success">Plan Ready ✓</span>
+                      </div>
                       <div class="card-icon">📅</div>
                       <div class="card-text">Today</div>
-                    </div>
-                    <div class="card-back">
-                      <button class="card-back-close" aria-label="Close card">✕</button>
-                      <div class="card-back-title">Today</div>
-                      <div class="animated-list-container">
-                        <div class="animated-list-wrapper">
-                          <div class="animated-item selected" data-action="module:overview" data-index="0">
-                            <p class="item-text">📅 Open Dashboard</p>
-                            <span class="item-arrow">↗</span>
-                          </div>
-                          <div class="animated-item" data-action="click:#tilePlan .tile-summary-header" data-index="1">
-                            <p class="item-text">☀️ Pre-market Plan</p>
-                            <span class="item-arrow">↗</span>
-                          </div>
-                          <div class="animated-item" data-action="click:#tileReview .tile-summary-header" data-index="2">
-                            <p class="item-text">🌙 Close-out Review</p>
-                            <span class="item-arrow">↗</span>
-                          </div>
-                        </div>
-                      </div>
+                      <p class="bento-subtext">Pre-market plan & daily close-out review</p>
                     </div>
                   </div>
                 </div>
-                <div class="css3d-card" data-module="journal">
+
+                <!-- Bento Card 2: Journal (Square) -->
+                <div class="css3d-card bento-card" data-module="journal" onclick="window.openModule('journal')">
                   <div class="card-inner">
+                    <div class="card-glare"></div>
                     <div class="card-front">
+                      <div class="bento-badge-row">
+                        <span class="bento-chip">SOP Trail</span>
+                      </div>
                       <div class="card-icon">✍️</div>
                       <div class="card-text">Journal</div>
-                    </div>
-                    <div class="card-back">
-                      <button class="card-back-close" aria-label="Close card">✕</button>
-                      <div class="card-back-title">Journal</div>
-                      <div class="animated-list-container">
-                        <div class="animated-list-wrapper">
-                          <div class="animated-item selected" data-action="click:[data-open-capture]" data-index="0">
-                            <p class="item-text">✍️ Start Trade</p>
-                            <span class="item-arrow">↗</span>
-                          </div>
-                          <div class="animated-item" data-action="module:journal" data-index="1">
-                            <p class="item-text">📖 SOP Record Trail</p>
-                            <span class="item-arrow">↗</span>
-                          </div>
-                          <div class="animated-item" data-action="click:#journalAddSopBtn" data-index="2">
-                            <p class="item-text">➕ Add SOP</p>
-                            <span class="item-arrow">↗</span>
-                          </div>
-                          <div class="animated-item" data-action="click:#journalAddAccountBtn" data-index="3">
-                            <p class="item-text">➕ Add Account</p>
-                            <span class="item-arrow">↗</span>
-                          </div>
-                        </div>
-                      </div>
+                      <p class="bento-subtext">Log execution & accounts</p>
                     </div>
                   </div>
                 </div>
-                <div class="css3d-card" data-module="missions">
+
+                <!-- Bento Card 3: Missions (Square) -->
+                <div class="css3d-card bento-card" data-module="missions" onclick="window.openModule('missions')">
                   <div class="card-inner">
+                    <div class="card-glare"></div>
                     <div class="card-front">
+                      <div class="bento-badge-row">
+                        <span class="bento-chip fire">🔥 5 Streak</span>
+                      </div>
                       <div class="card-icon">🎯</div>
                       <div class="card-text">Missions</div>
+                      <p class="bento-subtext">Quests & Epic Rewards</p>
                     </div>
-                    <div class="card-back">
-                      <button class="card-back-close" aria-label="Close card">✕</button>
-                      <div class="card-back-title">Missions</div>
-                      <div class="animated-list-container">
-                        <div class="animated-list-wrapper">
-                          <div class="animated-item selected" data-action="module:missions" data-index="0">
-                            <p class="item-text">🎯 Daily Quests</p>
-                            <span class="item-arrow">↗</span>
-                          </div>
-                          <div class="animated-item" data-action="scroll:#rewardMissionPanel" data-index="1">
-                            <p class="item-text">🎁 Epic Reward</p>
-                            <span class="item-arrow">↗</span>
-                          </div>
-                          <div class="animated-item" data-action="scroll:.achievements-panel" data-index="2">
-                            <p class="item-text">🏆 Achievements</p>
-                            <span class="item-arrow">↗</span>
-                          </div>
+                  </div>
+                </div>
+
+                <!-- Bento Card 4: Review (2 columns with live mini SVG sparkline!) -->
+                <div class="css3d-card bento-card bento-wide" data-module="review" onclick="window.openModule('review')">
+                  <div class="card-inner">
+                    <div class="card-glare"></div>
+                    <div class="card-front">
+                      <div class="bento-badge-row">
+                        <span class="bento-chip blue">Analytics</span>
+                        <span class="bento-stat-preview" id="bentoEquityStat">+4.90R Equity</span>
+                      </div>
+                      <div class="bento-sparkline-box">
+                        <svg class="mini-sparkline" viewBox="0 0 200 40">
+                          <path id="bentoSparklinePath" d="M0,35 Q30,28 60,32 T120,15 T180,8 L200,5" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round"></path>
+                        </svg>
+                      </div>
+                      <div class="bento-footer-row">
+                        <div>
+                          <div class="card-icon mini">📊</div>
+                          <div class="card-text inline">Review</div>
                         </div>
+                        <span class="bento-arrow-hint">Explore Insights ↗</span>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div class="css3d-card" data-module="review">
+
+                <!-- Bento Card 5: System (Square) -->
+                <div class="css3d-card bento-card" data-module="settings" onclick="window.openModule('settings')">
                   <div class="card-inner">
+                    <div class="card-glare"></div>
                     <div class="card-front">
-                      <div class="card-icon">📊</div>
-                      <div class="card-text">Review</div>
-                    </div>
-                    <div class="card-back">
-                      <button class="card-back-close" aria-label="Close card">✕</button>
-                      <div class="card-back-title">Review</div>
-                      <div class="animated-list-container">
-                        <div class="animated-list-wrapper">
-                          <div class="animated-item selected" data-action="click:[data-review-panel='insights']" data-index="0">
-                            <p class="item-text">📊 Metrics Insights</p>
-                            <span class="item-arrow">↗</span>
-                          </div>
-                          <div class="animated-item" data-action="click:[data-review-panel='charts']" data-index="1">
-                            <p class="item-text">📈 Performance Charts</p>
-                            <span class="item-arrow">↗</span>
-                          </div>
-                          <div class="animated-item" data-action="click:[data-review-panel='calendar']" data-index="2">
-                            <p class="item-text">📅 Trading Calendar</p>
-                            <span class="item-arrow">↗</span>
-                          </div>
-                          <div class="animated-item" data-action="click:[data-review-panel='playbook']" data-index="3">
-                            <p class="item-text">📖 Strategy Playbook</p>
-                            <span class="item-arrow">↗</span>
-                          </div>
-                        </div>
+                      <div class="bento-badge-row">
+                        <span class="bento-status-chip online">Online • Auto-Backup</span>
                       </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="css3d-card" data-module="settings">
-                  <div class="card-inner">
-                    <div class="card-front">
                       <div class="card-icon">⚙️</div>
                       <div class="card-text">System</div>
-                    </div>
-                    <div class="card-back">
-                      <button class="card-back-close" aria-label="Close card">✕</button>
-                      <div class="card-back-title">System</div>
-                      <div class="animated-list-container">
-                        <div class="animated-list-wrapper">
-                          <div class="animated-item selected" data-action="module:settings" data-index="0">
-                            <p class="item-text">⚙️ Preferences</p>
-                            <span class="item-arrow">↗</span>
-                          </div>
-                          <div class="animated-item" data-action="click:#exportJsonBtn" data-index="1">
-                            <p class="item-text">📤 Export Backup</p>
-                            <span class="item-arrow">↗</span>
-                          </div>
-                          <div class="animated-item" data-action="click:#resetBtn" data-index="2">
-                            <p class="item-text">⚠️ Reset Demo Data</p>
-                            <span class="item-arrow">↗</span>
-                          </div>
-                        </div>
-                      </div>
+                      <p class="bento-subtext">Preferences & Data</p>
                     </div>
                   </div>
                 </div>
+
               </div>
             </div>
             
-            <div class="landing-hint">Swipe or Drag to explore</div>
+            <div class="landing-hint">Click any module card to launch</div>
           </section>
           
           <section class="view" id="overview" data-title="Today" data-kicker="Command Center">
@@ -1095,7 +1052,7 @@
         </div>
       </div>
     </div>
-    <script type="module" src="gallery.js?v=phase12-2"></script>
-    <script defer src="app.js?v=phase12-2"></script>
+    <script type="module" src="gallery.js?v=phase13-bento-fix-9"></script>
+    <script defer src="app.js?v=phase13-bento-fix-9"></script>
   </body>
 </html>

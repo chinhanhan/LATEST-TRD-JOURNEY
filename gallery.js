@@ -1,333 +1,158 @@
-// Pure CSS 3D Carousel Implementation
-// Replaces the heavy WebGL engine for authentic iOS/macOS blur aesthetics
+// visionOS 2.0 Spatial Liquid Glass Bento Grid & Dynamic Island Launcher
+// Direct single-click 5-module spatial launcher with 3D tilt & specular glare physics
 
-class CSS3DCarousel {
+class VisionOSBentoLauncher {
   constructor() {
-    this.wrapper = document.getElementById('css3d-carousel');
     this.container = document.getElementById('css3d-carousel-container');
     this.cards = Array.from(document.querySelectorAll('.css3d-card'));
     
-    if (!this.wrapper || this.cards.length === 0) return;
+    if (!this.container || this.cards.length === 0) return;
     
-    this.numCards = this.cards.length;
-    this.theta = 360 / this.numCards;
-    
-    this.currentRotation = 0;
-    this.targetRotation = 0;
-    
-    this.isDragging = false;
-    this.startX = 0;
-    this.startRotation = 0;
-    
-    this.isExpanded = false;
-    this.expandedIndex = -1;
-    this.selectedIndex = 0;
-    
-    this.updateRadius();
     this.initCards();
     this.addEventListeners();
-    this.animate();
+    this.updateDynamicIsland();
+    this.updateBentoStats();
   }
   
-  updateRadius() {
-    // Read actual width of cards dynamically from offsetWidth
-    const cardWidth = this.cards[0].offsetWidth || 260;
-    this.radius = Math.round((cardWidth / 2) / Math.tan(Math.PI / this.numCards)) + 60; // 60px extra gap
+  updateDynamicIsland() {
+    if (!window.state) return;
+    
+    const islandGuardrail = document.getElementById('islandGuardrail');
+    if (islandGuardrail && window.state.preferences) {
+      islandGuardrail.textContent = `Max Loss: -${window.state.preferences.dailyMaxLossR || 2}R`;
+    }
+    
+    const islandStreak = document.getElementById('islandStreak');
+    if (islandStreak) {
+      const streakCount = window.state.stats ? window.state.stats.disciplineStreak : 5;
+      islandStreak.textContent = `${streakCount || 5} Trades`;
+    }
+  }
+
+  updateBentoStats() {
+    if (!window.state || !window.state.trades) return;
+    const trades = window.state.trades;
+    let totalR = 0;
+    const points = [0];
+    trades.forEach(t => {
+      totalR += (t.resultR || 0);
+      points.push(totalR);
+    });
+    
+    const statEl = document.getElementById('bentoEquityStat');
+    if (statEl) {
+      const formatted = (totalR >= 0 ? '+' : '') + totalR.toFixed(2) + 'R Equity';
+      statEl.textContent = formatted;
+    }
+
+    // Dynamic SVG Sparkline generator from real trade history
+    const sparklinePath = document.getElementById('bentoSparklinePath');
+    if (sparklinePath && points.length > 1) {
+      const minR = Math.min(...points, 0);
+      const maxR = Math.max(...points, 1);
+      const range = (maxR - minR) || 1;
+      const width = 200;
+      const height = 30;
+      const padding = 5;
+      
+      const d = points.map((val, idx) => {
+        const x = (idx / (points.length - 1)) * width;
+        const y = height + padding - ((val - minR) / range) * height;
+        return `${idx === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ');
+      
+      sparklinePath.setAttribute('d', d);
+    }
   }
   
   initCards() {
-    this.cards.forEach((card, i) => {
-      // Set initial 3D positions in circle
-      card.style.transform = `rotateY(${i * this.theta}deg) translateZ(${this.radius}px)`;
+    this.cards.forEach((card) => {
+      card.style.transform = '';
+      const targetModule = card.dataset.module;
       
-      // Card main click event
+      // Single Click Handler: Instant module launch
       card.addEventListener('click', (e) => {
-        if (this.isExpanded) return;
-        
-        // Only click if we didn't just drag heavily
-        if (Math.abs(this.targetRotation - this.startRotation) < 10) {
-          const facingIndex = this.getFacingIndex();
-          if (facingIndex === i) {
-            this.expandCard(i);
-          } else {
-            // Spin to face the user first, then expand automatically
-            this.targetRotation = -i * this.theta;
-            setTimeout(() => {
-              this.expandCard(i);
-            }, 300);
-          }
+        if (window.openModule) {
+          window.openModule(targetModule);
         }
       });
       
-      // Close button inside the card back
-      const closeBtn = card.querySelector('.card-back-close');
-      if (closeBtn) {
-        closeBtn.addEventListener('click', (e) => {
-          e.stopPropagation(); // Prevent card main click
-          this.collapseCard();
-        });
-      }
-      
-      // Sub-items List (AnimatedList) hover and click events
-      const listItems = Array.from(card.querySelectorAll('.animated-item'));
-      listItems.forEach((item, itemIdx) => {
-        // Selection index sets on hover
-        item.addEventListener('mouseenter', () => {
-          if (this.isExpanded && this.expandedIndex === i) {
-            this.setSelectedIndex(itemIdx);
-          }
-        });
+      // visionOS 3D Mouse Parallax Tilt & Specular Glare Sheen
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
         
-        // Run action on click
-        item.addEventListener('click', (e) => {
-          e.stopPropagation();
-          if (this.isExpanded && this.expandedIndex === i) {
-            this.triggerAction(item.dataset.action);
-          }
-        });
+        const tiltX = -((y - centerY) / centerY) * 12;
+        const tiltY = ((x - centerX) / centerX) * 12;
+        
+        const glareX = (x / rect.width) * 100;
+        const glareY = (y / rect.height) * 100;
+        
+        const inner = card.querySelector('.card-inner');
+        if (inner) {
+          inner.style.setProperty('--tilt-x', `${tiltX.toFixed(2)}deg`);
+          inner.style.setProperty('--tilt-y', `${tiltY.toFixed(2)}deg`);
+          inner.style.setProperty('--glare-x', `${glareX.toFixed(2)}%`);
+          inner.style.setProperty('--glare-y', `${glareY.toFixed(2)}%`);
+          inner.style.setProperty('--glare-opacity', '0.45');
+        }
+      });
+      
+      card.addEventListener('mouseleave', () => {
+        const inner = card.querySelector('.card-inner');
+        if (inner) {
+          inner.style.setProperty('--tilt-x', '0deg');
+          inner.style.setProperty('--tilt-y', '0deg');
+          inner.style.setProperty('--glare-opacity', '0');
+        }
       });
     });
-    
-    this.wrapper.style.transform = `translateZ(-${this.radius}px) rotateY(${this.currentRotation}deg)`;
   }
   
   addEventListeners() {
-    // Mouse Events
-    this.container.addEventListener('mousedown', this.onDragStart.bind(this));
-    window.addEventListener('mousemove', this.onDragMove.bind(this));
-    window.addEventListener('mouseup', this.onDragEnd.bind(this));
-    
-    // Touch Events
-    this.container.addEventListener('touchstart', this.onDragStart.bind(this), { passive: true });
-    window.addEventListener('touchmove', this.onDragMove.bind(this), { passive: true });
-    window.addEventListener('touchend', this.onDragEnd.bind(this));
-    
-    // Wheel Events
-    this.container.addEventListener('wheel', this.onWheel.bind(this), { passive: true });
-    
-    // Keyboard Navigation
     window.addEventListener('keydown', this.onKeyDown.bind(this));
-    
-    // Resize Event
-    window.addEventListener('resize', this.onResize.bind(this));
-  }
-  
-  onResize() {
-    if (this.isExpanded) return;
-    this.updateRadius();
-    this.cards.forEach((card, i) => {
-      card.style.transform = `rotateY(${i * this.theta}deg) translateZ(${this.radius}px)`;
-    });
-    this.wrapper.style.transform = `translateZ(-${this.radius}px) rotateY(${this.currentRotation}deg)`;
-  }
-  
-  onDragStart(e) {
-    if (this.isExpanded) return;
-    this.isDragging = true;
-    this.startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-    this.startRotation = this.targetRotation;
-    this.container.style.cursor = 'grabbing';
-  }
-  
-  onDragMove(e) {
-    if (!this.isDragging || this.isExpanded) return;
-    const x = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-    const diff = x - this.startX;
-    const sens = (window.state && window.state.preferences && window.state.preferences.carouselDragSensitivity) ?? 0.18;
-    this.targetRotation = this.startRotation + (diff * sens);
-  }
-  
-  onDragEnd() {
-    if (!this.isDragging || this.isExpanded) return;
-    this.isDragging = false;
-    this.container.style.cursor = 'grab';
-    
-    // Snap to closest card
-    const snapRotation = Math.round(this.targetRotation / this.theta) * this.theta;
-    this.targetRotation = snapRotation;
-  }
-  
-  onWheel(e) {
-    if (this.isExpanded) return;
-    const delta = e.deltaY || e.detail || e.wheelDelta;
-    // Slower wheel scroll (changed from 15 to 5)
-    this.targetRotation += (delta > 0 ? -1 : 1) * 5;
-    
-    // Snap
-    clearTimeout(this.wheelTimeout);
-    this.wheelTimeout = setTimeout(() => {
-      const snapRotation = Math.round(this.targetRotation / this.theta) * this.theta;
-      this.targetRotation = snapRotation;
-    }, 150);
   }
   
   onKeyDown(e) {
     const landing = document.getElementById('landing-gallery');
     if (!landing || !landing.classList.contains('active')) return;
     
-    if (this.isExpanded) {
-      // Menu list navigation when card is expanded
-      const card = this.cards[this.expandedIndex];
-      const items = Array.from(card.querySelectorAll('.animated-item'));
-      
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        this.setSelectedIndex(this.selectedIndex + 1);
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        this.setSelectedIndex(this.selectedIndex - 1);
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        this.triggerActiveItemAction();
-      } else if (e.key === 'Escape' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        e.preventDefault();
-        this.collapseCard();
-      }
-    } else {
-      // Standard carousel navigation
-      if (e.key === 'ArrowRight') {
-        this.targetRotation -= this.theta;
-      } else if (e.key === 'ArrowLeft') {
-        this.targetRotation += this.theta;
-      } else if (e.key === 'Enter') {
-        this.expandCard(this.getFacingIndex());
-      }
+    // Quick module launch shortcuts via keyboard 1-5
+    if (['1', '2', '3', '4', '5'].includes(e.key)) {
+      const modules = ['overview', 'journal', 'missions', 'review', 'settings'];
+      const target = modules[parseInt(e.key, 10) - 1];
+      if (window.openModule) window.openModule(target);
     }
-  }
-  
-  getFacingIndex() {
-    const normalizedRot = Math.round(-this.targetRotation / this.theta) % this.numCards;
-    return (normalizedRot + this.numCards) % this.numCards;
-  }
-  
-  expandCard(index) {
-    if (this.isExpanded) return;
-    
-    this.isExpanded = true;
-    this.expandedIndex = index;
-    this.selectedIndex = 0;
-    
-    // Snap rotation immediately to face user perfectly when expanding
-    this.targetRotation = -index * this.theta;
-    this.currentRotation = this.targetRotation;
-    this.wrapper.style.transform = `translateZ(-${this.radius}px) rotateY(${this.currentRotation}deg)`;
-    
-    const card = this.cards[index];
-    
-    // Dim other cards and hide hint
-    this.container.classList.add('has-expanded');
-    card.classList.add('expanded');
-    
-    // Push the active card forward and scale it up
-    card.style.transform = `rotateY(${index * this.theta}deg) translateZ(${this.radius + 150}px) scale(1.22)`;
-    
-    this.updateListSelection();
   }
   
   collapseCard() {
-    if (!this.isExpanded) return;
-    
-    this.container.classList.remove('has-expanded');
-    
-    const card = this.cards[this.expandedIndex];
-    card.classList.remove('expanded');
-    
-    // Recalculate radius in case window resized while expanded
-    this.updateRadius();
-    
-    // Reposition all cards to the correct radius
-    this.cards.forEach((c, i) => {
-      if (i !== this.expandedIndex) {
-        c.style.transform = `rotateY(${i * this.theta}deg) translateZ(${this.radius}px)`;
-      }
-    });
-    
-    // Restore collapsed card rotation and radius placement
-    card.style.transform = `rotateY(${this.expandedIndex * this.theta}deg) translateZ(${this.radius}px)`;
-    this.wrapper.style.transform = `translateZ(-${this.radius}px) rotateY(${this.currentRotation}deg)`;
-    
-    this.isExpanded = false;
-    this.expandedIndex = -1;
-  }
-  
-  setSelectedIndex(index) {
-    if (this.expandedIndex === -1) return;
-    const card = this.cards[this.expandedIndex];
-    const items = card.querySelectorAll('.animated-item');
-    if (items.length === 0) return;
-    
-    this.selectedIndex = (index + items.length) % items.length;
-    this.updateListSelection();
-  }
-  
-  updateListSelection() {
-    if (this.expandedIndex === -1) return;
-    const card = this.cards[this.expandedIndex];
-    const items = card.querySelectorAll('.animated-item');
-    
-    items.forEach((item, idx) => {
-      item.classList.toggle('selected', idx === this.selectedIndex);
-    });
-  }
-  
-  triggerActiveItemAction() {
-    if (this.expandedIndex === -1) return;
-    const card = this.cards[this.expandedIndex];
-    const items = card.querySelectorAll('.animated-item');
-    const activeItem = items[this.selectedIndex];
-    if (activeItem) {
-      this.triggerAction(activeItem.dataset.action);
-    }
-  }
-  
-  triggerAction(actionStr) {
-    if (!actionStr) return;
-    
-    const targetModule = this.cards[this.expandedIndex].dataset.module;
-    
-    if (actionStr.startsWith('module:')) {
-      const moduleId = actionStr.replace('module:', '');
-      if (window.openModule) window.openModule(moduleId);
-      this.collapseCard();
-    } else if (actionStr.startsWith('click:')) {
-      const selector = actionStr.replace('click:', '');
-      if (window.openModule) window.openModule(targetModule);
-      this.collapseCard();
-      
-      // Delay click slightly so the transition executes cleanly
-      setTimeout(() => {
-        const btn = document.querySelector(selector);
-        if (btn) btn.click();
-      }, 300);
-    } else if (actionStr.startsWith('scroll:')) {
-      const selector = actionStr.replace('scroll:', '');
-      if (window.openModule) window.openModule(targetModule);
-      this.collapseCard();
-      
-      // Scroll to target element with a smooth transition
-      setTimeout(() => {
-        const el = document.querySelector(selector);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 500);
-    }
-  }
-  
-  animate() {
-    const diff = this.targetRotation - this.currentRotation;
-    const friction = (window.state && window.state.preferences && window.state.preferences.carouselSnapFriction) ?? 0.04;
-    this.currentRotation += diff * friction;
-    
-    if (Math.abs(diff) > 0.01 && !this.isExpanded) {
-      this.wrapper.style.transform = `translateZ(-${this.radius}px) rotateY(${this.currentRotation}deg)`;
-    }
-    
-    requestAnimationFrame(this.animate.bind(this));
+    // Compatibility helper
   }
 }
 
-// Global initializer
-window.initCSS3DCarousel = function() {
-  new CSS3DCarousel();
+// Global helper for Dynamic Island action
+window.triggerBentoAction = function(actionStr, moduleName) {
+  if (actionStr === 'open-capture') {
+    if (window.openSheet) window.openSheet('tradeFormSheet');
+    return;
+  }
+  if (moduleName && window.openModule) {
+    window.openModule(moduleName);
+  }
 };
 
-window.dispatchEvent(new Event('gallery-ready'));
+// Global initializer
+window.initCSS3DCarousel = function() {
+  window.css3dCarousel = new VisionOSBentoLauncher();
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    window.initCSS3DCarousel();
+  });
+} else {
+  window.initCSS3DCarousel();
+}

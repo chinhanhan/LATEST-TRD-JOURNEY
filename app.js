@@ -1566,6 +1566,9 @@ function openAccountModal(sopId = state.activeSopId, accountId = "") {
   `);
 }
 
+window.openSopModal = openSopModal;
+window.openAccountModal = openAccountModal;
+
 function saveSopFromModal(event) {
   event.preventDefault();
   const form = event.target;
@@ -2393,6 +2396,10 @@ function updateWorkflowTiles() {
 function openModule(id, source = null) {
   const view = document.getElementById(id);
   if (!view) return;
+  
+  if (window.css3dCarousel && typeof window.css3dCarousel.collapseCard === 'function') {
+    window.css3dCarousel.collapseCard();
+  }
   
   if (window.resetInternalSelection) window.resetInternalSelection();
   playSound("switch");
