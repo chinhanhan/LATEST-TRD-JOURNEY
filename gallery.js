@@ -324,17 +324,12 @@ class VisionOSBentoLauncher {
     this.container = document.getElementById('css3d-carousel-container');
     this.cards = Array.from(document.querySelectorAll('.css3d-card'));
     
-    if (!this.container || this.cards.length === 0) return;
-    
-    this.initCards();
-    this.addEventListeners();
-    this.updateDynamicIsland();
-    this.updateBentoStats();
-    
-    // Initialize LaserFlow, ClickSpark & StaggeredMenu engines
-    window.laserFlowEngine = new LaserFlowEngine();
-    window.clickSparkEngine = new ClickSparkEngine();
-    window.staggeredMenuEngine = new StaggeredMenuEngine();
+    if (this.container && this.cards.length > 0) {
+      this.initCards();
+      this.addEventListeners();
+      this.updateDynamicIsland();
+      this.updateBentoStats();
+    }
   }
   
   updateDynamicIsland() {
@@ -467,8 +462,23 @@ window.triggerBentoAction = function(actionStr, moduleName) {
   }
 };
 
-// Global initializer
+// Global initializer - Guaranteed 100% execution for all engines
 window.initCSS3DCarousel = function() {
+  try {
+    window.laserFlowEngine = new LaserFlowEngine();
+  } catch (err) {
+    console.warn('LaserFlowEngine init:', err);
+  }
+  try {
+    window.clickSparkEngine = new ClickSparkEngine();
+  } catch (err) {
+    console.warn('ClickSparkEngine init:', err);
+  }
+  try {
+    window.staggeredMenuEngine = new StaggeredMenuEngine();
+  } catch (err) {
+    console.warn('StaggeredMenuEngine init:', err);
+  }
   window.css3dCarousel = new VisionOSBentoLauncher();
 };
 
