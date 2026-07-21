@@ -2403,6 +2403,7 @@ function openModule(id, source = null) {
   
   if (window.resetInternalSelection) window.resetInternalSelection();
   playSound("switch");
+  if (window.appleAudioEngine) window.appleAudioEngine.play('module');
   activeModule = id;
   window.dispatchEvent(new CustomEvent('moduleChanged', { detail: { moduleId: id } }));
   

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=phase28-guaranteed-engines" />
+    <link rel="stylesheet" href="styles.css?v=phase35-dock-zero-flicker-lerp" />
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -38,13 +38,13 @@
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
             </svg>
           </button>
-          <button class="language-toggle" type="button" aria-label="Switch language">中文</button>
           <button class="primary-button module-action pill-button" id="headerLogTradeBtn" type="button">
             <span class="label-stack">
               <span class="pill-label">Log Trade</span>
               <span class="pill-label-hover" aria-hidden="true">Log Trade</span>
             </span>
           </button>
+          <button class="language-toggle" type="button" aria-label="Switch language">中文</button>
         </div>
       </header>
 
@@ -758,6 +758,34 @@
               <button class="primary-button" type="submit">Save Preferences</button>
             </form>
 
+            <!-- Data Backup & Export Center Panel -->
+            <div class="panel data-export-panel" style="margin-top: 24px;">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Data Governance & Reporting</p>
+                  <h2>Data Backup & Export Center</h2>
+                </div>
+              </div>
+              <p style="font-size: 13px; color: var(--muted); margin-bottom: 20px;">
+                Safeguard your trading history with 1-click JSON backups, export trade logs to CSV for Excel/Numbers, or generate a printable Monthly PDF Performance Executive Report.
+              </p>
+              <div class="form-row" style="gap: 12px; flex-wrap: wrap;">
+                <button class="primary-button pill-button" type="button" onclick="window.exportJSONBackup()" style="border-radius: 9999px; padding: 10px 20px;">
+                  <span class="label-stack"><span class="pill-label">⬇️ Export JSON Backup</span></span>
+                </button>
+                <label class="ghost-button pill-button" style="border-radius: 9999px; padding: 10px 20px; cursor: pointer; display: inline-flex; align-items: center;">
+                  <span>⬆️ Import JSON Backup</span>
+                  <input type="file" accept=".json" style="display: none;" onchange="window.importJSONBackup(this)" />
+                </label>
+                <button class="ghost-button pill-button" type="button" onclick="window.exportTradesCSV()" style="border-radius: 9999px; padding: 10px 20px;">
+                  <span>📊 Export Trades CSV</span>
+                </button>
+                <button class="ghost-button pill-button" type="button" onclick="window.generateMonthlyReport()" style="border-radius: 9999px; padding: 10px 20px;">
+                  <span>📄 Generate Monthly PDF Report</span>
+                </button>
+              </div>
+            </div>
+
             <section class="panel">
               <div class="panel-head"><div><p class="eyebrow">Data</p><h2>Backup and restore</h2></div></div>
               <div class="row-actions settings-actions">
@@ -1117,8 +1145,14 @@
         </div>
       </div>
     </div>
+
+    <!-- React Bits Inspired Floating Dock Container -->
+    <div class="dock-outer" id="reactBitsDock"></div>
     <canvas id="clickSparkCanvas" class="click-spark-canvas"></canvas>
-    <script type="module" src="gallery.js?v=phase28-guaranteed-engines"></script>
-    <script defer src="app.js?v=phase28-guaranteed-engines"></script>
+    <script defer src="audioEngine.js?v=phase37-data-backup-export"></script>
+    <script defer src="dataEngine.js?v=phase37-data-backup-export"></script>
+    <script defer src="dock.js?v=phase37-data-backup-export"></script>
+    <script type="module" src="gallery.js?v=phase37-data-backup-export"></script>
+    <script defer src="app.js?v=phase37-data-backup-export"></script>
   </body>
 </html>
