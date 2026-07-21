@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=phase26-release-sync" />
+    <link rel="stylesheet" href="styles.css?v=phase27-menu-always-visible" />
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -43,20 +43,6 @@
             <span class="label-stack">
               <span class="pill-label">Log Trade</span>
               <span class="pill-label-hover" aria-hidden="true">Log Trade</span>
-            </span>
-          </button>
-
-          <!-- Integrated StaggeredMenu Toggle Button -->
-          <button id="staggeredMenuToggle" class="sm-toggle pill-button" type="button" aria-label="Open menu" aria-expanded="false">
-            <span class="sm-toggle-textWrap" aria-hidden="true">
-              <span class="sm-toggle-textInner" id="smToggleTextInner">
-                <span class="sm-toggle-line">Menu</span>
-                <span class="sm-toggle-line">Close</span>
-              </span>
-            </span>
-            <span class="sm-icon" id="smIcon">
-              <span class="sm-icon-line"></span>
-              <span class="sm-icon-line sm-icon-line-v"></span>
             </span>
           </button>
         </div>
@@ -792,6 +778,20 @@
         
         <!-- React Bits Inspired StaggeredMenu Drawer & Toggle Button -->
         <div id="staggeredMenuWrapper" class="staggered-menu-wrapper" data-position="right">
+          <!-- Floating Staggered Menu Toggle Button (Always Visible) -->
+          <button id="staggeredMenuToggle" class="sm-toggle pill-button" type="button" aria-label="Open menu" aria-expanded="false">
+            <span class="sm-toggle-textWrap" aria-hidden="true">
+              <span class="sm-toggle-textInner" id="smToggleTextInner">
+                <span class="sm-toggle-line">Menu</span>
+                <span class="sm-toggle-line">Close</span>
+              </span>
+            </span>
+            <span class="sm-icon" id="smIcon">
+              <span class="sm-icon-line"></span>
+              <span class="sm-icon-line sm-icon-line-v"></span>
+            </span>
+          </button>
+
           <!-- Staggered Underlay Layers -->
           <div id="staggeredPrelayers" class="sm-prelayers" aria-hidden="true">
             <div class="sm-prelayer sm-prelayer-1"></div>
@@ -1118,7 +1118,7 @@
       </div>
     </div>
     <canvas id="clickSparkCanvas" class="click-spark-canvas"></canvas>
-    <script type="module" src="gallery.js?v=phase26-release-sync"></script>
-    <script defer src="app.js?v=phase26-release-sync"></script>
+    <script type="module" src="gallery.js?v=phase27-menu-always-visible"></script>
+    <script defer src="app.js?v=phase27-menu-always-visible"></script>
   </body>
 </html>
