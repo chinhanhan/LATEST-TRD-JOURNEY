@@ -1356,6 +1356,11 @@ h3 {
   gap: 12px;
 }
 
+.analytics-grid .insight-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
 .overview-grid .status-grid {
   grid-template-columns: 1fr;
 }
@@ -1363,7 +1368,7 @@ h3 {
 .insight-card,
 .status-card {
   min-height: 104px;
-  padding: 16px;
+  padding: 14px 16px;
   display: grid;
   align-content: space-between;
   gap: 12px;
@@ -1381,6 +1386,23 @@ h3 {
   font-size: 1.38rem;
   font-weight: 760;
   letter-spacing: -0.01em;
+}
+
+.insight-card strong.is-period {
+  font-size: clamp(0.95rem, 1.15vw, 1.12rem);
+  font-weight: 740;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  word-break: keep-all;
+  line-height: 1.2;
+}
+
+.insight-card strong.is-long {
+  font-size: clamp(1rem, 1.25vw, 1.22rem);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 input,

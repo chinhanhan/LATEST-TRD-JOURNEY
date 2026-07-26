@@ -1025,7 +1025,15 @@ function insightCard(title, value, note, insightKey = "") {
   const num = String(value);
   const klass = num.startsWith("-") ? "negative" : num.startsWith("+") ? "positive" : "";
   const clickAttr = insightKey ? ` data-insight="${safe(insightKey)}" style="cursor:pointer;"` : "";
-  return `<article class="insight-card"${clickAttr}><span>${safe(title)}</span><strong class="value ${klass}">${safe(value)}</strong><small>${safe(note)}</small></article>`;
+  
+  const isPeriod = title === "Period" || title.toLowerCase().includes("period");
+  const isDateVal = isPeriod || /\d{2}[-.\/]\d{2}/.test(num);
+  const isLongVal = num.length > 9 || isDateVal;
+
+  const cardKlass = isPeriod ? " card-period" : "";
+  const valKlass = isPeriod ? " is-period" : isLongVal ? " is-long" : "";
+
+  return `<article class="insight-card${cardKlass}"${clickAttr}><span>${safe(title)}</span><strong class="value ${klass}${valKlass}">${safe(value)}</strong><small>${safe(note)}</small></article>`;
 }
 
 function renderJournal() {
@@ -1414,13 +1422,20 @@ function renderCycleSummaries() {
   document.getElementById("monthlySummary").innerHTML = monthlyCards(monthTrades, monthStart, monthEnd).join("");
 }
 
+function formatPeriodString(start, end) {
+  if (!start || !end) return "N/A";
+  const s = start.slice(5).replace("-", ".");
+  const e = end.slice(5).replace("-", ".");
+  return `${s}\u00A0–\u00A0${e}`;
+}
+
 function summaryCardsFor(trades, start, end) {
   const m = metrics(trades);
   const setups = Object.entries(groupBy(trades, "setup")).map(([name, list]) => ({ name, ...metrics(list) }));
   const best = setups.sort((a, b) => b.expectancy - a.expectancy)[0];
   const weak = setups.sort((a, b) => a.expectancy - b.expectancy)[0];
   return [
-    insightCard("Period", `${start.slice(5)} - ${end.slice(5)}`, `${trades.length} trades`),
+    insightCard("Period", formatPeriodString(start, end), `${trades.length} trades`),
     insightCard("Total R", formatR(m.totalR), `${Math.round(m.winRate * 100)}% win rate`),
     insightCard("Best Setup", best?.name || "No data", best ? formatR(best.expectancy) : "Add trades"),
     insightCard("Weakest Setup", weak?.name || "No data", weak ? formatR(weak.expectancy) : "Add trades"),
@@ -1435,11 +1450,14 @@ function monthlyCards(trades, start, end) {
   const best = [...dayStats].sort((a, b) => b.totalR - a.totalR)[0];
   const worst = [...dayStats].sort((a, b) => a.totalR - b.totalR)[0];
   const reviews = days.filter((day) => state.dailyReviews[day]).length;
+
+  const formatDateNote = (d) => d ? d.replace(/-/g, ".") : "No data";
+
   return [
     ...summaryCardsFor(trades, start, end).slice(0, 2),
     insightCard("Active Days", String(activeDays.length), "Days with trades"),
-    insightCard("Best Day", best ? formatR(best.totalR) : "0.00R", best?.day || "No data"),
-    insightCard("Worst Day", worst ? formatR(worst.totalR) : "0.00R", worst?.day || "No data"),
+    insightCard("Best Day", best ? formatR(best.totalR) : "0.00R", formatDateNote(best?.day)),
+    insightCard("Worst Day", worst ? formatR(worst.totalR) : "0.00R", formatDateNote(worst?.day)),
     insightCard("Review Rate", `${Math.round(reviews / Math.max(activeDays.length, 1) * 100)}%`, "Reviewed active days")
   ];
 }
