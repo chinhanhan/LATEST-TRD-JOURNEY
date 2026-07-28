@@ -303,6 +303,7 @@ function normalizeState(raw) {
     activeAccountId: raw.activeAccountId || "",
     backtests: [],
     rewardMission: raw.rewardMission || null,
+    unlockedBadges: raw.unlockedBadges || {},
     experience: {
       xp: raw.experience?.xp || 0,
       level: raw.experience?.level || 1,
@@ -731,6 +732,135 @@ function updateChecklistLabelsInUI() {
   if (stopEl) stopEl.textContent = labels.hasStop;
   if (targetEl) targetEl.textContent = labels.hasTarget;
   if (emotionEl) emotionEl.textContent = labels.emotionControlled;
+}
+
+const BADGES = [
+  {
+    id: "risk_guardian",
+    name: "Risk Guardian",
+    icon: "🛡️",
+    desc: "100% rule compliance on 5 consecutive trades",
+    category: "Discipline",
+    target: 5,
+    getProgress: () => getDisciplineStreak()
+  },
+  {
+    id: "zen_master",
+    name: "Zen Master",
+    icon: "🧘",
+    desc: "10 trades executed under Calm or Focused emotions",
+    category: "Mindset",
+    target: 10,
+    getProgress: () => closedTrades().filter(t => t.emotion === "Calm" || t.emotion === "Focused").length
+  },
+  {
+    id: "precision_shooter",
+    name: "Precision Shooter",
+    icon: "🎯",
+    desc: "Achieve a +3.00R or higher single winning trade",
+    category: "Execution",
+    target: 1,
+    getProgress: () => closedTrades().filter(t => rValue(t) >= 3.0).length
+  },
+  {
+    id: "profit_surfer",
+    name: "Profit Surfer",
+    icon: "🚀",
+    desc: "Accumulate +10.00R in net total profit",
+    category: "Growth",
+    target: 10,
+    getProgress: () => Math.max(0, Math.round(metrics().totalR))
+  },
+  {
+    id: "hot_streak",
+    name: "Hot Streak",
+    icon: "🔥",
+    desc: "Achieve a 3-day winning streak",
+    category: "Streak",
+    target: 3,
+    getProgress: () => {
+      const s = streak();
+      return s.direction > 0 ? s.count : 0;
+    }
+  },
+  {
+    id: "evidence_collector",
+    name: "Evidence Collector",
+    icon: "📸",
+    desc: "Attach chart screenshots to 5 trades",
+    category: "Journaling",
+    target: 5,
+    getProgress: () => closedTrades().filter(t => imageFor(t)).length
+  },
+  {
+    id: "journal_master",
+    name: "Journal Master",
+    icon: "💎",
+    desc: "Log and review 20 total trades",
+    category: "Mastery",
+    target: 20,
+    getProgress: () => closedTrades().length
+  }
+];
+
+function evaluateBadges() {
+  if (!state.unlockedBadges) state.unlockedBadges = {};
+  let newlyUnlocked = false;
+
+  BADGES.forEach(badge => {
+    const progress = badge.getProgress();
+    if (progress >= badge.target && !state.unlockedBadges[badge.id]) {
+      state.unlockedBadges[badge.id] = todayISO();
+      newlyUnlocked = true;
+      toast(`🏆 Achievement Unlocked: ${badge.name}!`, "win");
+      if (window.appleAudioEngine) window.appleAudioEngine.play('win');
+    }
+  });
+
+  if (newlyUnlocked) saveState();
+}
+
+function renderBadgeShowcase() {
+  const grid = document.getElementById("badgeShowcaseGrid");
+  const tag = document.getElementById("badgeUnlockCountTag");
+  if (!grid) return;
+
+  if (!state.unlockedBadges) state.unlockedBadges = {};
+  let unlockedCount = 0;
+
+  const html = BADGES.map(badge => {
+    const progress = badge.getProgress();
+    const isUnlocked = Boolean(state.unlockedBadges[badge.id]) || progress >= badge.target;
+    if (isUnlocked) unlockedCount++;
+
+    const pct = Math.min(100, Math.round((progress / badge.target) * 100));
+    const statusText = isUnlocked
+      ? `Unlocked on ${state.unlockedBadges[badge.id] || todayISO()}`
+      : `${progress} / ${badge.target} (${pct}%)`;
+
+    return `
+      <div class="badge-card ${isUnlocked ? 'unlocked' : 'locked'}">
+        <div class="badge-icon-wrap">${badge.icon}</div>
+        <div class="badge-content">
+          <div class="badge-title-row">
+            <strong>${safe(badge.name)}</strong>
+            <span class="badge-category-tag">${safe(badge.category)}</span>
+          </div>
+          <p class="badge-desc">${safe(badge.desc)}</p>
+          <div class="badge-progress-bar">
+            <div class="badge-progress-fill" style="width: ${pct}%"></div>
+          </div>
+          <div class="badge-status-text">
+            <span>${isUnlocked ? '🏆 Completed' : 'In Progress'}</span>
+            <span>${statusText}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  grid.innerHTML = html;
+  if (tag) tag.textContent = `${unlockedCount} / ${BADGES.length} Unlocked`;
 }
 
 function renderAll() {

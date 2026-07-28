@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v51-card-dual-currency-display';
+const CACHE_NAME = 'trd-journey-v52-evaluate-badges-defined-fix';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v51-card-dual-currency-display',
-  './audioEngine.js?v=v51-card-dual-currency-display',
-  './dataEngine.js?v=v51-card-dual-currency-display',
-  './dock.js?v=v51-card-dual-currency-display',
-  './gallery.js?v=v51-card-dual-currency-display',
-  './app.js?v=v51-card-dual-currency-display',
+  './styles.css?v=v52-evaluate-badges-defined-fix',
+  './audioEngine.js?v=v52-evaluate-badges-defined-fix',
+  './dataEngine.js?v=v52-evaluate-badges-defined-fix',
+  './dock.js?v=v52-evaluate-badges-defined-fix',
+  './gallery.js?v=v52-evaluate-badges-defined-fix',
+  './app.js?v=v52-evaluate-badges-defined-fix',
   './manifest.json'
 ];
 
