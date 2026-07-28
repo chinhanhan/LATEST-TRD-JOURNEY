@@ -2626,10 +2626,15 @@ function openModule(id, source = null) {
     });
   }
   
-  // Update Dock active states
-  document.querySelectorAll(".dock-item").forEach((item) => {
-    item.classList.toggle("active", item.dataset.dockModule === (id === "landing-gallery" ? activeModule : id));
-  });
+  const isSimulationActive = id === "review" && Boolean(document.getElementById("review-simulation")?.classList.contains("active"));
+  const targetDockModule = id === "landing-gallery" ? activeModule : (isSimulationActive ? "simulation" : id);
+  if (window.reactBitsDockEngine) {
+    window.reactBitsDockEngine.setActiveModule(targetDockModule);
+  } else {
+    document.querySelectorAll(".dock-item").forEach((item) => {
+      item.classList.toggle("active", item.dataset.dockModule === targetDockModule);
+    });
+  }
   
   // Trigger shimmer skeleton loaders
   const mainEl = document.querySelector(".main");
@@ -3036,6 +3041,9 @@ document.querySelectorAll("[data-review-panel]").forEach((button) => {
     }
     if (button.dataset.reviewPanel === "simulation") {
       executeAndRenderMonteCarlo();
+      if (window.reactBitsDockEngine) window.reactBitsDockEngine.setActiveModule('simulation');
+    } else {
+      if (window.reactBitsDockEngine) window.reactBitsDockEngine.setActiveModule('review');
     }
   });
 });

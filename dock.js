@@ -153,6 +153,16 @@ class ReactBitsDockEngine {
 
     step();
   }
+
+  setActiveModule(name) {
+    this.itemStates.forEach(state => {
+      if (state.itemData.module === name) {
+        state.el.classList.add('active');
+      } else {
+        state.el.classList.remove('active');
+      }
+    });
+  }
 }
 
 // Instantiate immediately and on DOM load

@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v49-simulation-dock-quick-launch';
+const CACHE_NAME = 'trd-journey-v50-simulation-dock-sync-complete';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v49-simulation-dock-quick-launch',
-  './audioEngine.js?v=v49-simulation-dock-quick-launch',
-  './dataEngine.js?v=v49-simulation-dock-quick-launch',
-  './dock.js?v=v49-simulation-dock-quick-launch',
-  './gallery.js?v=v49-simulation-dock-quick-launch',
-  './app.js?v=v49-simulation-dock-quick-launch',
+  './styles.css?v=v50-simulation-dock-sync-complete',
+  './audioEngine.js?v=v50-simulation-dock-sync-complete',
+  './dataEngine.js?v=v50-simulation-dock-sync-complete',
+  './dock.js?v=v50-simulation-dock-sync-complete',
+  './gallery.js?v=v50-simulation-dock-sync-complete',
+  './app.js?v=v50-simulation-dock-sync-complete',
   './manifest.json'
 ];
 
