@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v46-rmultiple-modal-persistence-fix';
+const CACHE_NAME = 'trd-journey-v47-monte-carlo-interactive-tooltip';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v46-rmultiple-modal-persistence-fix',
-  './audioEngine.js?v=v46-rmultiple-modal-persistence-fix',
-  './dataEngine.js?v=v46-rmultiple-modal-persistence-fix',
-  './dock.js?v=v46-rmultiple-modal-persistence-fix',
-  './gallery.js?v=v46-rmultiple-modal-persistence-fix',
-  './app.js?v=v46-rmultiple-modal-persistence-fix',
+  './styles.css?v=v47-monte-carlo-interactive-tooltip',
+  './audioEngine.js?v=v47-monte-carlo-interactive-tooltip',
+  './dataEngine.js?v=v47-monte-carlo-interactive-tooltip',
+  './dock.js?v=v47-monte-carlo-interactive-tooltip',
+  './gallery.js?v=v47-monte-carlo-interactive-tooltip',
+  './app.js?v=v47-monte-carlo-interactive-tooltip',
   './manifest.json'
 ];
 

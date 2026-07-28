@@ -3680,6 +3680,52 @@ function renderMonteCarloChart(results) {
     <polyline points="${getPoints(medianCurve)}" fill="none" stroke="#0071e3" stroke-width="3"></polyline>
   `;
 
+  // Interactive Hover Tooltip for Monte Carlo Canvas
+  const mcPoints = [];
+  for (let i = 0; i <= numTrades; i++) {
+    const x = pad + (i / numTrades) * (width - pad * 2);
+    mcPoints.push({
+      step: i,
+      x,
+      top: topCurve[i],
+      med: medianCurve[i],
+      bot: bottomCurve[i]
+    });
+  }
+
+  svg.onmousemove = (e) => {
+    if (!mcPoints.length) return;
+    const rect = svg.getBoundingClientRect();
+    const mouseX = (e.clientX - rect.left) * (width / rect.width);
+    let nearest = mcPoints[0];
+    let minDist = Infinity;
+    for (const p of mcPoints) {
+      const dist = Math.abs(p.x - mouseX);
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = p;
+      }
+    }
+
+    const tooltip = document.getElementById("chartTooltip");
+    if (nearest && tooltip && minDist < 50) {
+      tooltip.style.left = `${e.clientX + 14}px`;
+      tooltip.style.top = `${e.clientY + 14}px`;
+      tooltip.innerHTML = `
+        <div style="font-weight:700; font-size:12px; margin-bottom:4px;">Trade Step #${nearest.step}</div>
+        <div style="color:#30d158; font-size:11px;">🌟 Best (95%): ${formatR(nearest.top)}</div>
+        <div style="color:#0071e3; font-size:11px;">📈 Expected (50%): ${formatR(nearest.med)}</div>
+        <div style="color:#ff9f0a; font-size:11px;">🛡️ Floor (5%): ${formatR(nearest.bot)}</div>
+      `;
+      tooltip.classList.remove("hidden");
+    }
+  };
+
+  svg.onmouseleave = () => {
+    const tooltip = document.getElementById("chartTooltip");
+    if (tooltip) tooltip.classList.add("hidden");
+  };
+
   if (metricsGrid) {
     metricsGrid.innerHTML = [
       insightCard("Win Probability", `${winRate}%`, `${isBaseline ? "Baseline model" : "Historical pool"} (${results.numRuns} runs)`),
