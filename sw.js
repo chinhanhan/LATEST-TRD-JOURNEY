@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v50-simulation-dock-sync-complete';
+const CACHE_NAME = 'trd-journey-v51-card-dual-currency-display';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v50-simulation-dock-sync-complete',
-  './audioEngine.js?v=v50-simulation-dock-sync-complete',
-  './dataEngine.js?v=v50-simulation-dock-sync-complete',
-  './dock.js?v=v50-simulation-dock-sync-complete',
-  './gallery.js?v=v50-simulation-dock-sync-complete',
-  './app.js?v=v50-simulation-dock-sync-complete',
+  './styles.css?v=v51-card-dual-currency-display',
+  './audioEngine.js?v=v51-card-dual-currency-display',
+  './dataEngine.js?v=v51-card-dual-currency-display',
+  './dock.js?v=v51-card-dual-currency-display',
+  './gallery.js?v=v51-card-dual-currency-display',
+  './app.js?v=v51-card-dual-currency-display',
   './manifest.json'
 ];
 

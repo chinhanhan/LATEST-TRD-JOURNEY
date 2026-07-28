@@ -1426,7 +1426,8 @@ function tradeCard(trade) {
 function resultTag(trade) {
   if (trade.status === "open") return '<span class="tag info">Open</span>';
   const r = rValue(trade);
-  return `<span class="tag ${r >= 0 ? "good" : "bad"}">${formatR(r)}</span>`;
+  const pnlStr = trade.pnl ? ` (${formatDollar(trade.pnl)})` : "";
+  return `<span class="tag ${r >= 0 ? "good" : "bad"}">${formatR(r)}${pnlStr}</span>`;
 }
 
 function mediaBadges(trade) {
