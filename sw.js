@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v45-trade-normalization-time-fix';
+const CACHE_NAME = 'trd-journey-v46-rmultiple-modal-persistence-fix';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v45-trade-normalization-time-fix',
-  './audioEngine.js?v=v45-trade-normalization-time-fix',
-  './dataEngine.js?v=v45-trade-normalization-time-fix',
-  './dock.js?v=v45-trade-normalization-time-fix',
-  './gallery.js?v=v45-trade-normalization-time-fix',
-  './app.js?v=v45-trade-normalization-time-fix',
+  './styles.css?v=v46-rmultiple-modal-persistence-fix',
+  './audioEngine.js?v=v46-rmultiple-modal-persistence-fix',
+  './dataEngine.js?v=v46-rmultiple-modal-persistence-fix',
+  './dock.js?v=v46-rmultiple-modal-persistence-fix',
+  './gallery.js?v=v46-rmultiple-modal-persistence-fix',
+  './app.js?v=v46-rmultiple-modal-persistence-fix',
   './manifest.json'
 ];
 

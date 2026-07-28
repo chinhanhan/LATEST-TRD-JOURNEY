@@ -334,6 +334,7 @@ function normalizeTrade(trade) {
     direction: trade.direction || "Long",
     grade: trade.grade || "B",
     risk: Number(trade.risk || 0),
+    rMultiple: trade.rMultiple !== undefined && trade.rMultiple !== "" && !isNaN(Number(trade.rMultiple)) ? Number(trade.rMultiple) : "",
     pnl: trade.pnl === "" || trade.pnl == null ? 0 : Number(trade.pnl || 0),
     rule: trade.rule !== false,
     emotion: trade.emotion || "Calm",
@@ -475,9 +476,15 @@ function openTrades(trades = visibleTrades()) {
 }
 
 function rValue(trade) {
-  if (!trade || !trade.risk) return 0;
-  const res = Number(trade.pnl) / Number(trade.risk);
-  return isNaN(res) ? 0 : res;
+  if (!trade) return 0;
+  if (trade.rMultiple !== undefined && trade.rMultiple !== "" && !isNaN(Number(trade.rMultiple))) {
+    return Number(trade.rMultiple);
+  }
+  if (trade.risk) {
+    const res = Number(trade.pnl) / Number(trade.risk);
+    return isNaN(res) ? 0 : res;
+  }
+  return 0;
 }
 
 function formatR(value) {
@@ -2314,7 +2321,8 @@ async function closeTradeFromModal(event) {
     trade.status = "closed";
     trade.closeTime = closeTimeVal;
     trade.closedAt = closeTimeVal.split("T")[0];
-    trade.pnl = pnlInput ? Number(pnlInput) : Number(rInput) * Number(trade.risk || 0);
+    if (rInput !== "") trade.rMultiple = Number(rInput);
+    trade.pnl = pnlInput !== "" ? Number(pnlInput) : (rInput !== "" ? Number(rInput) * Number(trade.risk || 0) : 0);
     trade.rule = form.rule.value === "true";
     trade.emotion = form.emotion.value;
     trade.exitNote = form.exitNote.value.trim();
