@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v41-monte-carlo-simulation-badges';
+const CACHE_NAME = 'trd-journey-v42-monte-carlo-mobile-clean';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v41-monte-carlo-simulation-badges',
-  './audioEngine.js?v=v41-monte-carlo-simulation-badges',
-  './dataEngine.js?v=v41-monte-carlo-simulation-badges',
-  './dock.js?v=v41-monte-carlo-simulation-badges',
-  './gallery.js?v=v41-monte-carlo-simulation-badges',
-  './app.js?v=v41-monte-carlo-simulation-badges',
+  './styles.css?v=v42-monte-carlo-mobile-clean',
+  './audioEngine.js?v=v42-monte-carlo-mobile-clean',
+  './dataEngine.js?v=v42-monte-carlo-mobile-clean',
+  './dock.js?v=v42-monte-carlo-mobile-clean',
+  './gallery.js?v=v42-monte-carlo-mobile-clean',
+  './app.js?v=v42-monte-carlo-mobile-clean',
   './manifest.json'
 ];
 

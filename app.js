@@ -1428,6 +1428,7 @@ function renderAnalytics() {
   renderGroupedBars("directionBars", groupBy(closedTrades(), "direction"));
   
   renderDistribution();
+  executeAndRenderMonteCarlo();
 }
 
 function renderGroupedBars(id, grouped) {

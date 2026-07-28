@@ -5811,6 +5811,9 @@ body:not(:has(#landing-gallery.active)) .ios-dock-container {
 .badge-card.unlocked .badge-status-text {
   color: #ffd700;
 }
-  border-color: var(--red) !important;
-  outline: none;
+
+@media (max-width: 540px) {
+  .badge-grid {
+    grid-template-columns: 1fr;
+  }
 }
