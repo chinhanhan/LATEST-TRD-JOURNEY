@@ -972,7 +972,7 @@ function renderLineChart(id, seriesData, options = {}) {
   const area = `${pad},${zeroY} ${line} ${width - pad},${zeroY}`;
   const last = points.at(-1);
 
-  const themeFillColor = options.negative ? "#ff453a" : "#0071e3";
+  const themeFillColor = options.negative ? "#ff453a" : options.positive ? "#30d158" : "#0071e3";
 
   svg.innerHTML = `
     <defs>
@@ -3115,6 +3115,7 @@ function openInsightDetail(key) {
   if (key === "totalProfit") {
     kicker.textContent = "Gross Profit Breakdown";
     title.textContent = "Cumulative Winning Trades ($ & R)";
+    chartOptions = { positive: true };
     let totalR = 0;
     const wins = closed.filter(t => rValue(t) > 0);
     seriesData = [{ value: 0, label: "Start" }, ...wins.map((t) => {
@@ -3133,6 +3134,7 @@ function openInsightDetail(key) {
   } else if (key === "totalLoss") {
     kicker.textContent = "Gross Loss Breakdown";
     title.textContent = "Cumulative Losing Trades ($ & R)";
+    chartOptions = { negative: true };
     let totalLossR = 0;
     const losses = closed.filter(t => rValue(t) < 0);
     seriesData = [{ value: 0, label: "Start" }, ...losses.map((t) => {

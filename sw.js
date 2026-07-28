@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v38-profit-loss-open-close';
+const CACHE_NAME = 'trd-journey-v39-grid-chart-time-fix';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v38-profit-loss-open-close',
-  './audioEngine.js?v=v38-profit-loss-open-close',
-  './dataEngine.js?v=v38-profit-loss-open-close',
-  './dock.js?v=v38-profit-loss-open-close',
-  './gallery.js?v=v38-profit-loss-open-close',
-  './app.js?v=v38-profit-loss-open-close',
+  './styles.css?v=v39-grid-chart-time-fix',
+  './audioEngine.js?v=v39-grid-chart-time-fix',
+  './dataEngine.js?v=v39-grid-chart-time-fix',
+  './dock.js?v=v39-grid-chart-time-fix',
+  './gallery.js?v=v39-grid-chart-time-fix',
+  './app.js?v=v39-grid-chart-time-fix',
   './manifest.json'
 ];
 

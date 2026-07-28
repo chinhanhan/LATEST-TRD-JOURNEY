@@ -1357,8 +1357,12 @@ h3 {
 }
 
 .analytics-grid .insight-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+}
+
+#weeklySummary .card-period {
+  grid-column: span 2;
 }
 
 .overview-grid .status-grid {
