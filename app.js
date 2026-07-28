@@ -972,7 +972,7 @@ function renderLineChart(id, seriesData, options = {}) {
   const zeroY = height - pad - ((0 - min) / spread) * (height - pad * 2);
   const line = points.map((p) => `${p.x},${p.y}`).join(" ");
   const area = `${pad},${zeroY} ${line} ${width - pad},${zeroY}`;
-  const last = points.at(-1);
+  const last = points[points.length - 1];
 
   const themeFillColor = options.negative ? "#ff453a" : options.positive ? "#30d158" : "#0071e3";
 
@@ -3605,7 +3605,7 @@ function runMonteCarloSimulation(numTrades = 50, numRuns = 1000) {
     medianCurve,
     bottomCurve,
     winRate,
-    medianFinalR: medianCurve.at(-1),
+    medianFinalR: medianCurve[medianCurve.length - 1],
     medianDD,
     p95DD
   };

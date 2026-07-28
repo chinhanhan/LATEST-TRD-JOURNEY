@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v42-monte-carlo-mobile-clean';
+const CACHE_NAME = 'trd-journey-v43-es5-compat-array-fix';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v42-monte-carlo-mobile-clean',
-  './audioEngine.js?v=v42-monte-carlo-mobile-clean',
-  './dataEngine.js?v=v42-monte-carlo-mobile-clean',
-  './dock.js?v=v42-monte-carlo-mobile-clean',
-  './gallery.js?v=v42-monte-carlo-mobile-clean',
-  './app.js?v=v42-monte-carlo-mobile-clean',
+  './styles.css?v=v43-es5-compat-array-fix',
+  './audioEngine.js?v=v43-es5-compat-array-fix',
+  './dataEngine.js?v=v43-es5-compat-array-fix',
+  './dock.js?v=v43-es5-compat-array-fix',
+  './gallery.js?v=v43-es5-compat-array-fix',
+  './app.js?v=v43-es5-compat-array-fix',
   './manifest.json'
 ];
 
