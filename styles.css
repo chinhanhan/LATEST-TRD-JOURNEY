@@ -3703,6 +3703,7 @@ body, .panel, .workflow-tile, .metric-item, .dock-item, .app-header, input, sele
 .form-group textarea:not(:placeholder-shown) ~ .floating-label,
 .form-group select ~ .floating-label,
 .form-group input[type="date"] ~ .floating-label,
+.form-group input[type="datetime-local"] ~ .floating-label,
 .form-group input[type="file"] ~ .floating-label {
   top: 4px !important;
   font-size: 0.68rem !important;
@@ -3716,6 +3717,7 @@ body, .panel, .workflow-tile, .metric-item, .dock-item, .app-header, input, sele
 [data-theme="dark"] .form-group textarea:not(:placeholder-shown) ~ .floating-label,
 [data-theme="dark"] .form-group select ~ .floating-label,
 [data-theme="dark"] .form-group input[type="date"] ~ .floating-label,
+[data-theme="dark"] .form-group input[type="datetime-local"] ~ .floating-label,
 [data-theme="dark"] .form-group input[type="file"] ~ .floating-label {
   color: #0a84ff !important;
 }

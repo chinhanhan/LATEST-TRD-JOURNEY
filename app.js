@@ -472,6 +472,12 @@ function formatR(value) {
   return `${value >= 0 ? "+" : ""}${Number(value || 0).toFixed(2)}R`;
 }
 
+function formatLossR(value) {
+  const num = Number(value || 0);
+  if (Math.abs(num) < 0.0001) return "0.00R";
+  return `${num.toFixed(2)}R`;
+}
+
 function formatDollar(val) {
   const num = Number(val || 0);
   const sign = num > 0 ? "+" : num < 0 ? "-" : "";
@@ -480,8 +486,10 @@ function formatDollar(val) {
 
 function formatHoldDuration(openTimeStr, closeTimeStr) {
   if (!openTimeStr || !closeTimeStr) return "";
-  const start = new Date(openTimeStr.includes("T") ? openTimeStr : `${openTimeStr}T00:00:00`);
-  const end = new Date(closeTimeStr.includes("T") ? closeTimeStr : `${closeTimeStr}T00:00:00`);
+  const sStr = String(openTimeStr).trim().replace(" ", "T");
+  const eStr = String(closeTimeStr).trim().replace(" ", "T");
+  const start = new Date(sStr.includes("T") ? sStr : `${sStr}T00:00:00`);
+  const end = new Date(eStr.includes("T") ? eStr : `${eStr}T00:00:00`);
   if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return "";
   const diffMs = end - start;
   const diffMins = Math.floor(diffMs / (1000 * 60));
@@ -1059,7 +1067,7 @@ function renderInsights() {
   const s = streak();
   const cards = [
     ["Total Profit", formatR(all.grossWinR), formatDollar(all.grossWinDollars), "totalProfit"],
-    ["Total Loss", formatR(all.grossLossR), formatDollar(all.grossLossDollars), "totalLoss"],
+    ["Total Loss", formatLossR(all.grossLossR), formatDollar(all.grossLossDollars), "totalLoss"],
     ["Week R", formatR(week.totalR), `${week.count} trades this week`, "weekR"],
     ["Current Streak", s.count ? `${s.count} ${s.direction > 0 ? "winning" : "losing"} days` : "No streak", "Based on active trading days", "streak"],
     ["Best Setup", bestSetup ? bestSetup.name : "No data", bestSetup ? formatR(bestSetup.expectancy) : "Add trades", "bestSetup"],
@@ -1077,6 +1085,45 @@ function renderInsights() {
     ["Closed", `${closedByDate(todayISO()).length}`, "Completed today"],
     ["Review", state.dailyReviews[todayISO()] ? "Done" : "Pending", "Daily close"],
   ].map(([title, value, note]) => `<article class="status-card"><span>${title}</span><strong>${value}</strong><small>${note}</small></article>`).join("");
+}
+
+function summaryCardsFor(trades, start, end) {
+  const m = metrics(trades);
+  const setups = Object.entries(groupBy(trades, "setup")).map(([name, list]) => ({ name, ...metrics(list) }));
+  const best = setups.sort((a, b) => b.expectancy - a.expectancy)[0];
+  const weak = setups.sort((a, b) => a.expectancy - b.expectancy)[0];
+  return [
+    insightCard("Period", formatPeriodString(start, end), `${trades.length} trades`),
+    insightCard("Total Profit", formatR(m.grossWinR), formatDollar(m.grossWinDollars)),
+    insightCard("Total Loss", formatLossR(m.grossLossR), formatDollar(m.grossLossDollars)),
+    insightCard("Total R", formatR(m.totalR), `${Math.round(m.winRate * 100)}% win rate`),
+    insightCard("Best Setup", best?.name || "No data", best ? formatR(best.expectancy) : "Add trades"),
+    insightCard("Weakest Setup", weak?.name || "No data", weak ? formatR(weak.expectancy) : "Add trades"),
+    insightCard("Process Leak", `${Math.round(processLeakRate(trades) * 100)}%`, "Lower is better")
+  ];
+}
+
+function monthlyCards(trades, start, end) {
+  const m = metrics(trades);
+  const days = dateRange(start, end);
+  const activeDays = days.filter((day) => byDate(day).length || closedByDate(day).length);
+  const dayStats = activeDays.map((day) => ({ day, totalR: metrics(closedByDate(day)).totalR }));
+  const best = [...dayStats].sort((a, b) => b.totalR - a.totalR)[0];
+  const worst = [...dayStats].sort((a, b) => a.totalR - b.totalR)[0];
+  const reviews = days.filter((day) => state.dailyReviews[day]).length;
+
+  const formatDateNote = (d) => d ? d.replace(/-/g, ".") : "No data";
+
+  return [
+    insightCard("Period", formatPeriodString(start, end), `${trades.length} trades`),
+    insightCard("Total Profit", formatR(m.grossWinR), formatDollar(m.grossWinDollars)),
+    insightCard("Total Loss", formatLossR(m.grossLossR), formatDollar(m.grossLossDollars)),
+    insightCard("Total R", formatR(m.totalR), `${Math.round(m.winRate * 100)}% win rate`),
+    insightCard("Active Days", String(activeDays.length), "Days with trades"),
+    insightCard("Best Day", best ? formatR(best.totalR) : "0.00R", formatDateNote(best?.day)),
+    insightCard("Worst Day", worst ? formatR(worst.totalR) : "0.00R", formatDateNote(worst?.day)),
+    insightCard("Review Rate", `${Math.round(reviews / Math.max(activeDays.length, 1) * 100)}%`, "Reviewed active days")
+  ];
 }
 
 function insightCard(title, value, note, insightKey = "") {
@@ -3047,7 +3094,43 @@ function openInsightDetail(key) {
   let detailCards = [];
   let chartOptions = {};
 
-  if (key === "weekR" || key === "totalR") {
+  if (key === "totalProfit") {
+    kicker.textContent = "Gross Profit Breakdown";
+    title.textContent = "Cumulative Winning Trades ($ & R)";
+    let totalR = 0;
+    const wins = closed.filter(t => rValue(t) > 0);
+    seriesData = [{ value: 0, label: "Start" }, ...wins.map((t) => {
+      totalR += rValue(t);
+      return { value: totalR, label: t.date, detail: `${t.symbol}: ${formatR(rValue(t))} (${money(t.pnl)})` };
+    })];
+    const m = metrics();
+    const avgWin = wins.length ? m.grossWinR / wins.length : 0;
+    const avgWinDollars = wins.length ? m.grossWinDollars / wins.length : 0;
+    detailCards = [
+      insightCard("Total Profit R", formatR(m.grossWinR), `${wins.length} winning trades`),
+      insightCard("Total Profit $", formatDollar(m.grossWinDollars), "Gross USD gain"),
+      insightCard("Avg Win R", formatR(avgWin), "Average winner size"),
+      insightCard("Avg Win $", formatDollar(avgWinDollars), "Average winner PnL"),
+    ];
+  } else if (key === "totalLoss") {
+    kicker.textContent = "Gross Loss Breakdown";
+    title.textContent = "Cumulative Losing Trades ($ & R)";
+    let totalLossR = 0;
+    const losses = closed.filter(t => rValue(t) < 0);
+    seriesData = [{ value: 0, label: "Start" }, ...losses.map((t) => {
+      totalLossR += rValue(t);
+      return { value: totalLossR, label: t.date, detail: `${t.symbol}: ${formatLossR(rValue(t))} (${money(t.pnl)})` };
+    })];
+    const m = metrics();
+    const avgLoss = losses.length ? m.grossLossR / losses.length : 0;
+    const avgLossDollars = losses.length ? m.grossLossDollars / losses.length : 0;
+    detailCards = [
+      insightCard("Total Loss R", formatLossR(m.grossLossR), `${losses.length} losing trades`),
+      insightCard("Total Loss $", formatDollar(m.grossLossDollars), "Gross USD loss"),
+      insightCard("Avg Loss R", formatLossR(avgLoss), "Average loser size"),
+      insightCard("Avg Loss $", formatDollar(avgLossDollars), "Average loser PnL"),
+    ];
+  } else if (key === "weekR" || key === "totalR") {
     kicker.textContent = key === "weekR" ? "Weekly Trend" : "Cumulative Equity";
     title.textContent = key === "weekR" ? "R-Value per trade (this week)" : "Equity curve (all trades)";
     let total = 0;
