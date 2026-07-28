@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v44-nan-zero-sign-protection';
+const CACHE_NAME = 'trd-journey-v45-trade-normalization-time-fix';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v44-nan-zero-sign-protection',
-  './audioEngine.js?v=v44-nan-zero-sign-protection',
-  './dataEngine.js?v=v44-nan-zero-sign-protection',
-  './dock.js?v=v44-nan-zero-sign-protection',
-  './gallery.js?v=v44-nan-zero-sign-protection',
-  './app.js?v=v44-nan-zero-sign-protection',
+  './styles.css?v=v45-trade-normalization-time-fix',
+  './audioEngine.js?v=v45-trade-normalization-time-fix',
+  './dataEngine.js?v=v45-trade-normalization-time-fix',
+  './dock.js?v=v45-trade-normalization-time-fix',
+  './gallery.js?v=v45-trade-normalization-time-fix',
+  './app.js?v=v45-trade-normalization-time-fix',
   './manifest.json'
 ];
 

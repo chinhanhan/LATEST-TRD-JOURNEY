@@ -314,11 +314,21 @@ function normalizeState(raw) {
 
 function normalizeTrade(trade) {
   const status = trade.status === "open" ? "open" : "closed";
+  const dateVal = trade.date || todayISO();
+  const openTimeVal = trade.openTime
+    ? (trade.openTime.includes("T") ? trade.openTime : `${trade.openTime}T09:30`)
+    : `${dateVal}T09:30`;
+  const closeTimeVal = trade.closeTime
+    ? (trade.closeTime.includes("T") ? trade.closeTime : `${trade.closeTime}T10:30`)
+    : (status === "closed" ? (trade.closedAt ? (trade.closedAt.includes("T") ? trade.closedAt : `${trade.closedAt}T10:30`) : `${dateVal}T10:30`) : "");
+
   return {
     id: String(trade.id || uid()),
     status,
-    date: trade.date || todayISO(),
-    closedAt: trade.closedAt || (status === "closed" ? trade.date || todayISO() : ""),
+    date: dateVal,
+    closedAt: trade.closedAt || (status === "closed" ? dateVal : ""),
+    openTime: openTimeVal,
+    closeTime: closeTimeVal,
     symbol: trade.symbol || defaultPreferences.defaultSymbol,
     setup: trade.setup || defaultPreferences.setups[0],
     direction: trade.direction || "Long",
