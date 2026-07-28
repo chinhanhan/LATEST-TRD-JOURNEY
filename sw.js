@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v43-es5-compat-array-fix';
+const CACHE_NAME = 'trd-journey-v44-nan-zero-sign-protection';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v43-es5-compat-array-fix',
-  './audioEngine.js?v=v43-es5-compat-array-fix',
-  './dataEngine.js?v=v43-es5-compat-array-fix',
-  './dock.js?v=v43-es5-compat-array-fix',
-  './gallery.js?v=v43-es5-compat-array-fix',
-  './app.js?v=v43-es5-compat-array-fix',
+  './styles.css?v=v44-nan-zero-sign-protection',
+  './audioEngine.js?v=v44-nan-zero-sign-protection',
+  './dataEngine.js?v=v44-nan-zero-sign-protection',
+  './dock.js?v=v44-nan-zero-sign-protection',
+  './gallery.js?v=v44-nan-zero-sign-protection',
+  './app.js?v=v44-nan-zero-sign-protection',
   './manifest.json'
 ];
 

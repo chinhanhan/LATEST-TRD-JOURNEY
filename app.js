@@ -465,23 +465,33 @@ function openTrades(trades = visibleTrades()) {
 }
 
 function rValue(trade) {
-  return trade.risk ? trade.pnl / trade.risk : 0;
+  if (!trade || !trade.risk) return 0;
+  const res = Number(trade.pnl) / Number(trade.risk);
+  return isNaN(res) ? 0 : res;
 }
 
 function formatR(value) {
-  return `${value >= 0 ? "+" : ""}${Number(value || 0).toFixed(2)}R`;
+  const num = Number(value || 0);
+  if (isNaN(num)) return "0.00R";
+  const fixed = Math.abs(num) < 0.005 ? "0.00" : num.toFixed(2);
+  const sign = Number(fixed) > 0 ? "+" : "";
+  return `${sign}${fixed}R`;
 }
 
 function formatLossR(value) {
   const num = Number(value || 0);
-  if (Math.abs(num) < 0.0001) return "0.00R";
-  return `${num.toFixed(2)}R`;
+  if (isNaN(num)) return "0.00R";
+  const fixed = Math.abs(num) < 0.005 ? "0.00" : num.toFixed(2);
+  return Number(fixed) === 0 ? "0.00R" : `${fixed}R`;
 }
 
 function formatDollar(val) {
   const num = Number(val || 0);
-  const sign = num > 0 ? "+" : num < 0 ? "-" : "";
-  return `${sign}$${Math.abs(num).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (isNaN(num)) return "$0.00";
+  const absNum = Math.abs(num);
+  const fixedStr = absNum < 0.005 ? "0.00" : absNum.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const sign = Math.abs(num) < 0.005 ? "" : num > 0 ? "+" : "-";
+  return `${sign}$${fixedStr}`;
 }
 
 function formatHoldDuration(openTimeStr, closeTimeStr) {
