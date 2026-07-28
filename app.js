@@ -1376,7 +1376,7 @@ function tradeCard(trade) {
         <p style="margin-top:2px;">${safe(trade.setup)}</p>
         <div style="font-size:11px; color:var(--muted); margin-top:4px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
           <span>🟢 ${openDisp}</span>
-          ${trade.status === "closed" ? `<span>🔴 ${closeDisp}</span>` : ""}
+          ${trade.status === "closed" ? `<span>🔴 ${closeDisp}</span>` : `<span class="tag info" style="font-size:10px;">In Progress</span>`}
           ${durationTag}
         </div>
       </div>
@@ -2230,11 +2230,17 @@ function deleteTrade(id) {
 function openCloseTradeModal(id) {
   const trade = state.trades.find((item) => item.id === id);
   if (!trade) return;
+  const currentNow = nowDatetimeLocal();
   openModal("Close trade", "Result", `
     <form class="close-trade-form" id="closeTradeForm" data-close-id="${trade.id}">
       <div class="insight-grid">
         ${insightCard("Symbol", trade.symbol, trade.direction)}
         ${insightCard("Setup", trade.setup, `Risk ${money(trade.risk)}`)}
+      </div>
+      <div class="form-row" style="margin-top:12px;">
+        <label>Closing Time (平仓时间)
+          <input name="closeTime" type="datetime-local" value="${currentNow}" required />
+        </label>
       </div>
       <div class="form-row">
         <label>Net P&L ($)<input name="pnl" type="number" step="1" placeholder="240" /></label>
@@ -2275,10 +2281,16 @@ async function closeTradeFromModal(event) {
       toast(t("needsResult"), "error");
       return;
     }
+    const closeTimeVal = form.closeTime?.value || nowDatetimeLocal();
+    if (trade.openTime && closeTimeVal < trade.openTime) {
+      toast("Closing time cannot be earlier than opening time.", "error");
+      return;
+    }
     const imagePromises = Array.from(form.imageFile.files).map(file => fileToDataUrl(file));
     const imagesData = (await Promise.all(imagePromises)).filter(Boolean);
     trade.status = "closed";
-    trade.closedAt = todayISO();
+    trade.closeTime = closeTimeVal;
+    trade.closedAt = closeTimeVal.split("T")[0];
     trade.pnl = pnlInput ? Number(pnlInput) : Number(rInput) * Number(trade.risk || 0);
     trade.rule = form.rule.value === "true";
     trade.emotion = form.emotion.value;
@@ -2643,6 +2655,12 @@ document.querySelectorAll(".theme-toggle, #headerThemeToggleBtn").forEach((butto
 document.getElementById("backHomeBtn")?.addEventListener("click", closeModule);
 
 document.getElementById("tradeForm").addEventListener("submit", saveTradeFromForm);
+document.querySelector('#tradeForm [name="openTime"]')?.addEventListener("change", (event) => {
+  if (event.target.value) {
+    const form = document.getElementById("tradeForm");
+    if (form.date) form.date.value = event.target.value.split("T")[0];
+  }
+});
 document.getElementById("cancelEditBtn").addEventListener("click", resetTradeForm);
 document.getElementById("setupFilter").addEventListener("change", renderJournal);
 document.getElementById("activeSopSelect").addEventListener("change", (event) => {
