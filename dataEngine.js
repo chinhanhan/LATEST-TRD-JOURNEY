@@ -80,21 +80,29 @@ class TRDDataEngine {
       return;
     }
 
-    const headers = ["Date", "Symbol", "Direction", "Setup", "Risk ($)", "R-Multiple", "Net PnL ($)", "Grade", "Rule Followed", "Emotion", "Entry Plan", "Exit Note"];
-    const rows = trades.map(t => [
-      t.date || "",
-      t.symbol || "",
-      t.direction || "Long",
-      t.setup || "",
-      t.risk || 0,
-      t.pnl && t.risk ? (t.pnl / t.risk).toFixed(2) : 0,
-      t.pnl || 0,
-      t.grade || "A",
-      t.rule ? "Yes" : "No",
-      t.emotion || "Calm",
-      `"${(t.entryPlan || "").replace(/"/g, '""')}"`,
-      `"${(t.exitNote || "").replace(/"/g, '""')}"`
-    ]);
+    const headers = ["Open Time", "Close Time", "Duration", "Date", "Symbol", "Direction", "Setup", "Risk ($)", "R-Multiple", "Net PnL ($)", "Grade", "Rule Followed", "Emotion", "Entry Plan", "Exit Note"];
+    const rows = trades.map(t => {
+      const openDisp = t.openTime ? t.openTime.replace("T", " ") : t.date || "";
+      const closeDisp = t.closeTime ? t.closeTime.replace("T", " ") : (t.closedAt || "");
+      const duration = (window.formatHoldDuration ? window.formatHoldDuration(t.openTime || t.date, t.closeTime || t.closedAt) : "");
+      return [
+        `"${openDisp}"`,
+        `"${closeDisp}"`,
+        `"${duration}"`,
+        t.date || "",
+        t.symbol || "",
+        t.direction || "Long",
+        t.setup || "",
+        t.risk || 0,
+        t.pnl && t.risk ? (t.pnl / t.risk).toFixed(2) : 0,
+        t.pnl || 0,
+        t.grade || "A",
+        t.rule ? "Yes" : "No",
+        t.emotion || "Calm",
+        `"${(t.entryPlan || "").replace(/"/g, '""')}"`,
+        `"${(t.exitNote || "").replace(/"/g, '""')}"`
+      ];
+    });
 
     const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });

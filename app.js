@@ -472,13 +472,64 @@ function formatR(value) {
   return `${value >= 0 ? "+" : ""}${Number(value || 0).toFixed(2)}R`;
 }
 
+function formatDollar(val) {
+  const num = Number(val || 0);
+  const sign = num > 0 ? "+" : num < 0 ? "-" : "";
+  return `${sign}$${Math.abs(num).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function formatHoldDuration(openTimeStr, closeTimeStr) {
+  if (!openTimeStr || !closeTimeStr) return "";
+  const start = new Date(openTimeStr.includes("T") ? openTimeStr : `${openTimeStr}T00:00:00`);
+  const end = new Date(closeTimeStr.includes("T") ? closeTimeStr : `${closeTimeStr}T00:00:00`);
+  if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return "";
+  const diffMs = end - start;
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  if (diffMins < 1) return "<1m";
+  const days = Math.floor(diffMins / (60 * 24));
+  const hours = Math.floor((diffMins % (60 * 24)) / 60);
+  const mins = diffMins % 60;
+
+  const parts = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (mins > 0 || !parts.length) parts.push(`${mins}m`);
+  return parts.join(" ");
+}
+
+function formatTimeDisplay(isoStr) {
+  if (!isoStr) return "";
+  if (isoStr.includes("T")) {
+    const [d, t] = isoStr.split("T");
+    return `${d.slice(5).replace("-", ".")} ${t.slice(0, 5)}`;
+  }
+  return isoStr.slice(5).replace("-", ".");
+}
+
+function nowDatetimeLocal() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const mins = String(now.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${mins}`;
+}
+
 function metrics(trades = closedTrades()) {
   const source = closedTrades(trades);
   const rList = source.map(rValue);
-  const wins = rList.filter((r) => r > 0);
-  const losses = rList.filter((r) => r < 0);
-  const grossWin = wins.reduce((sum, r) => sum + r, 0);
-  const grossLoss = Math.abs(losses.reduce((sum, r) => sum + r, 0));
+  const pnlList = source.map((t) => Number(t.pnl || (rValue(t) * Number(t.risk || 0)) || 0));
+
+  const winningTrades = source.filter((t) => rValue(t) > 0);
+  const losingTrades = source.filter((t) => rValue(t) < 0);
+
+  const grossWinR = winningTrades.reduce((sum, t) => sum + rValue(t), 0);
+  const grossLossR = losingTrades.reduce((sum, t) => sum + rValue(t), 0);
+
+  const grossWinDollars = winningTrades.reduce((sum, t) => sum + Number(t.pnl || (rValue(t) * Number(t.risk || 0)) || 0), 0);
+  const grossLossDollars = losingTrades.reduce((sum, t) => sum + Number(t.pnl || (rValue(t) * Number(t.risk || 0)) || 0), 0);
+
   let curve = 0;
   let peak = 0;
   let maxDrawdown = 0;
@@ -490,9 +541,14 @@ function metrics(trades = closedTrades()) {
   return {
     count: source.length,
     totalR: rList.reduce((sum, r) => sum + r, 0),
+    totalPnL: pnlList.reduce((sum, p) => sum + p, 0),
+    grossWinR,
+    grossLossR,
+    grossWinDollars,
+    grossLossDollars,
     expectancy: rList.length ? rList.reduce((sum, r) => sum + r, 0) / rList.length : 0,
-    winRate: rList.length ? wins.length / rList.length : 0,
-    profitFactor: grossLoss ? grossWin / grossLoss : grossWin ? Infinity : 0,
+    winRate: rList.length ? winningTrades.length / rList.length : 0,
+    profitFactor: Math.abs(grossLossR) ? grossWinR / Math.abs(grossLossR) : grossWinR ? Infinity : 0,
     maxDrawdown
   };
 }
@@ -1002,6 +1058,8 @@ function renderInsights() {
   const worstTrade = [...closedTrades()].sort((a, b) => rValue(a) - rValue(b))[0];
   const s = streak();
   const cards = [
+    ["Total Profit", formatR(all.grossWinR), formatDollar(all.grossWinDollars), "totalProfit"],
+    ["Total Loss", formatR(all.grossLossR), formatDollar(all.grossLossDollars), "totalLoss"],
     ["Week R", formatR(week.totalR), `${week.count} trades this week`, "weekR"],
     ["Current Streak", s.count ? `${s.count} ${s.direction > 0 ? "winning" : "losing"} days` : "No streak", "Based on active trading days", "streak"],
     ["Best Setup", bestSetup ? bestSetup.name : "No data", bestSetup ? formatR(bestSetup.expectancy) : "Add trades", "bestSetup"],
@@ -1235,9 +1293,16 @@ function renderReviewInsightCards() {
 }
 
 function tradeRow(trade) {
+  const openDisp = formatTimeDisplay(trade.openTime || trade.date);
+  const closeDisp = trade.status === "closed" ? formatTimeDisplay(trade.closeTime || trade.closedAt) : "Open";
+  const duration = formatHoldDuration(trade.openTime || trade.date, trade.closeTime || trade.closedAt);
+
   return `<tr>
-    <td>${safe(trade.date)}</td>
-    <td>${safe(trade.symbol)} ${trade.direction === "Long" ? "up" : "down"}</td>
+    <td>
+      <div style="font-weight:600;">${openDisp}</div>
+      ${trade.status === "closed" ? `<div style="font-size:11px; color:var(--muted);">🔴 ${closeDisp} ${duration ? `(${duration})` : ""}</div>` : '<div style="font-size:11px; color:var(--accent);">🟢 Open</div>'}
+    </td>
+    <td>${safe(trade.symbol)} ${trade.direction === "Long" ? "↑" : "↓"}</td>
     <td>${safe(trade.setup)}</td>
     <td>${resultTag(trade)}</td>
     <td>${safe(trade.grade)}</td>
@@ -1251,10 +1316,23 @@ function tradeRow(trade) {
 
 function tradeCard(trade) {
   const img = imageFor(trade);
+  const duration = formatHoldDuration(trade.openTime || trade.date, trade.closeTime || trade.closedAt);
+  const durationTag = duration ? `<span class="tag info" style="font-size:10px; font-weight:600;">⏱️ ${duration}</span>` : "";
+  const openDisp = formatTimeDisplay(trade.openTime || trade.date);
+  const closeDisp = trade.status === "closed" ? formatTimeDisplay(trade.closeTime || trade.closedAt) : "Open";
+
   return `<article class="trade-card" style="position:relative;">
     <button class="ghost-button action-trigger-btn" data-trade-actions="${trade.id}" style="position:absolute; top:12px; right:12px; padding:4px 8px; min-height:auto; font-size:12px; z-index:10;">•••</button>
     <div class="trade-card-head" style="padding-right:32px;">
-      <div><strong>${safe(trade.symbol)} ${safe(trade.direction)}</strong><p>${safe(trade.date)} | ${safe(trade.setup)}</p></div>
+      <div>
+        <strong>${safe(trade.symbol)} ${safe(trade.direction)}</strong>
+        <p style="margin-top:2px;">${safe(trade.setup)}</p>
+        <div style="font-size:11px; color:var(--muted); margin-top:4px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span>🟢 ${openDisp}</span>
+          ${trade.status === "closed" ? `<span>🔴 ${closeDisp}</span>` : ""}
+          ${durationTag}
+        </div>
+      </div>
       ${resultTag(trade)}
     </div>
     <div class="trade-card-meta" style="margin-top:8px;">
@@ -1436,6 +1514,8 @@ function summaryCardsFor(trades, start, end) {
   const weak = setups.sort((a, b) => a.expectancy - b.expectancy)[0];
   return [
     insightCard("Period", formatPeriodString(start, end), `${trades.length} trades`),
+    insightCard("Total Profit", formatR(m.grossWinR), formatDollar(m.grossWinDollars)),
+    insightCard("Total Loss", formatR(m.grossLossR), formatDollar(m.grossLossDollars)),
     insightCard("Total R", formatR(m.totalR), `${Math.round(m.winRate * 100)}% win rate`),
     insightCard("Best Setup", best?.name || "No data", best ? formatR(best.expectancy) : "Add trades"),
     insightCard("Weakest Setup", weak?.name || "No data", weak ? formatR(weak.expectancy) : "Add trades"),
@@ -1444,6 +1524,7 @@ function summaryCardsFor(trades, start, end) {
 }
 
 function monthlyCards(trades, start, end) {
+  const m = metrics(trades);
   const days = dateRange(start, end);
   const activeDays = days.filter((day) => byDate(day).length || closedByDate(day).length);
   const dayStats = activeDays.map((day) => ({ day, totalR: metrics(closedByDate(day)).totalR }));
@@ -1454,7 +1535,10 @@ function monthlyCards(trades, start, end) {
   const formatDateNote = (d) => d ? d.replace(/-/g, ".") : "No data";
 
   return [
-    ...summaryCardsFor(trades, start, end).slice(0, 2),
+    insightCard("Period", formatPeriodString(start, end), `${trades.length} trades`),
+    insightCard("Total Profit", formatR(m.grossWinR), formatDollar(m.grossWinDollars)),
+    insightCard("Total Loss", formatR(m.grossLossR), formatDollar(m.grossLossDollars)),
+    insightCard("Total R", formatR(m.totalR), `${Math.round(m.winRate * 100)}% win rate`),
     insightCard("Active Days", String(activeDays.length), "Days with trades"),
     insightCard("Best Day", best ? formatR(best.totalR) : "0.00R", formatDateNote(best?.day)),
     insightCard("Worst Day", worst ? formatR(worst.totalR) : "0.00R", formatDateNote(worst?.day)),
@@ -1957,6 +2041,8 @@ function resetTradeForm() {
   form.reset();
   form.elements.id.value = "";
   form.date.value = todayISO();
+  if (form.openTime) form.openTime.value = nowDatetimeLocal();
+  if (form.closeTime) form.closeTime.value = "";
   form.symbol.value = state.preferences.defaultSymbol;
   form.sopId.value = state.activeSopId;
   populateSopControls();
@@ -1981,6 +2067,8 @@ function editTrade(id) {
   const form = document.getElementById("tradeForm");
   form.elements.id.value = trade.id;
   form.date.value = trade.date;
+  if (form.openTime) form.openTime.value = trade.openTime || (trade.date ? `${trade.date}T09:30` : nowDatetimeLocal());
+  if (form.closeTime) form.closeTime.value = trade.closeTime || (trade.closedAt ? `${trade.closedAt}T10:30` : "");
   form.symbol.value = trade.symbol;
   state.activeSopId = trade.sopId || state.activeSopId;
   const account = state.accounts.find((item) => item.id === trade.accountId);
@@ -2019,12 +2107,20 @@ async function saveTradeFromForm(event) {
     const current = form.elements.id.value ? state.trades.find((trade) => trade.id === form.elements.id.value) : {};
     const hasResult = form.pnl.value.trim() !== "";
     const nextStatus = hasResult ? "closed" : "open";
+    
+    const openTimeVal = form.openTime?.value || (form.date.value ? `${form.date.value}T09:30` : nowDatetimeLocal());
+    const closeTimeVal = nextStatus === "closed" ? (form.closeTime?.value || (form.date.value ? `${form.date.value}T10:30` : "")) : "";
+    const tradeDate = openTimeVal ? openTimeVal.split("T")[0] : form.date.value;
+    const closedAtDate = closeTimeVal ? closeTimeVal.split("T")[0] : (nextStatus === "closed" ? tradeDate : "");
+
     const trade = normalizeTrade({
       ...current,
       id: form.elements.id.value || uid(),
       status: nextStatus,
-      date: form.date.value,
-      closedAt: nextStatus === "closed" ? (current.date && current.date !== form.date.value ? form.date.value : current.closedAt || form.date.value) : "",
+      date: tradeDate,
+      closedAt: closedAtDate,
+      openTime: openTimeVal,
+      closeTime: closeTimeVal,
       symbol: form.symbol.value.trim().toUpperCase(),
       sopId: form.sopId.value,
       accountId: form.accountId.value,
