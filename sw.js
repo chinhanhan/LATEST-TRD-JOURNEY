@@ -1,10 +1,13 @@
-const CACHE_NAME = 'trd-journey-phase12-2';
+const CACHE_NAME = 'trd-journey-v38-profit-loss-open-close';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=phase11-dock-fix-3',
-  './gallery.js?v=phase12-2',
-  './app.js?v=phase12-2',
+  './styles.css?v=v38-profit-loss-open-close',
+  './audioEngine.js?v=v38-profit-loss-open-close',
+  './dataEngine.js?v=v38-profit-loss-open-close',
+  './dock.js?v=v38-profit-loss-open-close',
+  './gallery.js?v=v38-profit-loss-open-close',
+  './app.js?v=v38-profit-loss-open-close',
   './manifest.json'
 ];
 
@@ -32,24 +35,24 @@ self.addEventListener('message', (e) => {
   }
 });
 
+// Network-first strategy to ensure users always get the latest app version
 self.addEventListener('fetch', (e) => {
-  // Only handle GET requests
   if (e.request.method !== 'GET') return;
   
   e.respondWith(
-    caches.match(e.request).then((res) => {
-      if (res) return res;
-      return fetch(e.request).then((networkRes) => {
-        if (networkRes && networkRes.status === 200 && networkRes.type === 'basic') {
-          const clone = networkRes.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
-        }
-        return networkRes;
-      });
-    }).catch(() => {
-      if (e.request.mode === 'navigate') {
-        return caches.match('./index.html');
+    fetch(e.request).then((networkRes) => {
+      if (networkRes && networkRes.status === 200 && networkRes.type === 'basic') {
+        const clone = networkRes.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
       }
+      return networkRes;
+    }).catch(() => {
+      return caches.match(e.request).then((res) => {
+        if (res) return res;
+        if (e.request.mode === 'navigate') {
+          return caches.match('./index.html');
+        }
+      });
     })
   );
 });

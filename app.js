@@ -4298,6 +4298,7 @@ async function initApp() {
     // Register service worker with version update banner
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("sw.js").then((reg) => {
+        reg.update();
         if (reg.waiting) {
           showUpdateBanner(reg.waiting);
         }
