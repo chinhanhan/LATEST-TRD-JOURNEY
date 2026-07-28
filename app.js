@@ -2654,47 +2654,47 @@ document.querySelectorAll(".theme-toggle, #headerThemeToggleBtn").forEach((butto
 
 document.getElementById("backHomeBtn")?.addEventListener("click", closeModule);
 
-document.getElementById("tradeForm").addEventListener("submit", saveTradeFromForm);
+document.getElementById("tradeForm")?.addEventListener("submit", saveTradeFromForm);
 document.querySelector('#tradeForm [name="openTime"]')?.addEventListener("change", (event) => {
   if (event.target.value) {
     const form = document.getElementById("tradeForm");
     if (form.date) form.date.value = event.target.value.split("T")[0];
   }
 });
-document.getElementById("cancelEditBtn").addEventListener("click", resetTradeForm);
-document.getElementById("setupFilter").addEventListener("change", renderJournal);
-document.getElementById("activeSopSelect").addEventListener("change", (event) => {
+document.getElementById("cancelEditBtn")?.addEventListener("click", resetTradeForm);
+document.getElementById("setupFilter")?.addEventListener("change", renderJournal);
+document.getElementById("activeSopSelect")?.addEventListener("change", (event) => {
   state.activeSopId = event.target.value;
   state.activeAccountId = accountsForSop(state.activeSopId)[0]?.id || "";
   saveState();
   renderAll();
   resetTradeForm();
 });
-document.getElementById("accountFilterSelect").addEventListener("change", (event) => {
+document.getElementById("accountFilterSelect")?.addEventListener("change", (event) => {
   state.activeAccountId = event.target.value;
   saveState();
   renderAll();
   resetTradeForm();
 });
-document.getElementById("tradeSopSelect").addEventListener("change", (event) => {
+document.getElementById("tradeSopSelect")?.addEventListener("change", (event) => {
   state.activeSopId = event.target.value;
   state.activeAccountId = accountsForSop(state.activeSopId)[0]?.id || "";
   saveState();
   renderAll();
   resetTradeForm();
 });
-document.getElementById("tradeAccountSelect").addEventListener("change", (event) => {
+document.getElementById("tradeAccountSelect")?.addEventListener("change", (event) => {
   state.activeAccountId = event.target.value;
   saveState();
 });
-document.getElementById("exportCsvBtn").addEventListener("click", exportCsv);
-document.getElementById("exportJsonBtn").addEventListener("click", exportJson);
-document.getElementById("importJsonInput").addEventListener("change", (event) => importJson(event.target.files[0]));
-document.getElementById("resetBtn").addEventListener("click", resetDemo);
-document.getElementById("addSopBtn").addEventListener("click", () => openSopModal());
-document.getElementById("addAccountBtn").addEventListener("click", () => openAccountModal());
-document.getElementById("journalAddSopBtn").addEventListener("click", () => openSopModal());
-document.getElementById("journalAddAccountBtn").addEventListener("click", () => openAccountModal());
+document.getElementById("exportCsvBtn")?.addEventListener("click", exportCsv);
+document.getElementById("exportJsonBtn")?.addEventListener("click", exportJson);
+document.getElementById("importJsonInput")?.addEventListener("change", (event) => importJson(event.target.files[0]));
+document.getElementById("resetBtn")?.addEventListener("click", resetDemo);
+document.getElementById("addSopBtn")?.addEventListener("click", () => openSopModal());
+document.getElementById("addAccountBtn")?.addEventListener("click", () => openAccountModal());
+document.getElementById("journalAddSopBtn")?.addEventListener("click", () => openSopModal());
+document.getElementById("journalAddAccountBtn")?.addEventListener("click", () => openAccountModal());
 document.getElementById("modalCloseBtn")?.addEventListener("click", closeModal);
 document.getElementById("modalBackdrop")?.addEventListener("click", (event) => {
   if (event.target.id === "modalBackdrop") closeModal();
@@ -3008,7 +3008,7 @@ document.querySelectorAll("#planForm [name='workflowDate'], #reviewForm [name='w
   input.addEventListener("change", (event) => setWorkflowDate(event.target.value));
 });
 
-document.getElementById("planForm").addEventListener("submit", (event) => {
+document.getElementById("planForm")?.addEventListener("submit", (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   const day = form.workflowDate.value || selectedDay || todayISO();
@@ -3031,7 +3031,7 @@ document.getElementById("planForm").addEventListener("submit", (event) => {
   closeSheet("planSheet");
 });
 
-document.getElementById("reviewForm").addEventListener("submit", (event) => {
+document.getElementById("reviewForm")?.addEventListener("submit", (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   const day = form.workflowDate.value || selectedDay || todayISO();
@@ -3066,7 +3066,7 @@ document.getElementById("reviewForm").addEventListener("submit", (event) => {
   closeSheet("reviewSheet");
 });
 
-document.getElementById("settingsForm").addEventListener("submit", (event) => {
+document.getElementById("settingsForm")?.addEventListener("submit", (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   state.preferences = {

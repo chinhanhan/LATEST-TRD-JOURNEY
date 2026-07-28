@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v39-grid-chart-time-fix';
+const CACHE_NAME = 'trd-journey-v40-null-safe-grid-balance';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v39-grid-chart-time-fix',
-  './audioEngine.js?v=v39-grid-chart-time-fix',
-  './dataEngine.js?v=v39-grid-chart-time-fix',
-  './dock.js?v=v39-grid-chart-time-fix',
-  './gallery.js?v=v39-grid-chart-time-fix',
-  './app.js?v=v39-grid-chart-time-fix',
+  './styles.css?v=v40-null-safe-grid-balance',
+  './audioEngine.js?v=v40-null-safe-grid-balance',
+  './dataEngine.js?v=v40-null-safe-grid-balance',
+  './dock.js?v=v40-null-safe-grid-balance',
+  './gallery.js?v=v40-null-safe-grid-balance',
+  './app.js?v=v40-null-safe-grid-balance',
   './manifest.json'
 ];
 
