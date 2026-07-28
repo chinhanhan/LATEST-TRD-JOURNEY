@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v47-monte-carlo-interactive-tooltip';
+const CACHE_NAME = 'trd-journey-v48-trade-status-transition-fix';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v47-monte-carlo-interactive-tooltip',
-  './audioEngine.js?v=v47-monte-carlo-interactive-tooltip',
-  './dataEngine.js?v=v47-monte-carlo-interactive-tooltip',
-  './dock.js?v=v47-monte-carlo-interactive-tooltip',
-  './gallery.js?v=v47-monte-carlo-interactive-tooltip',
-  './app.js?v=v47-monte-carlo-interactive-tooltip',
+  './styles.css?v=v48-trade-status-transition-fix',
+  './audioEngine.js?v=v48-trade-status-transition-fix',
+  './dataEngine.js?v=v48-trade-normalization-time-fix',
+  './dock.js?v=v48-trade-status-transition-fix',
+  './gallery.js?v=v48-trade-status-transition-fix',
+  './app.js?v=v48-trade-status-transition-fix',
   './manifest.json'
 ];
 

@@ -2183,7 +2183,9 @@ async function saveTradeFromForm(event) {
     const imagesData = (await Promise.all(imagePromises)).filter(Boolean);
     const current = form.elements.id.value ? state.trades.find((trade) => trade.id === form.elements.id.value) : {};
     const hasResult = form.pnl.value.trim() !== "";
-    const nextStatus = hasResult ? "closed" : "open";
+    const hasCloseTime = Boolean(form.closeTime?.value.trim());
+    const isEditingExistingClosed = Boolean(current && current.status === "closed");
+    const nextStatus = (hasResult || hasCloseTime || isEditingExistingClosed) ? "closed" : "open";
     
     const openTimeVal = form.openTime?.value || (form.date.value ? `${form.date.value}T09:30` : nowDatetimeLocal());
     const closeTimeVal = nextStatus === "closed" ? (form.closeTime?.value || (form.date.value ? `${form.date.value}T10:30` : "")) : "";
