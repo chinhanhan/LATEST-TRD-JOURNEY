@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v40-null-safe-grid-balance';
+const CACHE_NAME = 'trd-journey-v41-monte-carlo-simulation-badges';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v40-null-safe-grid-balance',
-  './audioEngine.js?v=v40-null-safe-grid-balance',
-  './dataEngine.js?v=v40-null-safe-grid-balance',
-  './dock.js?v=v40-null-safe-grid-balance',
-  './gallery.js?v=v40-null-safe-grid-balance',
-  './app.js?v=v40-null-safe-grid-balance',
+  './styles.css?v=v41-monte-carlo-simulation-badges',
+  './audioEngine.js?v=v41-monte-carlo-simulation-badges',
+  './dataEngine.js?v=v41-monte-carlo-simulation-badges',
+  './dock.js?v=v41-monte-carlo-simulation-badges',
+  './gallery.js?v=v41-monte-carlo-simulation-badges',
+  './app.js?v=v41-monte-carlo-simulation-badges',
   './manifest.json'
 ];
 

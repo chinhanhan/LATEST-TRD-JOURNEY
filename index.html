@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=v40-null-safe-grid-balance" />
+    <link rel="stylesheet" href="styles.css?v=v41-monte-carlo-simulation-badges" />
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -403,7 +403,18 @@
                 </div>
                 <div class="top-gradient"></div>
                 <div class="bottom-gradient"></div>
+            </section>
+
+            <!-- Trader Achievement Badges -->
+            <section class="panel badges-panel" style="margin-top:16px;">
+              <div class="panel-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <p class="eyebrow">Milestones & Trophies</p>
+                  <h2>Trader Badges (成就勋章馆)</h2>
+                </div>
+                <span class="tag info" id="badgeUnlockCountTag" style="font-size:12px; font-weight:700; padding:6px 12px;">0 / 7 Unlocked</span>
               </div>
+              <div class="badge-grid" id="badgeShowcaseGrid"></div>
             </section>
 
             <!-- Epic Mission Panel -->
@@ -594,6 +605,7 @@
           <section class="view" id="review" data-title="Review" data-kicker="Evidence">
             <div class="segment-control" aria-label="Review sections">
               <button class="segment active" data-review-panel="insights" type="button">Insights</button>
+              <button class="segment" data-review-panel="simulation" type="button">🎲 Simulation</button>
               <button class="segment" data-review-panel="charts" type="button">Charts</button>
               <button class="segment" data-review-panel="calendar" type="button">Calendar</button>
               <button class="segment" data-review-panel="playbook" type="button">Playbook</button>
@@ -621,6 +633,43 @@
                 <div class="panel-head"><div><p class="eyebrow" id="insightDetailKicker">Detail</p><h2 id="insightDetailTitle">Metric</h2></div><button class="ghost-button" id="closeInsightDetail">Close</button></div>
                 <svg class="line-chart" id="insightDetailChart" viewBox="0 0 760 300"></svg>
                 <div class="insight-grid" id="insightDetailCards"></div>
+              </section>
+            </div>
+
+            <!-- Dedicated Monte Carlo Simulation Panel Area -->
+            <div class="review-panel" id="review-simulation">
+              <section class="panel monte-carlo-panel" id="monteCarloPanel">
+                <div class="panel-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                  <div>
+                    <p class="eyebrow">Quantitative Probability Engine</p>
+                    <h2>🎲 Monte Carlo Equity Simulation (蒙特卡洛资金曲线推演专区)</h2>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <label style="font-size:12px; color:var(--muted); font-weight:600; display:flex; align-items:center; gap:6px;">
+                      Simulated Trades:
+                      <select id="mcTradeCountSelect" style="padding:4px 8px; font-size:12px; border-radius:8px;">
+                        <option value="30">Next 30 Trades</option>
+                        <option value="50" selected>Next 50 Trades</option>
+                        <option value="100">Next 100 Trades</option>
+                      </select>
+                    </label>
+                    <button class="primary-button" type="button" id="btnRunMonteCarlo" style="padding:6px 14px; font-size:12px;">🎲 Run 1,000 Trials</button>
+                  </div>
+                </div>
+
+                <!-- Multi-Line Simulation SVG Canvas -->
+                <div style="position:relative; margin-top:16px;">
+                  <svg class="line-chart" id="monteCarloChart" viewBox="0 0 760 320" role="img" aria-label="Monte Carlo Equity Trails"></svg>
+                </div>
+
+                <div style="margin-top:16px; font-size:11px; color:var(--muted); display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                  <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:3px; background:#30d158; display:inline-block; border-radius:2px;"></span> 🌟 Best-Case Path (95th Percentile)</span>
+                  <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:3px; background:#0071e3; display:inline-block; border-radius:2px;"></span> 📈 Expected Path (Median 50th)</span>
+                  <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:3px; background:#ff9f0a; display:inline-block; border-radius:2px;"></span> 🛡️ Drawdown Floor (5th Percentile)</span>
+                </div>
+
+                <!-- Quantitative Metrics Breakdown Grid -->
+                <div class="insight-grid" id="monteCarloMetricsGrid" style="margin-top:20px;"></div>
               </section>
             </div>
 
@@ -1159,10 +1208,10 @@
     <!-- React Bits Inspired Floating Dock Container -->
     <div class="dock-outer" id="reactBitsDock"></div>
     <canvas id="clickSparkCanvas" class="click-spark-canvas"></canvas>
-    <script defer src="audioEngine.js?v=v40-null-safe-grid-balance"></script>
-    <script defer src="dataEngine.js?v=v40-null-safe-grid-balance"></script>
-    <script defer src="dock.js?v=v40-null-safe-grid-balance"></script>
-    <script type="module" src="gallery.js?v=v40-null-safe-grid-balance"></script>
-    <script defer src="app.js?v=v40-null-safe-grid-balance"></script>
+    <script defer src="audioEngine.js?v=v41-monte-carlo-simulation-badges"></script>
+    <script defer src="dataEngine.js?v=v41-monte-carlo-simulation-badges"></script>
+    <script defer src="dock.js?v=v41-monte-carlo-simulation-badges"></script>
+    <script type="module" src="gallery.js?v=v41-monte-carlo-simulation-badges"></script>
+    <script defer src="app.js?v=v41-monte-carlo-simulation-badges"></script>
   </body>
 </html>

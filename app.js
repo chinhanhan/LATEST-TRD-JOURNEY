@@ -741,6 +741,8 @@ function renderAll() {
   renderDisciplineHeatmap();
 
   renderMissions();
+  evaluateBadges();
+  renderBadgeShowcase();
 
   // Initialize AnimatedList gradients and Intersection Observer
   setTimeout(() => {
@@ -3001,8 +3003,18 @@ document.querySelectorAll("[data-review-panel]").forEach((button) => {
       renderSavedBacktests();
       updateBacktesterUI();
     }
+    if (button.dataset.reviewPanel === "simulation") {
+      executeAndRenderMonteCarlo();
+    }
   });
 });
+
+document.getElementById("btnRunMonteCarlo")?.addEventListener("click", () => {
+  playSound("click");
+  executeAndRenderMonteCarlo();
+  toast("Monte Carlo 1,000 trials simulated!", "success");
+});
+document.getElementById("mcTradeCountSelect")?.addEventListener("change", executeAndRenderMonteCarlo);
 
 document.querySelectorAll("#planForm [name='workflowDate'], #reviewForm [name='workflowDate']").forEach((input) => {
   input.addEventListener("change", (event) => setWorkflowDate(event.target.value));
@@ -3530,6 +3542,130 @@ function getDisciplineStreak() {
     }
   }
   return streak;
+}
+
+function runMonteCarloSimulation(numTrades = 50, numRuns = 1000) {
+  const closed = closedTrades();
+  let samplePool = closed.map(t => rValue(t));
+  let isBaseline = false;
+
+  if (samplePool.length < 3) {
+    isBaseline = true;
+    samplePool = [1.8, 2.0, -1.0, 1.5, -1.0, 2.5, -1.0, 1.2, -1.0, 2.0, -1.0, 1.5, 3.0, -1.0, 1.0];
+  }
+
+  const allRuns = [];
+  let winRuns = 0;
+  const maxDrawdowns = [];
+
+  for (let r = 0; r < numRuns; r++) {
+    let currentR = 0;
+    let peakR = 0;
+    let maxDD = 0;
+    const curve = [0];
+
+    for (let t = 0; t < numTrades; t++) {
+      const randomIndex = Math.floor(Math.random() * samplePool.length);
+      const sampledR = samplePool[randomIndex];
+      currentR += sampledR;
+      curve.push(Number(currentR.toFixed(2)));
+
+      if (currentR > peakR) peakR = currentR;
+      const dd = peakR - currentR;
+      if (dd > maxDD) maxDD = dd;
+    }
+
+    if (currentR > 0) winRuns++;
+    maxDrawdowns.push(maxDD);
+    allRuns.push(curve);
+  }
+
+  const medianCurve = [];
+  const topCurve = [];
+  const bottomCurve = [];
+
+  for (let step = 0; step <= numTrades; step++) {
+    const valuesAtStep = allRuns.map(run => run[step]).sort((a, b) => a - b);
+    bottomCurve.push(valuesAtStep[Math.floor(numRuns * 0.05)]);
+    medianCurve.push(valuesAtStep[Math.floor(numRuns * 0.50)]);
+    topCurve.push(valuesAtStep[Math.floor(numRuns * 0.95)]);
+  }
+
+  const winRate = Math.round((winRuns / numRuns) * 100);
+  maxDrawdowns.sort((a, b) => a - b);
+  const medianDD = maxDrawdowns[Math.floor(numRuns * 0.50)];
+  const p95DD = maxDrawdowns[Math.floor(numRuns * 0.95)];
+
+  return {
+    numTrades,
+    numRuns,
+    isBaseline,
+    topCurve,
+    medianCurve,
+    bottomCurve,
+    winRate,
+    medianFinalR: medianCurve.at(-1),
+    medianDD,
+    p95DD
+  };
+}
+
+function renderMonteCarloChart(results) {
+  const svg = document.getElementById("monteCarloChart");
+  const metricsGrid = document.getElementById("monteCarloMetricsGrid");
+  if (!svg) return;
+
+  const { numTrades, topCurve, medianCurve, bottomCurve, winRate, medianFinalR, medianDD, p95DD, isBaseline } = results;
+  const width = 760;
+  const height = 320;
+  const pad = 36;
+
+  const allValues = [...topCurve, ...medianCurve, ...bottomCurve, 0];
+  const minVal = Math.min(...allValues);
+  const maxVal = Math.max(...allValues);
+  const spread = Math.max(maxVal - minVal, 1);
+
+  const getPoints = (curve) => curve.map((val, idx) => {
+    const x = pad + (idx / numTrades) * (width - pad * 2);
+    const y = height - pad - ((val - minVal) / spread) * (height - pad * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+
+  const zeroY = height - pad - ((0 - minVal) / spread) * (height - pad * 2);
+
+  svg.innerHTML = `
+    <!-- Grid Lines -->
+    <line class="grid-line" x1="${pad}" y1="${pad}" x2="${width - pad}" y2="${pad}"></line>
+    <line class="grid-line" x1="${pad}" y1="${zeroY}" x2="${width - pad}" y2="${zeroY}" stroke="rgba(255,255,255,0.2)" stroke-dasharray="4 4"></line>
+    <text class="axis-label" x="${pad}" y="${pad - 10}">${formatR(maxVal)}</text>
+    <text class="axis-label" x="${pad}" y="${zeroY - 6}" fill="var(--muted)">0.00R</text>
+    <text class="axis-label" x="${width - pad - 70}" y="${height - 10}">${numTrades} Trades</text>
+
+    <!-- 95th Best-Case Curve (Green) -->
+    <polyline points="${getPoints(topCurve)}" fill="none" stroke="#30d158" stroke-width="2" stroke-dasharray="4 4" opacity="0.85"></polyline>
+
+    <!-- 5th Worst-Case Curve (Orange/Red) -->
+    <polyline points="${getPoints(bottomCurve)}" fill="none" stroke="#ff9f0a" stroke-width="2" stroke-dasharray="5 5" opacity="0.85"></polyline>
+
+    <!-- 50th Median Expected Curve (Solid Blue) -->
+    <polyline points="${getPoints(medianCurve)}" fill="none" stroke="#0071e3" stroke-width="3"></polyline>
+  `;
+
+  if (metricsGrid) {
+    metricsGrid.innerHTML = [
+      insightCard("Win Probability", `${winRate}%`, `${isBaseline ? "Baseline model" : "Historical pool"} (${results.numRuns} runs)`),
+      insightCard("Expected Median R", formatR(medianFinalR), `Projected over ${numTrades} trades`),
+      insightCard("Median Drawdown", formatR(-medianDD), "50% typical max drawdown"),
+      insightCard("95% DD Floor", formatR(-p95DD), "Worst 5% drawdown boundary")
+    ].join("");
+  }
+}
+
+function executeAndRenderMonteCarlo() {
+  const select = document.getElementById("mcTradeCountSelect");
+  const count = select ? parseInt(select.value, 10) : 50;
+  const results = runMonteCarloSimulation(count, 1000);
+  renderMonteCarloChart(results);
 }
 
 function updateMindfulnessBanner() {
