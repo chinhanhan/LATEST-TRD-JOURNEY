@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v57-activity-ring-r-format-sanitized';
+const CACHE_NAME = 'trd-journey-v58-populate-setup-options-null-guard';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v57-activity-ring-r-format-sanitized',
-  './audioEngine.js?v=v57-activity-ring-r-format-sanitized',
-  './dataEngine.js?v=v57-activity-ring-r-format-sanitized',
-  './dock.js?v=v57-activity-ring-r-format-sanitized',
-  './gallery.js?v=v57-activity-ring-r-format-sanitized',
-  './app.js?v=v57-activity-ring-r-format-sanitized',
+  './styles.css?v=v58-populate-setup-options-null-guard',
+  './audioEngine.js?v=v58-populate-setup-options-null-guard',
+  './dataEngine.js?v=v58-populate-setup-options-null-guard',
+  './dock.js?v=v58-populate-setup-options-null-guard',
+  './gallery.js?v=v58-populate-setup-options-null-guard',
+  './app.js?v=v58-populate-setup-options-null-guard',
   './manifest.json'
 ];
 

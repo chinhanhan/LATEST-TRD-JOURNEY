@@ -979,13 +979,17 @@ function renderMiniSparkline(id, values) {
 
 function populateSetupOptions() {
   const setupSelect = document.getElementById("setupSelect");
-  const current = setupSelect.value;
-  setupSelect.innerHTML = state.preferences.setups.map((setup) => `<option>${safe(setup)}</option>`).join("");
-  setupSelect.value = state.preferences.setups.includes(current) ? current : state.preferences.setups[0];
+  if (setupSelect) {
+    const current = setupSelect.value;
+    setupSelect.innerHTML = state.preferences.setups.map((setup) => `<option>${safe(setup)}</option>`).join("");
+    setupSelect.value = state.preferences.setups.includes(current) ? current : state.preferences.setups[0];
+  }
   const filter = document.getElementById("setupFilter");
-  const filterValue = filter.value;
-  filter.innerHTML = `<option value="All">All setups</option>${state.preferences.setups.map((setup) => `<option>${safe(setup)}</option>`).join("")}`;
-  filter.value = ["All", ...state.preferences.setups].includes(filterValue) ? filterValue : "All";
+  if (filter) {
+    const filterValue = filter.value;
+    filter.innerHTML = `<option value="All">All setups</option>${state.preferences.setups.map((setup) => `<option>${safe(setup)}</option>`).join("")}`;
+    filter.value = ["All", ...state.preferences.setups].includes(filterValue) ? filterValue : "All";
+  }
 }
 
 function populateSopControls() {
