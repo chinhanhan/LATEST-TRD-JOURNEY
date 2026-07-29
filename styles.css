@@ -512,7 +512,15 @@ h3 {
   border: 1px solid rgba(0, 0, 0, 0.15);
   padding: 0.5rem 0.75rem 0.5rem;
   box-shadow: 0 16px 44px rgba(0, 0, 0, 0.25);
-  transition: background 0.3s ease, border-color 0.3s ease;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease, background 0.3s ease, border-color 0.3s ease;
+}
+
+body.sheet-open .dock-panel,
+body:has(.sheet-backdrop.active) .dock-panel,
+#reactBitsDock.is-hidden .dock-panel {
+  transform: translate(-50%, 140%) scale(0.92);
+  opacity: 0;
+  pointer-events: none;
 }
 
 [data-theme="dark"] .dock-panel {
@@ -2987,7 +2995,7 @@ tbody tr:hover {
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 32px 32px 0 0; /* 圆角底部切平 */
   box-shadow: 0 -15px 45px rgba(0, 0, 0, 0.15);
-  padding: 24px 32px 48px 32px;
+  padding: 24px 32px 56px 32px;
   max-height: 90vh; /* 避免溢出屏幕 */
   display: flex;
   flex-direction: column;
@@ -3039,6 +3047,7 @@ tbody tr:hover {
   overflow-y: auto;
   flex: 1;
   padding-right: 4px;
+  padding-bottom: 48px;
 }
 
 /* 隐藏自带的滚动条，使用苹果风极细滚动条 */

@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v53-full-width-table-stretch';
+const CACHE_NAME = 'trd-journey-v54-dock-modal-auto-hide';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v53-full-width-table-stretch',
-  './audioEngine.js?v=v53-full-width-table-stretch',
-  './dataEngine.js?v=v53-full-width-table-stretch',
-  './dock.js?v=v53-full-width-table-stretch',
-  './gallery.js?v=v53-full-width-table-stretch',
-  './app.js?v=v53-full-width-table-stretch',
+  './styles.css?v=v54-dock-modal-auto-hide',
+  './audioEngine.js?v=v54-dock-modal-auto-hide',
+  './dataEngine.js?v=v54-dock-modal-auto-hide',
+  './dock.js?v=v54-dock-modal-auto-hide',
+  './gallery.js?v=v54-dock-modal-auto-hide',
+  './app.js?v=v54-dock-modal-auto-hide',
   './manifest.json'
 ];
 

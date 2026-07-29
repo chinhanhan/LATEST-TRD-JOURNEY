@@ -2679,9 +2679,10 @@ function openSheet(id) {
   sheet.offsetWidth;
   sheet.classList.add("active");
   document.body.style.overflow = "hidden";
+  document.body.classList.add("sheet-open");
 
   // Hide dock
-  const dock = document.querySelector(".ios-dock-container");
+  const dock = document.getElementById("reactBitsDock");
   if (dock) dock.classList.add("is-hidden");
 }
 
@@ -2699,8 +2700,9 @@ function closeSheet(id) {
   const activeSheets = document.querySelectorAll(".sheet-backdrop.active");
   if (activeSheets.length <= 1) {
     document.body.style.overflow = "";
+    document.body.classList.remove("sheet-open");
     // Show dock
-    const dock = document.querySelector(".ios-dock-container");
+    const dock = document.getElementById("reactBitsDock");
     if (dock) dock.classList.remove("is-hidden");
   }
 }
