@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v67-forexfactory-red-news-deep-fix';
+const CACHE_NAME = 'trd-journey-v68-multi-bugfix-format-hold-markdown-br-actual-color';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v67-forexfactory-red-news-deep-fix',
-  './audioEngine.js?v=v67-forexfactory-red-news-deep-fix',
-  './dataEngine.js?v=v67-forexfactory-red-news-deep-fix',
-  './dock.js?v=v67-forexfactory-red-news-deep-fix',
-  './gallery.js?v=v67-forexfactory-red-news-deep-fix',
-  './app.js?v=v67-forexfactory-red-news-deep-fix',
+  './styles.css?v=v68-multi-bugfix-format-hold-markdown-br-actual-color',
+  './audioEngine.js?v=v68-multi-bugfix-format-hold-markdown-br-actual-color',
+  './dataEngine.js?v=v68-multi-bugfix-format-hold-markdown-br-actual-color',
+  './dock.js?v=v68-multi-bugfix-format-hold-markdown-br-actual-color',
+  './gallery.js?v=v68-multi-bugfix-format-hold-markdown-br-actual-color',
+  './app.js?v=v68-multi-bugfix-format-hold-markdown-br-actual-color',
   './manifest.json'
 ];
 

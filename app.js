@@ -40,14 +40,13 @@ function parseMarkdown(text) {
       } else if (line.startsWith("# ")) {
         processedLines.push(`<h3>${line.substring(2)}</h3>`);
       } else {
-        processedLines.push(line);
+        processedLines.push(line ? `${line}<br>` : "");
       }
     }
   }
   if (inList) processedLines.push("</ul>");
 
-  // Join back and add <br> for remaining newlines outside of blocks
-  return processedLines.join("\n").replace(/\n/g, "<br>");
+  return processedLines.join("");
 }
 
 window.insertMarkdown = function(btn, prefix, suffix) {
@@ -520,8 +519,10 @@ function formatDollar(val) {
 
 function formatHoldDuration(openTimeStr, closeTimeStr) {
   if (!openTimeStr || !closeTimeStr) return "";
-  const sStr = String(openTimeStr).trim().replace(" ", "T");
-  const eStr = String(closeTimeStr).trim().replace(" ", "T");
+  let sStr = String(openTimeStr).trim().replace(" ", "T");
+  let eStr = String(closeTimeStr).trim().replace(" ", "T");
+  if (sStr.length === 16 && sStr.includes("T")) sStr += ":00";
+  if (eStr.length === 16 && eStr.includes("T")) eStr += ":00";
   const start = new Date(sStr.includes("T") ? sStr : `${sStr}T00:00:00`);
   const end = new Date(eStr.includes("T") ? eStr : `${eStr}T00:00:00`);
   if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return "";
@@ -5001,7 +5002,7 @@ function renderRedNewsTable(currency = "All") {
 
   tbody.innerHTML = events.map(e => {
     const currClass = e.currency.toLowerCase();
-    const actualClass = e.actual ? (e.actual.startsWith("-") ? "style='color:#ef4444; font-weight:700;'" : "style='color:#22c55e; font-weight:700;'") : "style='color:var(--muted);'";
+    const actualClass = !e.actual ? "style='color:var(--muted);'" : (e.actual === e.forecast || e.actual.startsWith("0")) ? "style='color:var(--text); font-weight:700;'" : e.actual.startsWith("-") ? "style='color:#ef4444; font-weight:700;'" : "style='color:#22c55e; font-weight:700;'";
     return `
       <tr>
         <td><strong>${safe(e.date)}</strong> <span style="color:var(--muted); margin-left:4px;">${safe(e.time)}</span></td>
