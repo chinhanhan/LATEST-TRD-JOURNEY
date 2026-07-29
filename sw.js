@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v60-heatmap-date-extraction-fix';
+const CACHE_NAME = 'trd-journey-v61-monte-carlo-sample-pool-fallback';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v60-heatmap-date-extraction-fix',
-  './audioEngine.js?v=v60-heatmap-date-extraction-fix',
-  './dataEngine.js?v=v60-heatmap-date-extraction-fix',
-  './dock.js?v=v60-heatmap-date-extraction-fix',
-  './gallery.js?v=v60-heatmap-date-extraction-fix',
-  './app.js?v=v60-heatmap-date-extraction-fix',
+  './styles.css?v=v61-monte-carlo-sample-pool-fallback',
+  './audioEngine.js?v=v61-monte-carlo-sample-pool-fallback',
+  './dataEngine.js?v=v61-monte-carlo-sample-pool-fallback',
+  './dock.js?v=v61-monte-carlo-sample-pool-fallback',
+  './gallery.js?v=v61-monte-carlo-sample-pool-fallback',
+  './app.js?v=v61-monte-carlo-sample-pool-fallback',
   './manifest.json'
 ];
 

@@ -3734,10 +3734,10 @@ function getDisciplineStreak() {
 
 function runMonteCarloSimulation(numTrades = 50, numRuns = 1000) {
   const closed = closedTrades();
-  let samplePool = closed.map(t => rValue(t));
+  let samplePool = closed.map(t => rValue(t)).filter(v => !isNaN(v));
   let isBaseline = false;
 
-  if (samplePool.length < 3) {
+  if (samplePool.filter(v => Math.abs(v) > 0.001).length < 3) {
     isBaseline = true;
     samplePool = [1.8, 2.0, -1.0, 1.5, -1.0, 2.5, -1.0, 1.2, -1.0, 2.0, -1.0, 1.5, 3.0, -1.0, 1.0];
   }
