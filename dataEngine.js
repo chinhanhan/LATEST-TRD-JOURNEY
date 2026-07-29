@@ -284,22 +284,30 @@ class ForexFactoryRedNewsEngine {
         return { ...evt, eventDate: evtDate, diffMs: evtDate - now };
       }
     }
-    return sorted[0] ? { ...sorted[0], eventDate: new Date(`${sorted[0].date}T${sorted[0].time}:00`), diffMs: 0 } : null;
+    return null;
   }
 
   isTradeNearRedNews(tradeDateStr, windowMins = 30) {
     if (!tradeDateStr) return null;
     const cleanStr = String(tradeDateStr).trim().replace(" ", "T");
-    const tradeTime = new Date(cleanStr.includes("T") ? cleanStr : `${cleanStr}T12:00:00`);
-    if (isNaN(tradeTime.getTime())) return null;
+    const dateOnly = cleanStr.split("T")[0];
+    const isDateOnly = !cleanStr.includes("T");
 
     const windowMs = windowMins * 60 * 1000;
     for (const evt of this.events) {
-      const evtTime = new Date(`${evt.date}T${evt.time}:00`);
-      if (isNaN(evtTime.getTime())) continue;
-      const diffMs = Math.abs(tradeTime - evtTime);
-      if (diffMs <= windowMs) {
-        return { event: evt, diffMins: Math.round(diffMs / 60000) };
+      if (isDateOnly) {
+        if (evt.date === dateOnly) {
+          return { event: evt, diffMins: 0, sameDay: true };
+        }
+      } else {
+        const tradeTime = new Date(cleanStr);
+        const evtTime = new Date(`${evt.date}T${evt.time}:00`);
+        if (!isNaN(tradeTime.getTime()) && !isNaN(evtTime.getTime())) {
+          const diffMs = Math.abs(tradeTime - evtTime);
+          if (diffMs <= windowMs) {
+            return { event: evt, diffMins: Math.round(diffMs / 60000), sameDay: false };
+          }
+        }
       }
     }
     return null;

@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v66-forexfactory-red-news-calendar';
+const CACHE_NAME = 'trd-journey-v67-forexfactory-red-news-deep-fix';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v66-forexfactory-red-news-calendar',
-  './audioEngine.js?v=v66-forexfactory-red-news-calendar',
-  './dataEngine.js?v=v66-forexfactory-red-news-calendar',
-  './dock.js?v=v66-forexfactory-red-news-calendar',
-  './gallery.js?v=v66-forexfactory-red-news-calendar',
-  './app.js?v=v66-forexfactory-red-news-calendar',
+  './styles.css?v=v67-forexfactory-red-news-deep-fix',
+  './audioEngine.js?v=v67-forexfactory-red-news-deep-fix',
+  './dataEngine.js?v=v67-forexfactory-red-news-deep-fix',
+  './dock.js?v=v67-forexfactory-red-news-deep-fix',
+  './gallery.js?v=v67-forexfactory-red-news-deep-fix',
+  './app.js?v=v67-forexfactory-red-news-deep-fix',
   './manifest.json'
 ];
 

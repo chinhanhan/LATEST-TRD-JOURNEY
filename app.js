@@ -4922,6 +4922,12 @@ function scrollSelectedItemIntoView(container, selectedItem) {
 let currentRedNewsCurrencyFilter = "All";
 
 function initNewsBar() {
+  if (window.newsBarInitialized) {
+    updateNewsBarCountdown();
+    return;
+  }
+  window.newsBarInitialized = true;
+
   const headerNewsBtn = document.getElementById("headerNewsBtn");
   const newsBarViewBtn = document.getElementById("newsBarViewBtn");
   const closeRedNewsModalBtn = document.getElementById("closeRedNewsModalBtn");
