@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v58-populate-setup-options-null-guard';
+const CACHE_NAME = 'trd-journey-v59-format-time-display-robustness';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v58-populate-setup-options-null-guard',
-  './audioEngine.js?v=v58-populate-setup-options-null-guard',
-  './dataEngine.js?v=v58-populate-setup-options-null-guard',
-  './dock.js?v=v58-populate-setup-options-null-guard',
-  './gallery.js?v=v58-populate-setup-options-null-guard',
-  './app.js?v=v58-populate-setup-options-null-guard',
+  './styles.css?v=v59-format-time-display-robustness',
+  './audioEngine.js?v=v59-format-time-display-robustness',
+  './dataEngine.js?v=v59-format-time-display-robustness',
+  './dock.js?v=v59-format-time-display-robustness',
+  './gallery.js?v=v59-format-time-display-robustness',
+  './app.js?v=v59-format-time-display-robustness',
   './manifest.json'
 ];
 

@@ -535,11 +535,12 @@ function formatHoldDuration(openTimeStr, closeTimeStr) {
 
 function formatTimeDisplay(isoStr) {
   if (!isoStr) return "";
-  if (isoStr.includes("T")) {
-    const [d, t] = isoStr.split("T");
+  const s = String(isoStr).trim().replace(" ", "T");
+  if (s.includes("T")) {
+    const [d, t] = s.split("T");
     return `${d.slice(5).replace("-", ".")} ${t.slice(0, 5)}`;
   }
-  return isoStr.slice(5).replace("-", ".");
+  return s.slice(5).replace("-", ".");
 }
 
 function nowDatetimeLocal() {
