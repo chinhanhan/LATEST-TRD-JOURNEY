@@ -5837,3 +5837,191 @@ body:not(:has(#landing-gallery.active)) .ios-dock-container {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   ForexFactory High-Impact Red Folder Economic Calendar & Top News Bar
+   ========================================================================== */
+.news-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 999px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.news-trigger-btn:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.4);
+  transform: translateY(-1px);
+}
+
+.news-bar-banner {
+  width: 100%;
+  padding: 8px 24px;
+  background: rgba(239, 68, 68, 0.06);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.15);
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+.news-bar-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.84rem;
+}
+
+.news-bar-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  background: #ef4444;
+  color: #ffffff;
+  font-weight: 750;
+  font-size: 0.72rem;
+  border-radius: 4px;
+  letter-spacing: 0.2px;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+  animation: pulseRed 2s infinite;
+}
+
+@keyframes pulseRed {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+  70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.news-bar-countdown {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.news-bar-action {
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.news-bar-action:hover {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.news-modal-card {
+  max-width: 880px;
+  width: 92%;
+}
+
+.news-currency-filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.news-currency-filters .filter-chip {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 650;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--hairline);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.news-currency-filters .filter-chip.active,
+.news-currency-filters .filter-chip:hover {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+.news-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.news-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.news-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.news-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--hairline);
+  vertical-align: middle;
+}
+
+.red-folder-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 16px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 900;
+  border-radius: 3px;
+  box-shadow: 0 1px 4px rgba(239, 68, 68, 0.4);
+}
+
+.badge-currency {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 750;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.badge-currency.usd { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+.badge-currency.aud { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.badge-currency.eur { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+.badge-currency.gbp { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+.badge-currency.jpy { background: rgba(236, 72, 153, 0.15); color: #f472b6; }
+.badge-currency.cad { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+
+.trade-red-news-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 999px;
+}

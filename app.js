@@ -920,6 +920,7 @@ function renderAll() {
   initCollapsiblePanels();
   updateWorkflowTiles();
   renderActivityRings();
+  initNewsBar();
 
   // Phase 9 Mindfulness & Reward System
   updateRewardMission();
@@ -1596,7 +1597,10 @@ function resultTag(trade) {
 function mediaBadges(trade) {
   const imgCount = imagesFor(trade).length;
   const imgBadge = imgCount > 1 ? `<span class="tag info">${imgCount} Images</span> ` : imgCount === 1 ? '<span class="tag info">Image</span> ' : "";
-  return `${imgBadge}${trade.tradingViewUrl ? '<span class="tag info">TV</span>' : ""}` || '<span class="muted">None</span>';
+  const tvBadge = trade.tradingViewUrl ? '<span class="tag info">TV</span> ' : "";
+  const nearNews = window.forexFactoryRedNewsEngine?.isTradeNearRedNews(trade.date);
+  const newsBadge = nearNews ? `<span class="trade-red-news-tag" title="${safe(nearNews.event.title)}">🔴 ${safe(nearNews.event.currency)} News</span> ` : "";
+  return `${imgBadge}${tvBadge}${newsBadge}` || '<span class="muted">None</span>';
 }
 
 function imageFor(trade) {
@@ -4910,6 +4914,100 @@ function scrollSelectedItemIntoView(container, selectedItem) {
       behavior: "smooth"
     });
   }
+}
+
+/* ==========================================================================
+   ForexFactory High-Impact Red Folder Economic Calendar & Top News Bar
+   ========================================================================== */
+let currentRedNewsCurrencyFilter = "All";
+
+function initNewsBar() {
+  const headerNewsBtn = document.getElementById("headerNewsBtn");
+  const newsBarViewBtn = document.getElementById("newsBarViewBtn");
+  const closeRedNewsModalBtn = document.getElementById("closeRedNewsModalBtn");
+  const newsCurrencyFilters = document.getElementById("newsCurrencyFilters");
+
+  if (headerNewsBtn) headerNewsBtn.onclick = () => openRedNewsModal();
+  if (newsBarViewBtn) newsBarViewBtn.onclick = () => openRedNewsModal();
+  if (closeRedNewsModalBtn) closeRedNewsModalBtn.onclick = () => closeRedNewsModal();
+
+  if (newsCurrencyFilters) {
+    newsCurrencyFilters.querySelectorAll(".filter-chip").forEach(btn => {
+      btn.onclick = (e) => {
+        newsCurrencyFilters.querySelectorAll(".filter-chip").forEach(b => b.classList.remove("active"));
+        e.target.classList.add("active");
+        currentRedNewsCurrencyFilter = e.target.getAttribute("data-currency") || "All";
+        renderRedNewsTable(currentRedNewsCurrencyFilter);
+      };
+    });
+  }
+
+  updateNewsBarCountdown();
+  if (!window.newsBarTimer) {
+    window.newsBarTimer = setInterval(updateNewsBarCountdown, 1000);
+  }
+}
+
+function updateNewsBarCountdown() {
+  const countdownEl = document.getElementById("newsBarCountdown");
+  if (!countdownEl || !window.forexFactoryRedNewsEngine) return;
+
+  const nextEvt = window.forexFactoryRedNewsEngine.getNextRedEvent();
+  if (!nextEvt) {
+    countdownEl.textContent = "No upcoming high-impact red news";
+    return;
+  }
+
+  const now = new Date();
+  const diffMs = nextEvt.eventDate - now;
+
+  if (diffMs <= 0) {
+    countdownEl.textContent = `🔴 ${nextEvt.currency} ${nextEvt.title} (Released Now)`;
+  } else {
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const secs = Math.floor((diffMs % (1000 * 60)) / 1000);
+    const hStr = hours > 0 ? `${hours}h ` : "";
+    const mStr = `${mins}m `;
+    const sStr = `${secs}s`;
+    countdownEl.textContent = `Next Red Event: ${nextEvt.currency} ${nextEvt.title} in ${hStr}${mStr}${sStr} (${nextEvt.time})`;
+  }
+}
+
+function openRedNewsModal() {
+  renderRedNewsTable(currentRedNewsCurrencyFilter);
+  openSheet("redNewsModal");
+}
+
+function closeRedNewsModal() {
+  closeSheet("redNewsModal");
+}
+
+function renderRedNewsTable(currency = "All") {
+  const tbody = document.getElementById("redNewsTableBody");
+  if (!tbody || !window.forexFactoryRedNewsEngine) return;
+
+  const events = window.forexFactoryRedNewsEngine.filterByCurrency(currency);
+  if (!events.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:24px; color:var(--muted);">No high-impact red news found for ${safe(currency)}.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = events.map(e => {
+    const currClass = e.currency.toLowerCase();
+    const actualClass = e.actual ? (e.actual.startsWith("-") ? "style='color:#ef4444; font-weight:700;'" : "style='color:#22c55e; font-weight:700;'") : "style='color:var(--muted);'";
+    return `
+      <tr>
+        <td><strong>${safe(e.date)}</strong> <span style="color:var(--muted); margin-left:4px;">${safe(e.time)}</span></td>
+        <td><span class="badge-currency ${currClass}">${safe(e.currency)}</span></td>
+        <td><span class="red-folder-icon" title="High Impact Red Folder">🔴</span></td>
+        <td><strong>${safe(e.title)}</strong></td>
+        <td ${actualClass}>${safe(e.actual || "—")}</td>
+        <td>${safe(e.forecast || "—")}</td>
+        <td>${safe(e.previous || "—")}</td>
+      </tr>
+    `;
+  }).join("");
 }
 
 initApp();

@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v65-multi-bugfix-money-utf8-bom-webaudio-event';
+const CACHE_NAME = 'trd-journey-v66-forexfactory-red-news-calendar';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v65-multi-bugfix-money-utf8-bom-webaudio-event',
-  './audioEngine.js?v=v65-multi-bugfix-money-utf8-bom-webaudio-event',
-  './dataEngine.js?v=v65-multi-bugfix-money-utf8-bom-webaudio-event',
-  './dock.js?v=v65-multi-bugfix-money-utf8-bom-webaudio-event',
-  './gallery.js?v=v65-multi-bugfix-money-utf8-bom-webaudio-event',
-  './app.js?v=v65-multi-bugfix-money-utf8-bom-webaudio-event',
+  './styles.css?v=v66-forexfactory-red-news-calendar',
+  './audioEngine.js?v=v66-forexfactory-red-news-calendar',
+  './dataEngine.js?v=v66-forexfactory-red-news-calendar',
+  './dock.js?v=v66-forexfactory-red-news-calendar',
+  './gallery.js?v=v66-forexfactory-red-news-calendar',
+  './app.js?v=v66-forexfactory-red-news-calendar',
   './manifest.json'
 ];
 

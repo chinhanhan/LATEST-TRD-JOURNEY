@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=v65-multi-bugfix-money-utf8-bom-webaudio-event" />
+    <link rel="stylesheet" href="styles.css?v=v66-forexfactory-red-news-calendar" />
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -37,6 +37,8 @@
             <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
             </svg>
+          <button class="ghost-button news-trigger-btn" id="headerNewsBtn" type="button" title="ForexFactory Red Calendar">
+            🔴 Red News
           </button>
           <button class="primary-button module-action pill-button" id="headerLogTradeBtn" type="button">
             <span class="label-stack">
@@ -47,6 +49,15 @@
           <button class="language-toggle" type="button" aria-label="Switch language">中文</button>
         </div>
       </header>
+
+      <!-- ForexFactory High Impact Top News Bar -->
+      <div class="news-bar-banner" id="globalNewsBar">
+        <div class="news-bar-content" id="newsBarContent">
+          <span class="news-bar-badge">🔴 High Impact</span>
+          <span class="news-bar-countdown" id="newsBarCountdown">Loading ForexFactory Red Folder...</span>
+        </div>
+        <button class="news-bar-action" id="newsBarViewBtn" type="button">View Calendar</button>
+      </div>
 
       <main class="main">
           <section class="view active" id="landing-gallery">
@@ -940,6 +951,47 @@
       </div>
     </div>
 
+    <!-- ForexFactory High-Impact Red News Calendar Modal -->
+    <div class="sheet-backdrop hidden" id="redNewsModal" aria-hidden="true">
+      <div class="sheet-card news-modal-card" role="dialog" aria-modal="true">
+        <div class="sheet-bar"></div>
+        <div class="sheet-header">
+          <div>
+            <p class="eyebrow" style="color:#ef4444; font-weight:700;">🔴 ForexFactory High Impact</p>
+            <h2>Economic Calendar (红盒财经日历)</h2>
+          </div>
+          <button class="icon-button sheet-close" id="closeRedNewsModalBtn" type="button" aria-label="Close sheet">✕</button>
+        </div>
+        <div class="sheet-body">
+          <div class="news-currency-filters" id="newsCurrencyFilters">
+            <button class="filter-chip active" data-currency="All">All Currencies</button>
+            <button class="filter-chip" data-currency="USD">🇺🇸 USD</button>
+            <button class="filter-chip" data-currency="AUD">🇦🇺 AUD</button>
+            <button class="filter-chip" data-currency="EUR">🇪🇺 EUR</button>
+            <button class="filter-chip" data-currency="GBP">🇬🇧 GBP</button>
+            <button class="filter-chip" data-currency="JPY">🇯🇵 JPY</button>
+            <button class="filter-chip" data-currency="CAD">🇨🇦 CAD</button>
+          </div>
+          <div class="table-wrap news-table-wrap">
+            <table class="news-table" id="redNewsTable">
+              <thead>
+                <tr>
+                  <th>Date & Time</th>
+                  <th>Currency</th>
+                  <th>Impact</th>
+                  <th>Event Title</th>
+                  <th>Actual</th>
+                  <th>Forecast</th>
+                  <th>Previous</th>
+                </tr>
+              </thead>
+              <tbody id="redNewsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Action Bubble Menu -->
     <div class="bubble-menu hidden" id="bubbleMenu" role="menu">
       <button class="bubble-menu-item" id="bubbleBtnDetail" role="menuitem">
@@ -1208,10 +1260,10 @@
     <!-- React Bits Inspired Floating Dock Container -->
     <div class="dock-outer" id="reactBitsDock"></div>
     <canvas id="clickSparkCanvas" class="click-spark-canvas"></canvas>
-    <script defer src="audioEngine.js?v=v65-multi-bugfix-money-utf8-bom-webaudio-event"></script>
-    <script defer src="dataEngine.js?v=v65-multi-bugfix-money-utf8-bom-webaudio-event"></script>
-    <script defer src="dock.js?v=v65-multi-bugfix-money-utf8-bom-webaudio-event"></script>
-    <script type="module" src="gallery.js?v=v65-multi-bugfix-money-utf8-bom-webaudio-event"></script>
-    <script defer src="app.js?v=v65-multi-bugfix-money-utf8-bom-webaudio-event"></script>
+    <script defer src="audioEngine.js?v=v66-forexfactory-red-news-calendar"></script>
+    <script defer src="dataEngine.js?v=v66-forexfactory-red-news-calendar"></script>
+    <script defer src="dock.js?v=v66-forexfactory-red-news-calendar"></script>
+    <script type="module" src="gallery.js?v=v66-forexfactory-red-news-calendar"></script>
+    <script defer src="app.js?v=v66-forexfactory-red-news-calendar"></script>
   </body>
 </html>
