@@ -110,8 +110,8 @@ class ReactBitsDockEngine {
 
   startLoop() {
     const lerpSpeed = 0.22;
-
     const step = () => {
+      if (!this.container || !document.body.contains(this.container)) return;
       this.itemStates.forEach((state) => {
         // Measure unmagnified base center of each item directly from its left edge + half base size
         const rect = state.el.getBoundingClientRect();

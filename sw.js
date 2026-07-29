@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v68-multi-bugfix-format-hold-markdown-br-actual-color';
+const CACHE_NAME = 'trd-journey-v69-multi-bugfix-format-r-dock-loop-spark-lifecycle';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v68-multi-bugfix-format-hold-markdown-br-actual-color',
-  './audioEngine.js?v=v68-multi-bugfix-format-hold-markdown-br-actual-color',
-  './dataEngine.js?v=v68-multi-bugfix-format-hold-markdown-br-actual-color',
-  './dock.js?v=v68-multi-bugfix-format-hold-markdown-br-actual-color',
-  './gallery.js?v=v68-multi-bugfix-format-hold-markdown-br-actual-color',
-  './app.js?v=v68-multi-bugfix-format-hold-markdown-br-actual-color',
+  './styles.css?v=v69-multi-bugfix-format-r-dock-loop-spark-lifecycle',
+  './audioEngine.js?v=v69-multi-bugfix-format-r-dock-loop-spark-lifecycle',
+  './dataEngine.js?v=v69-multi-bugfix-format-r-dock-loop-spark-lifecycle',
+  './dock.js?v=v69-multi-bugfix-format-r-dock-loop-spark-lifecycle',
+  './gallery.js?v=v69-multi-bugfix-format-r-dock-loop-spark-lifecycle',
+  './app.js?v=v69-multi-bugfix-format-r-dock-loop-spark-lifecycle',
   './manifest.json'
 ];
 

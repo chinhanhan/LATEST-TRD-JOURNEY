@@ -495,17 +495,19 @@ function rValue(trade) {
 
 function formatR(value) {
   const num = Number(value || 0);
-  if (isNaN(num)) return "0.00R";
-  const fixed = Math.abs(num) < 0.005 ? "0.00" : num.toFixed(2);
+  if (isNaN(num) || Math.abs(num) < 0.005) return "0.00R";
+  const fixed = num.toFixed(2);
+  if (fixed === "-0.00" || fixed === "0.00") return "0.00R";
   const sign = Number(fixed) > 0 ? "+" : "";
   return `${sign}${fixed}R`;
 }
 
 function formatLossR(value) {
   const num = Number(value || 0);
-  if (isNaN(num)) return "0.00R";
-  const fixed = Math.abs(num) < 0.005 ? "0.00" : num.toFixed(2);
-  return Number(fixed) === 0 ? "0.00R" : `${fixed}R`;
+  if (isNaN(num) || Math.abs(num) < 0.005) return "0.00R";
+  const fixed = num.toFixed(2);
+  if (fixed === "-0.00" || fixed === "0.00") return "0.00R";
+  return `${fixed}R`;
 }
 
 function formatDollar(val) {

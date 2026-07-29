@@ -138,9 +138,9 @@ class ClickSparkEngine {
     this.duration = options.duration || 450;
     
     this.sparks = [];
+    this.isAnimating = false;
     this.initCanvas();
     this.bindEvents();
-    this.animate();
   }
 
   initCanvas() {
@@ -173,10 +173,10 @@ class ClickSparkEngine {
     let color = '#38BDF8';
     const card = target ? target.closest('.css3d-card') : null;
     if (card) {
-      const mod = card.dataset.module;
-      if (mod === 'overview') color = '#60A5FA';       // Electric Blue
-      else if (mod === 'journal') color = '#F472B6';    // Cyber Pink
-      else if (mod === 'missions') color = '#F59E0B';   // Fire Amber
+      const mod = card.getAttribute('data-module');
+      if (mod === 'overview') color = '#10B981';      // Emerald Green
+      else if (mod === 'journal') color = '#F59E0B';   // Gold Amber
+      else if (mod === 'missions') color = '#EC4899';  // Neon Rose
       else if (mod === 'review') color = '#38BDF8';     // Ocean Cyan
       else if (mod === 'settings') color = '#34D399';   // Emerald Teal
     } else if (target && target.closest('.island-action-btn')) {
@@ -192,14 +192,24 @@ class ClickSparkEngine {
         color
       });
     }
+
+    if (!this.isAnimating) {
+      this.isAnimating = true;
+      this.animate();
+    }
   }
 
   animate() {
-    requestAnimationFrame(() => this.animate());
-    if (!this.ctx) return;
+    if (!this.ctx) {
+      this.isAnimating = false;
+      return;
+    }
 
     this.ctx.clearRect(0, 0, this.width, this.height);
-    if (this.sparks.length === 0) return;
+    if (this.sparks.length === 0) {
+      this.isAnimating = false;
+      return;
+    }
 
     const now = performance.now();
 
@@ -232,6 +242,12 @@ class ClickSparkEngine {
 
       return true;
     });
+
+    if (this.sparks.length > 0) {
+      requestAnimationFrame(() => this.animate());
+    } else {
+      this.isAnimating = false;
+    }
   }
 }
 
