@@ -27,15 +27,23 @@ class TRDDataEngine {
     const sop = localStorage.getItem("trd_sop_v1") || "";
     const accounts = localStorage.getItem("trd_accounts_v1") || "";
     const settings = localStorage.getItem("trd_settings_v1") || "";
+    const plans = localStorage.getItem("trd_daily_plans_v1") || "";
+    const reviews = localStorage.getItem("trd_daily_reviews_v1") || "";
+    const reflections = localStorage.getItem("trd_reflections_v1") || "";
+    const playbook = localStorage.getItem("trd_playbook_v1") || "";
 
     const backupData = {
       app: "TRD Journey",
-      version: "1.0",
+      version: "1.1",
       exportDate: new Date().toISOString(),
       trades,
       sop,
       accounts,
-      settings
+      settings,
+      plans,
+      reviews,
+      reflections,
+      playbook
     };
 
     const jsonStr = JSON.stringify(backupData, null, 2);
@@ -56,11 +64,15 @@ class TRDDataEngine {
         const data = JSON.parse(e.target.result);
         if (data.trades && Array.isArray(data.trades)) {
           localStorage.setItem("trd_trades_v1", JSON.stringify(data.trades));
-          if (data.sop) localStorage.setItem("trd_sop_v1", data.sop);
-          if (data.accounts) localStorage.setItem("trd_accounts_v1", data.accounts);
-          if (data.settings) localStorage.setItem("trd_settings_v1", data.settings);
+          if (data.sop) localStorage.setItem("trd_sop_v1", typeof data.sop === 'string' ? data.sop : JSON.stringify(data.sop));
+          if (data.accounts) localStorage.setItem("trd_accounts_v1", typeof data.accounts === 'string' ? data.accounts : JSON.stringify(data.accounts));
+          if (data.settings) localStorage.setItem("trd_settings_v1", typeof data.settings === 'string' ? data.settings : JSON.stringify(data.settings));
+          if (data.plans) localStorage.setItem("trd_daily_plans_v1", typeof data.plans === 'string' ? data.plans : JSON.stringify(data.plans));
+          if (data.reviews) localStorage.setItem("trd_daily_reviews_v1", typeof data.reviews === 'string' ? data.reviews : JSON.stringify(data.reviews));
+          if (data.reflections) localStorage.setItem("trd_reflections_v1", typeof data.reflections === 'string' ? data.reflections : JSON.stringify(data.reflections));
+          if (data.playbook) localStorage.setItem("trd_playbook_v1", typeof data.playbook === 'string' ? data.playbook : JSON.stringify(data.playbook));
 
-          alert(`Successfully imported ${data.trades.length} trade record(s)! Page will reload now.`);
+          alert(`Successfully imported ${data.trades.length} trade record(s) and system data! Page will reload now.`);
           window.location.reload();
         } else {
           alert("Invalid backup file format. Missing trades array.");
@@ -80,31 +92,34 @@ class TRDDataEngine {
       return;
     }
 
+    const esc = (val) => `"${String(val ?? "").replace(/"/g, '""')}"`;
+
     const headers = ["Open Time", "Close Time", "Duration", "Date", "Symbol", "Direction", "Setup", "Risk ($)", "R-Multiple", "Net PnL ($)", "Grade", "Rule Followed", "Emotion", "Entry Plan", "Exit Note"];
     const rows = trades.map(t => {
       const openDisp = t.openTime ? t.openTime.replace("T", " ") : t.date || "";
       const closeDisp = t.closeTime ? t.closeTime.replace("T", " ") : (t.closedAt || "");
       const duration = (window.formatHoldDuration ? window.formatHoldDuration(t.openTime || t.date, t.closeTime || t.closedAt) : "");
+      const rVal = t.pnl && t.risk && Number(t.risk) > 0 ? (Number(t.pnl) / Number(t.risk)).toFixed(2) : 0;
       return [
-        `"${openDisp}"`,
-        `"${closeDisp}"`,
-        `"${duration}"`,
-        t.date || "",
-        t.symbol || "",
-        t.direction || "Long",
-        t.setup || "",
+        esc(openDisp),
+        esc(closeDisp),
+        esc(duration),
+        esc(t.date || ""),
+        esc(t.symbol || ""),
+        esc(t.direction || "Long"),
+        esc(t.setup || ""),
         t.risk || 0,
-        t.pnl && t.risk ? (t.pnl / t.risk).toFixed(2) : 0,
+        rVal,
         t.pnl || 0,
-        t.grade || "A",
+        esc(t.grade || "A"),
         t.rule ? "Yes" : "No",
-        t.emotion || "Calm",
-        `"${(t.entryPlan || "").replace(/"/g, '""')}"`,
-        `"${(t.exitNote || "").replace(/"/g, '""')}"`
+        esc(t.emotion || "Calm"),
+        esc(t.entryPlan || ""),
+        esc(t.exitNote || "")
       ];
     });
 
-    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const dateStr = new Date().toISOString().slice(0, 10);
     this.downloadBlob(blob, `TRD_Trades_${dateStr}.csv`);

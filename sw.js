@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v71-multi-bugfix-trade-form-news-open-widget-upcoming-escape-key';
+const CACHE_NAME = 'trd-journey-v72-multi-bugfix-csv-escaping-rvalue-finite-json-full-backup';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v71-multi-bugfix-trade-form-news-open-widget-upcoming-escape-key',
-  './audioEngine.js?v=v71-multi-bugfix-trade-form-news-open-widget-upcoming-escape-key',
-  './dataEngine.js?v=v71-multi-bugfix-trade-form-news-open-widget-upcoming-escape-key',
-  './dock.js?v=v71-multi-bugfix-trade-form-news-open-widget-upcoming-escape-key',
-  './gallery.js?v=v71-multi-bugfix-trade-form-news-open-widget-upcoming-escape-key',
-  './app.js?v=v71-multi-bugfix-trade-form-news-open-widget-upcoming-escape-key',
+  './styles.css?v=v72-multi-bugfix-csv-escaping-rvalue-finite-json-full-backup',
+  './audioEngine.js?v=v72-multi-bugfix-csv-escaping-rvalue-finite-json-full-backup',
+  './dataEngine.js?v=v72-multi-bugfix-csv-escaping-rvalue-finite-json-full-backup',
+  './dock.js?v=v72-multi-bugfix-csv-escaping-rvalue-finite-json-full-backup',
+  './gallery.js?v=v72-multi-bugfix-csv-escaping-rvalue-finite-json-full-backup',
+  './app.js?v=v72-multi-bugfix-csv-escaping-rvalue-finite-json-full-backup',
   './manifest.json'
 ];
 

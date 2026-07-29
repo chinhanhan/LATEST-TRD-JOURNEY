@@ -484,11 +484,13 @@ function openTrades(trades = visibleTrades()) {
 function rValue(trade) {
   if (!trade) return 0;
   if (trade.rMultiple !== undefined && trade.rMultiple !== "" && !isNaN(Number(trade.rMultiple))) {
-    return Number(trade.rMultiple);
+    const val = Number(trade.rMultiple);
+    return Number.isFinite(val) ? val : 0;
   }
-  if (trade.risk) {
-    const res = Number(trade.pnl) / Number(trade.risk);
-    return isNaN(res) ? 0 : res;
+  const riskNum = Number(trade.risk || 0);
+  if (riskNum > 0) {
+    const res = Number(trade.pnl || 0) / riskNum;
+    return Number.isFinite(res) ? res : 0;
   }
   return 0;
 }
