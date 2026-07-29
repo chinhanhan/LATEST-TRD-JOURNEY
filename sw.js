@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v56-reset-trade-form-defensive-cleanup';
+const CACHE_NAME = 'trd-journey-v57-activity-ring-r-format-sanitized';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v56-reset-trade-form-defensive-cleanup',
-  './audioEngine.js?v=v56-reset-trade-form-defensive-cleanup',
-  './dataEngine.js?v=v56-reset-trade-form-defensive-cleanup',
-  './dock.js?v=v56-reset-trade-form-defensive-cleanup',
-  './gallery.js?v=v56-reset-trade-form-defensive-cleanup',
-  './app.js?v=v56-reset-trade-form-defensive-cleanup',
+  './styles.css?v=v57-activity-ring-r-format-sanitized',
+  './audioEngine.js?v=v57-activity-ring-r-format-sanitized',
+  './dataEngine.js?v=v57-activity-ring-r-format-sanitized',
+  './dock.js?v=v57-activity-ring-r-format-sanitized',
+  './gallery.js?v=v57-activity-ring-r-format-sanitized',
+  './app.js?v=v57-activity-ring-r-format-sanitized',
   './manifest.json'
 ];
 

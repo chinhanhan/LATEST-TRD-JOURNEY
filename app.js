@@ -2674,7 +2674,7 @@ function renderActivityRings() {
 
   // 6. Update Legend Values
   setText("legendTradesVal", `${totalCount} / ${maxTrades}`);
-  setText("legendLossVal", `${totalTodayR.toFixed(2)}R / -${maxLossR.toFixed(2)}R`);
+  setText("legendLossVal", `${formatR(totalTodayR)} / -${maxLossR.toFixed(1)}R`);
   setText("legendRulesVal", `${rulePercent}%`);
 }
 
