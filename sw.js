@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v54-dock-modal-auto-hide';
+const CACHE_NAME = 'trd-journey-v55-bubble-menu-clamping-fix';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v54-dock-modal-auto-hide',
-  './audioEngine.js?v=v54-dock-modal-auto-hide',
-  './dataEngine.js?v=v54-dock-modal-auto-hide',
-  './dock.js?v=v54-dock-modal-auto-hide',
-  './gallery.js?v=v54-dock-modal-auto-hide',
-  './app.js?v=v54-dock-modal-auto-hide',
+  './styles.css?v=v55-bubble-menu-clamping-fix',
+  './audioEngine.js?v=v55-bubble-menu-clamping-fix',
+  './dataEngine.js?v=v55-bubble-menu-clamping-fix',
+  './dock.js?v=v55-bubble-menu-clamping-fix',
+  './gallery.js?v=v55-bubble-menu-clamping-fix',
+  './app.js?v=v55-bubble-menu-clamping-fix',
   './manifest.json'
 ];
 

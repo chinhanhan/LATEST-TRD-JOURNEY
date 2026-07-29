@@ -3046,8 +3046,11 @@ document.body.addEventListener("click", (event) => {
       const scrollX = window.scrollX || window.pageXOffset;
       const scrollY = window.scrollY || window.pageYOffset;
       
-      bubbleMenu.style.left = (rect.left + scrollX + rect.width / 2 - 75) + "px";
-      bubbleMenu.style.top = (rect.top + scrollY - 146) + "px";
+      const leftPos = Math.max(12, Math.min(window.innerWidth - 170, rect.left + scrollX + rect.width / 2 - 75));
+      const topPos = rect.top < 160 ? (rect.top + scrollY + rect.height + 8) : (rect.top + scrollY - 146);
+      
+      bubbleMenu.style.left = leftPos + "px";
+      bubbleMenu.style.top = topPos + "px";
       
       bubbleMenu.classList.remove("hidden");
       bubbleMenu.offsetWidth; // reflow
