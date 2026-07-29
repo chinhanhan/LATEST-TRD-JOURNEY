@@ -2739,6 +2739,10 @@ function openSheet(id) {
   document.body.style.overflow = "hidden";
   document.body.classList.add("sheet-open");
 
+  if (id === "tradeFormSheet" && typeof checkTradeFormNewsRisk === "function") {
+    setTimeout(checkTradeFormNewsRisk, 50);
+  }
+
   // Hide dock
   const dock = document.getElementById("reactBitsDock");
   if (dock) dock.classList.add("is-hidden");
@@ -5033,18 +5037,24 @@ function renderHomeRedNewsWidget() {
   const bodyEl = document.getElementById("homeRedNewsBody");
   if (!bodyEl || !window.forexFactoryRedNewsEngine) return;
 
+  const now = new Date();
   const todayStr = todayISO();
   const allEvents = window.forexFactoryRedNewsEngine.getAllRedEvents();
-  const todayEvents = allEvents.filter(e => e.date === todayStr || e.date === localISO(new Date()));
+  
+  let displayEvents = allEvents.filter(e => e.date === todayStr);
+  if (!displayEvents.length) {
+    displayEvents = allEvents.filter(e => new Date(`${e.date}T${e.time}:00`) > now).slice(0, 3);
+  }
 
-  if (!todayEvents.length) {
-    bodyEl.innerHTML = `<div style="color:var(--muted); font-size:0.8rem; padding:8px 0;">No high-impact red folder events scheduled for today.</div>`;
+  if (!displayEvents.length) {
+    bodyEl.innerHTML = `<div style="color:var(--muted); font-size:0.8rem; padding:8px 0;">No upcoming high-impact red folder events found.</div>`;
     return;
   }
 
-  bodyEl.innerHTML = todayEvents.map(evt => {
+  bodyEl.innerHTML = displayEvents.map(evt => {
     const currClass = evt.currency.toLowerCase();
     const actualText = evt.actual ? `Actual: ${safe(evt.actual)}` : `Est: ${safe(evt.forecast || "—")}`;
+    const dateLabel = evt.date === todayStr ? evt.time : `${evt.date.slice(5)} ${evt.time}`;
     return `
       <div class="bento-news-row" onclick="window.openRedNewsModal()" style="cursor:pointer;">
         <div style="display:flex; align-items:center; gap:8px;">
@@ -5054,7 +5064,7 @@ function renderHomeRedNewsWidget() {
         </div>
         <div style="display:flex; align-items:center; gap:12px;">
           <span style="font-size:0.78rem; color:var(--muted);">${actualText}</span>
-          <strong style="color:var(--text);">${safe(evt.time)}</strong>
+          <strong style="color:var(--text);">${safe(dateLabel)}</strong>
         </div>
       </div>
     `;
@@ -5084,5 +5094,15 @@ function checkTradeFormNewsRisk() {
     alertEl.classList.add("hidden");
   }
 }
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    const activeSheets = document.querySelectorAll(".sheet-backdrop.active");
+    if (activeSheets.length) {
+      const topSheet = activeSheets[activeSheets.length - 1];
+      if (topSheet.id) closeSheet(topSheet.id);
+    }
+  }
+});
 
 initApp();

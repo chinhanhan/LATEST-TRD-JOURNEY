@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v70-forexfactory-bento-widget-form-alert';
+const CACHE_NAME = 'trd-journey-v71-multi-bugfix-trade-form-news-open-widget-upcoming-escape-key';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v70-forexfactory-bento-widget-form-alert',
-  './audioEngine.js?v=v70-forexfactory-bento-widget-form-alert',
-  './dataEngine.js?v=v70-forexfactory-bento-widget-form-alert',
-  './dock.js?v=v70-forexfactory-bento-widget-form-alert',
-  './gallery.js?v=v70-forexfactory-bento-widget-form-alert',
-  './app.js?v=v70-forexfactory-bento-widget-form-alert',
+  './styles.css?v=v71-multi-bugfix-trade-form-news-open-widget-upcoming-escape-key',
+  './audioEngine.js?v=v71-multi-bugfix-trade-form-news-open-widget-upcoming-escape-key',
+  './dataEngine.js?v=v71-multi-bugfix-trade-form-news-open-widget-upcoming-escape-key',
+  './dock.js?v=v71-multi-bugfix-trade-form-news-open-widget-upcoming-escape-key',
+  './gallery.js?v=v71-multi-bugfix-trade-form-news-open-widget-upcoming-escape-key',
+  './app.js?v=v71-multi-bugfix-trade-form-news-open-widget-upcoming-escape-key',
   './manifest.json'
 ];
 
