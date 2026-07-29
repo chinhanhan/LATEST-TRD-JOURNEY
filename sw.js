@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v62-image-for-trade-images-array-fix';
+const CACHE_NAME = 'trd-journey-v63-images-for-null-guard';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v62-image-for-trade-images-array-fix',
-  './audioEngine.js?v=v62-image-for-trade-images-array-fix',
-  './dataEngine.js?v=v62-image-for-trade-images-array-fix',
-  './dock.js?v=v62-image-for-trade-images-array-fix',
-  './gallery.js?v=v62-image-for-trade-images-array-fix',
-  './app.js?v=v62-image-for-trade-images-array-fix',
+  './styles.css?v=v63-images-for-null-guard',
+  './audioEngine.js?v=v63-images-for-null-guard',
+  './dataEngine.js?v=v63-images-for-null-guard',
+  './dock.js?v=v63-images-for-null-guard',
+  './gallery.js?v=v63-images-for-null-guard',
+  './app.js?v=v63-images-for-null-guard',
   './manifest.json'
 ];
 

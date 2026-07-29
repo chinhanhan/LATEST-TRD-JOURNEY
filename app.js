@@ -2492,6 +2492,7 @@ async function closeTradeFromModal(event) {
 }
 
 function imagesFor(trade) {
+  if (!trade) return [];
   return trade.images?.length ? trade.images : [trade.imageData || trade.imageUrl].filter(Boolean);
 }
 
