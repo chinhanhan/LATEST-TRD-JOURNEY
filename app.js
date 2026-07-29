@@ -4280,7 +4280,9 @@ function renderDisciplineHeatmap() {
   // Build a map of date string to trade compliance
   const tradeMap = {};
   closedTrades().forEach(t => {
-    const dStr = t.date; // YYYY-MM-DD
+    if (!t.date) return;
+    const dStr = String(t.date).trim().split("T")[0].split(" ")[0]; // YYYY-MM-DD
+    if (!dStr) return;
     if (!tradeMap[dStr]) {
       tradeMap[dStr] = { total: 0, compliant: 0 };
     }

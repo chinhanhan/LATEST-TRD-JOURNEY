@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v59-format-time-display-robustness';
+const CACHE_NAME = 'trd-journey-v60-heatmap-date-extraction-fix';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v59-format-time-display-robustness',
-  './audioEngine.js?v=v59-format-time-display-robustness',
-  './dataEngine.js?v=v59-format-time-display-robustness',
-  './dock.js?v=v59-format-time-display-robustness',
-  './gallery.js?v=v59-format-time-display-robustness',
-  './app.js?v=v59-format-time-display-robustness',
+  './styles.css?v=v60-heatmap-date-extraction-fix',
+  './audioEngine.js?v=v60-heatmap-date-extraction-fix',
+  './dataEngine.js?v=v60-heatmap-date-extraction-fix',
+  './dock.js?v=v60-heatmap-date-extraction-fix',
+  './gallery.js?v=v60-heatmap-date-extraction-fix',
+  './app.js?v=v60-heatmap-date-extraction-fix',
   './manifest.json'
 ];
 
