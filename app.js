@@ -591,16 +591,30 @@ function metrics(trades = closedTrades()) {
 }
 
 function byDate(date) {
-  return visibleTrades().filter((trade) => trade.date === date);
+  if (!date) return [];
+  const targetDate = String(date).trim().split("T")[0].split(" ")[0];
+  return visibleTrades().filter((trade) => {
+    if (!trade.date) return false;
+    const tradeD = String(trade.date).trim().split("T")[0].split(" ")[0];
+    return tradeD === targetDate;
+  });
 }
 
 function closedByDate(date) {
-  return closedTrades().filter((trade) => trade.date === date || trade.closedAt === date);
+  if (!date) return [];
+  const targetDate = String(date).trim().split("T")[0].split(" ")[0];
+  return closedTrades().filter((trade) => {
+    const rawD = trade.closedAt || trade.date;
+    if (!rawD) return false;
+    const tradeD = String(rawD).trim().split("T")[0].split(" ")[0];
+    return tradeD === targetDate;
+  });
 }
 
 function groupBy(trades, key) {
   return trades.reduce((map, trade) => {
-    const value = trade[key] || "Unknown";
+    const raw = trade[key];
+    const value = (raw === undefined || raw === null || raw === "") ? "Unknown" : String(raw);
     map[value] ||= [];
     map[value].push(trade);
     return map;
@@ -608,12 +622,16 @@ function groupBy(trades, key) {
 }
 
 function dateRange(start, end) {
+  if (!start || !end) return [];
   const days = [];
   const cursor = new Date(`${start}T00:00:00`);
   const last = new Date(`${end}T00:00:00`);
-  while (cursor <= last) {
+  if (isNaN(cursor.getTime()) || isNaN(last.getTime())) return [];
+  let safetyCount = 0;
+  while (cursor <= last && safetyCount < 366) {
     days.push(localISO(cursor));
     cursor.setDate(cursor.getDate() + 1);
+    safetyCount++;
   }
   return days;
 }
@@ -635,9 +653,13 @@ function monthRange(date = todayISO()) {
 }
 
 function tradesInRange(start, end) {
+  const cleanStart = String(start || "").split("T")[0].split(" ")[0];
+  const cleanEnd = String(end || "").split("T")[0].split(" ")[0];
   return closedTrades().filter((trade) => {
-    const date = trade.closedAt || trade.date;
-    return date >= start && date <= end;
+    const raw = trade.closedAt || trade.date;
+    if (!raw) return false;
+    const d = String(raw).split("T")[0].split(" ")[0];
+    return d >= cleanStart && d <= cleanEnd;
   });
 }
 
@@ -1466,7 +1488,7 @@ function timelineCard(trade) {
 function renderTodayOpenTrades() {
   const target = document.getElementById("todayOpenTradeCards");
   if (!target) return;
-  const open = openTrades(byDate(todayISO())).slice().sort((a, b) => b.date.localeCompare(a.date));
+  const open = openTrades(byDate(todayISO())).slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   target.innerHTML = open.length ? open.map(tradeCard).join("") : emptyState(t("noOpenTrades"));
 }
 
@@ -3725,7 +3747,7 @@ function showUpdateBanner(worker) {
 }
 
 function getDisciplineStreak() {
-  const closed = closedTrades().sort((a, b) => a.date.localeCompare(b.date));
+  const closed = closedTrades().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
   let streak = 0;
   for (let i = closed.length - 1; i >= 0; i--) {
     if (closed[i].rule === true || closed[i].rule === "true" || closed[i].rule === "Yes" || closed[i].rule === "y") {

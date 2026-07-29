@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v63-images-for-null-guard';
+const CACHE_NAME = 'trd-journey-v64-multi-bugfix-date-grouping-streak-guards';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v63-images-for-null-guard',
-  './audioEngine.js?v=v63-images-for-null-guard',
-  './dataEngine.js?v=v63-images-for-null-guard',
-  './dock.js?v=v63-images-for-null-guard',
-  './gallery.js?v=v63-images-for-null-guard',
-  './app.js?v=v63-images-for-null-guard',
+  './styles.css?v=v64-multi-bugfix-date-grouping-streak-guards',
+  './audioEngine.js?v=v64-multi-bugfix-date-grouping-streak-guards',
+  './dataEngine.js?v=v64-multi-bugfix-date-grouping-streak-guards',
+  './dock.js?v=v64-multi-bugfix-date-grouping-streak-guards',
+  './gallery.js?v=v64-multi-bugfix-date-grouping-streak-guards',
+  './app.js?v=v64-multi-bugfix-date-grouping-streak-guards',
   './manifest.json'
 ];
 
