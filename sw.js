@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v52-evaluate-badges-defined-fix';
+const CACHE_NAME = 'trd-journey-v53-full-width-table-stretch';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v52-evaluate-badges-defined-fix',
-  './audioEngine.js?v=v52-evaluate-badges-defined-fix',
-  './dataEngine.js?v=v52-evaluate-badges-defined-fix',
-  './dock.js?v=v52-evaluate-badges-defined-fix',
-  './gallery.js?v=v52-evaluate-badges-defined-fix',
-  './app.js?v=v52-evaluate-badges-defined-fix',
+  './styles.css?v=v53-full-width-table-stretch',
+  './audioEngine.js?v=v53-full-width-table-stretch',
+  './dataEngine.js?v=v53-full-width-table-stretch',
+  './dock.js?v=v53-full-width-table-stretch',
+  './gallery.js?v=v53-full-width-table-stretch',
+  './app.js?v=v53-full-width-table-stretch',
   './manifest.json'
 ];
 

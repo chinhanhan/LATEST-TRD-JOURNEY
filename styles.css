@@ -1247,13 +1247,23 @@ h3 {
 }
 
 .overview-grid,
-.entry-layout,
 .workflow-grid,
 .cycle-grid,
 .analytics-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.36fr) minmax(330px, 0.9fr);
   gap: 16px;
+}
+
+.entry-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.entry-layout .panel {
+  width: 100%;
 }
 
 .today-open-panel {
@@ -1494,20 +1504,21 @@ label {
 }
 
 .table-wrap {
-  overflow: auto;
+  overflow-x: auto;
+  width: 100%;
   border-radius: var(--radius);
 }
 
 table {
   width: 100%;
-  min-width: 850px;
+  min-width: 100%;
   border-collapse: collapse;
 }
 
 th,
 td {
   text-align: left;
-  padding: 14px 11px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--hairline);
   white-space: nowrap;
 }
