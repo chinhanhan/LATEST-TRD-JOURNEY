@@ -5,7 +5,12 @@ const IMAGE_LIMIT = 850 * 1024;
 
 const localISO = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const todayISO = () => localISO(new Date());
-const money = (value) => `$${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+const money = (value) => {
+  const num = Number(value || 0);
+  if (isNaN(num)) return "$0";
+  const absStr = Math.abs(num).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  return num < 0 ? `-$${absStr}` : `$${absStr}`;
+};
 const uid = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 const safe = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[c]);
 
@@ -62,6 +67,7 @@ window.insertMarkdown = function(btn, prefix, suffix) {
   textarea.focus();
   // Put cursor in the middle or after
   textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+  textarea.dispatchEvent(new Event("input", { bubbles: true }));
 };
 
 const starterTrades = [
@@ -2095,8 +2101,11 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function playSound(type) {
   if (state?.preferences && state.preferences.enableSounds === false) return;
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  const now = audioCtx.currentTime;
+  try {
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(() => {});
+    }
+    const now = audioCtx.currentTime;
   
   if (type === 'success') {
     const osc = audioCtx.createOscillator();
@@ -2240,6 +2249,7 @@ function playSound(type) {
     osc.start(now);
     osc.stop(now + 0.06);
   }
+  } catch (err) {}
 }
 
 async function compressImage(dataUrl) {

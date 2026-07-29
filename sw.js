@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v64-multi-bugfix-date-grouping-streak-guards';
+const CACHE_NAME = 'trd-journey-v65-multi-bugfix-money-utf8-bom-webaudio-event';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v64-multi-bugfix-date-grouping-streak-guards',
-  './audioEngine.js?v=v64-multi-bugfix-date-grouping-streak-guards',
-  './dataEngine.js?v=v64-multi-bugfix-date-grouping-streak-guards',
-  './dock.js?v=v64-multi-bugfix-date-grouping-streak-guards',
-  './gallery.js?v=v64-multi-bugfix-date-grouping-streak-guards',
-  './app.js?v=v64-multi-bugfix-date-grouping-streak-guards',
+  './styles.css?v=v65-multi-bugfix-money-utf8-bom-webaudio-event',
+  './audioEngine.js?v=v65-multi-bugfix-money-utf8-bom-webaudio-event',
+  './dataEngine.js?v=v65-multi-bugfix-money-utf8-bom-webaudio-event',
+  './dock.js?v=v65-multi-bugfix-money-utf8-bom-webaudio-event',
+  './gallery.js?v=v65-multi-bugfix-money-utf8-bom-webaudio-event',
+  './app.js?v=v65-multi-bugfix-money-utf8-bom-webaudio-event',
   './manifest.json'
 ];
 
