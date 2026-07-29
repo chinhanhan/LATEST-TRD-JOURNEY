@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v69-multi-bugfix-format-r-dock-loop-spark-lifecycle';
+const CACHE_NAME = 'trd-journey-v70-forexfactory-bento-widget-form-alert';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v69-multi-bugfix-format-r-dock-loop-spark-lifecycle',
-  './audioEngine.js?v=v69-multi-bugfix-format-r-dock-loop-spark-lifecycle',
-  './dataEngine.js?v=v69-multi-bugfix-format-r-dock-loop-spark-lifecycle',
-  './dock.js?v=v69-multi-bugfix-format-r-dock-loop-spark-lifecycle',
-  './gallery.js?v=v69-multi-bugfix-format-r-dock-loop-spark-lifecycle',
-  './app.js?v=v69-multi-bugfix-format-r-dock-loop-spark-lifecycle',
+  './styles.css?v=v70-forexfactory-bento-widget-form-alert',
+  './audioEngine.js?v=v70-forexfactory-bento-widget-form-alert',
+  './dataEngine.js?v=v70-forexfactory-bento-widget-form-alert',
+  './dock.js?v=v70-forexfactory-bento-widget-form-alert',
+  './gallery.js?v=v70-forexfactory-bento-widget-form-alert',
+  './app.js?v=v70-forexfactory-bento-widget-form-alert',
   './manifest.json'
 ];
 

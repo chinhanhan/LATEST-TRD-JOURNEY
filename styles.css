@@ -6025,3 +6025,83 @@ body:not(:has(#landing-gallery.active)) .ios-dock-container {
   border: 1px solid rgba(239, 68, 68, 0.3);
   border-radius: 999px;
 }
+
+/* Bento Grid News Widget & Trade Form News Alert */
+.bento-news-card {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-top: 16px;
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bento-news-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.bento-news-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 750;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-radius: 4px;
+}
+
+.bento-news-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bento-news-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  font-size: 0.83rem;
+}
+
+.trade-form-news-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md);
+  color: #ef4444;
+}
+
+.trade-form-news-alert.hidden {
+  display: none !important;
+}
+
+.trade-form-news-alert .alert-icon {
+  font-size: 1.1rem;
+}
+
+.trade-form-news-alert .alert-text strong {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.trade-form-news-alert .alert-text p {
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}

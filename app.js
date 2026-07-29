@@ -991,6 +991,7 @@ function renderHomeVisuals() {
   `;
   document.getElementById("homeLeakMeter").style.setProperty("--leak", `${Math.round(processLeakRate() * 100)}%`);
   document.getElementById("homeSystemHealth").classList.toggle("is-warning", state.sops.length < 2);
+  renderHomeRedNewsWidget();
 }
 
 function renderMiniSparkline(id, values) {
@@ -4927,6 +4928,7 @@ let currentRedNewsCurrencyFilter = "All";
 function initNewsBar() {
   if (window.newsBarInitialized) {
     updateNewsBarCountdown();
+    renderHomeRedNewsWidget();
     return;
   }
   window.newsBarInitialized = true;
@@ -4951,7 +4953,15 @@ function initNewsBar() {
     });
   }
 
+  const tradeForm = document.getElementById("tradeForm");
+  if (tradeForm) {
+    ["change", "input"].forEach(evtName => {
+      tradeForm.addEventListener(evtName, () => checkTradeFormNewsRisk());
+    });
+  }
+
   updateNewsBarCountdown();
+  renderHomeRedNewsWidget();
   if (!window.newsBarTimer) {
     window.newsBarTimer = setInterval(updateNewsBarCountdown, 1000);
   }
@@ -5017,6 +5027,62 @@ function renderRedNewsTable(currency = "All") {
       </tr>
     `;
   }).join("");
+}
+
+function renderHomeRedNewsWidget() {
+  const bodyEl = document.getElementById("homeRedNewsBody");
+  if (!bodyEl || !window.forexFactoryRedNewsEngine) return;
+
+  const todayStr = todayISO();
+  const allEvents = window.forexFactoryRedNewsEngine.getAllRedEvents();
+  const todayEvents = allEvents.filter(e => e.date === todayStr || e.date === localISO(new Date()));
+
+  if (!todayEvents.length) {
+    bodyEl.innerHTML = `<div style="color:var(--muted); font-size:0.8rem; padding:8px 0;">No high-impact red folder events scheduled for today.</div>`;
+    return;
+  }
+
+  bodyEl.innerHTML = todayEvents.map(evt => {
+    const currClass = evt.currency.toLowerCase();
+    const actualText = evt.actual ? `Actual: ${safe(evt.actual)}` : `Est: ${safe(evt.forecast || "—")}`;
+    return `
+      <div class="bento-news-row" onclick="window.openRedNewsModal()" style="cursor:pointer;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="badge-currency ${currClass}">${safe(evt.currency)}</span>
+          <span class="red-folder-icon">🔴</span>
+          <strong>${safe(evt.title)}</strong>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-size:0.78rem; color:var(--muted);">${actualText}</span>
+          <strong style="color:var(--text);">${safe(evt.time)}</strong>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function checkTradeFormNewsRisk() {
+  const form = document.getElementById("tradeForm");
+  const alertEl = document.getElementById("tradeFormNewsAlert");
+  const titleEl = document.getElementById("tradeFormNewsTitle");
+  const metaEl = document.getElementById("tradeFormNewsMeta");
+  if (!form || !alertEl || !window.forexFactoryRedNewsEngine) return;
+
+  const dateVal = form.date?.value || form.openTime?.value || "";
+  if (!dateVal) {
+    alertEl.classList.add("hidden");
+    return;
+  }
+
+  const nearNews = window.forexFactoryRedNewsEngine.isTradeNearRedNews(dateVal);
+  if (nearNews) {
+    const evt = nearNews.event;
+    alertEl.classList.remove("hidden");
+    if (titleEl) titleEl.textContent = `🔴 ${evt.currency} High Impact Event Nearby (${evt.title})`;
+    if (metaEl) metaEl.textContent = nearNews.sameDay ? `Red folder news scheduled for ${evt.date} at ${evt.time}.` : `Trade logged within ${nearNews.diffMins} minutes of ${evt.title} (${evt.time}).`;
+  } else {
+    alertEl.classList.add("hidden");
+  }
 }
 
 initApp();

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=v69-multi-bugfix-format-r-dock-loop-spark-lifecycle" />
+    <link rel="stylesheet" href="styles.css?v=v70-forexfactory-bento-widget-form-alert" />
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -178,6 +178,21 @@
                   </div>
                 </div>
 
+                <!-- Today's High-Impact Red Folder News Widget -->
+                <div class="bento-news-card" id="homeRedNewsWidget">
+                  <div class="bento-news-header">
+                    <div>
+                      <span class="bento-news-badge">🔴 High Impact</span>
+                      <h3 style="margin-top:4px;">Today's Red Folder News (今日红盒快讯)</h3>
+                    </div>
+                    <button class="ghost-button news-trigger-btn" type="button" onclick="window.openRedNewsModal()">
+                      Full Calendar ↗
+                    </button>
+                  </div>
+                  <div class="bento-news-body" id="homeRedNewsBody">
+                    <!-- Populated dynamically by app.js -->
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -1102,6 +1117,15 @@
         <div class="sheet-body">
           <form class="trade-form" id="tradeForm">
             <input type="hidden" name="id" />
+            
+            <!-- Red News Risk Warning Alert -->
+            <div class="trade-form-news-alert hidden" id="tradeFormNewsAlert">
+              <span class="alert-icon">🔴</span>
+              <div class="alert-text">
+                <strong id="tradeFormNewsTitle">High Impact Red News Event Nearby</strong>
+                <p id="tradeFormNewsMeta">Exercise caution when opening positions around high volatility news releases.</p>
+              </div>
+            </div>
             <div class="form-row">
               <div class="form-group">
                 <select name="sopId" id="tradeSopSelect" required></select>
@@ -1260,10 +1284,10 @@
     <!-- React Bits Inspired Floating Dock Container -->
     <div class="dock-outer" id="reactBitsDock"></div>
     <canvas id="clickSparkCanvas" class="click-spark-canvas"></canvas>
-    <script defer src="audioEngine.js?v=v69-multi-bugfix-format-r-dock-loop-spark-lifecycle"></script>
-    <script defer src="dataEngine.js?v=v69-multi-bugfix-format-r-dock-loop-spark-lifecycle"></script>
-    <script defer src="dock.js?v=v69-multi-bugfix-format-r-dock-loop-spark-lifecycle"></script>
-    <script type="module" src="gallery.js?v=v69-multi-bugfix-format-r-dock-loop-spark-lifecycle"></script>
-    <script defer src="app.js?v=v69-multi-bugfix-format-r-dock-loop-spark-lifecycle"></script>
+    <script defer src="audioEngine.js?v=v70-forexfactory-bento-widget-form-alert"></script>
+    <script defer src="dataEngine.js?v=v70-forexfactory-bento-widget-form-alert"></script>
+    <script defer src="dock.js?v=v70-forexfactory-bento-widget-form-alert"></script>
+    <script type="module" src="gallery.js?v=v70-forexfactory-bento-widget-form-alert"></script>
+    <script defer src="app.js?v=v70-forexfactory-bento-widget-form-alert"></script>
   </body>
 </html>
