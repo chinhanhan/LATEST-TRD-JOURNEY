@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v55-bubble-menu-clamping-fix';
+const CACHE_NAME = 'trd-journey-v56-reset-trade-form-defensive-cleanup';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v55-bubble-menu-clamping-fix',
-  './audioEngine.js?v=v55-bubble-menu-clamping-fix',
-  './dataEngine.js?v=v55-bubble-menu-clamping-fix',
-  './dock.js?v=v55-bubble-menu-clamping-fix',
-  './gallery.js?v=v55-bubble-menu-clamping-fix',
-  './app.js?v=v55-bubble-menu-clamping-fix',
+  './styles.css?v=v56-reset-trade-form-defensive-cleanup',
+  './audioEngine.js?v=v56-reset-trade-form-defensive-cleanup',
+  './dataEngine.js?v=v56-reset-trade-form-defensive-cleanup',
+  './dock.js?v=v56-reset-trade-form-defensive-cleanup',
+  './gallery.js?v=v56-reset-trade-form-defensive-cleanup',
+  './app.js?v=v56-reset-trade-form-defensive-cleanup',
   './manifest.json'
 ];
 

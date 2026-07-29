@@ -2246,6 +2246,7 @@ async function compressImage(dataUrl) {
 
 function resetTradeForm() {
   const form = document.getElementById("tradeForm");
+  if (!form) return;
   form.reset();
   form.elements.id.value = "";
   form.date.value = todayISO();
@@ -2257,15 +2258,22 @@ function resetTradeForm() {
   form.accountId.value = state.activeAccountId;
   form.risk.value = state.preferences.riskPerTrade;
   form.pnl.value = "";
+  form.tradingViewUrl.value = "";
+  form.imageUrl.value = "";
+  if (form.imageFile) form.imageFile.value = "";
   form.entryPlan.value = "";
   form.stopPlan.value = "";
   form.targetPlan.value = "";
   form.exitNote.value = "";
   form.note.value = "";
-  document.querySelector(".advanced-fields").open = false;
-  document.getElementById("tradeFormMode").textContent = "Open trade";
-  document.getElementById("saveTradeBtn").textContent = "Start Trade";
-  document.getElementById("cancelEditBtn").classList.add("hidden");
+  const adv = document.querySelector(".advanced-fields");
+  if (adv) adv.open = false;
+  const mode = document.getElementById("tradeFormMode");
+  if (mode) mode.textContent = "Open trade";
+  const btn = document.getElementById("saveTradeBtn");
+  if (btn) btn.textContent = "Start Trade";
+  const cancel = document.getElementById("cancelEditBtn");
+  if (cancel) cancel.classList.add("hidden");
   closeSheet("tradeFormSheet");
 }
 
