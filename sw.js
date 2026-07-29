@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v61-monte-carlo-sample-pool-fallback';
+const CACHE_NAME = 'trd-journey-v62-image-for-trade-images-array-fix';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v61-monte-carlo-sample-pool-fallback',
-  './audioEngine.js?v=v61-monte-carlo-sample-pool-fallback',
-  './dataEngine.js?v=v61-monte-carlo-sample-pool-fallback',
-  './dock.js?v=v61-monte-carlo-sample-pool-fallback',
-  './gallery.js?v=v61-monte-carlo-sample-pool-fallback',
-  './app.js?v=v61-monte-carlo-sample-pool-fallback',
+  './styles.css?v=v62-image-for-trade-images-array-fix',
+  './audioEngine.js?v=v62-image-for-trade-images-array-fix',
+  './dataEngine.js?v=v62-image-for-trade-images-array-fix',
+  './dock.js?v=v62-image-for-trade-images-array-fix',
+  './gallery.js?v=v62-image-for-trade-images-array-fix',
+  './app.js?v=v62-image-for-trade-images-array-fix',
   './manifest.json'
 ];
 

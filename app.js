@@ -1572,6 +1572,10 @@ function mediaBadges(trade) {
 }
 
 function imageFor(trade) {
+  if (!trade) return "";
+  if (trade.images && Array.isArray(trade.images) && trade.images.length > 0 && trade.images[0]) {
+    return trade.images[0];
+  }
   return trade.imageData || trade.imageUrl || "";
 }
 
