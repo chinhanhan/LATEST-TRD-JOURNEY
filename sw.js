@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v73-3tier-sop-orange-incomplete-status';
+const CACHE_NAME = 'trd-journey-v74-multi-bugfix-sop-progress-rule-rate-journal-rule-filter';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v73-3tier-sop-orange-incomplete-status',
-  './audioEngine.js?v=v73-3tier-sop-orange-incomplete-status',
-  './dataEngine.js?v=v73-3tier-sop-orange-incomplete-status',
-  './dock.js?v=v73-3tier-sop-orange-incomplete-status',
-  './gallery.js?v=v73-3tier-sop-orange-incomplete-status',
-  './app.js?v=v73-3tier-sop-orange-incomplete-status',
+  './styles.css?v=v74-multi-bugfix-sop-progress-rule-rate-journal-rule-filter',
+  './audioEngine.js?v=v74-multi-bugfix-sop-progress-rule-rate-journal-rule-filter',
+  './dataEngine.js?v=v74-multi-bugfix-sop-progress-rule-rate-journal-rule-filter',
+  './dock.js?v=v74-multi-bugfix-sop-progress-rule-rate-journal-rule-filter',
+  './gallery.js?v=v74-multi-bugfix-sop-progress-rule-rate-journal-rule-filter',
+  './app.js?v=v74-multi-bugfix-sop-progress-rule-rate-journal-rule-filter',
   './manifest.json'
 ];
 

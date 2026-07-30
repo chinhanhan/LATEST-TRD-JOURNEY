@@ -692,7 +692,7 @@ function tradesInRange(start, end) {
 function processLeakRate(trades = visibleTrades()) {
   const source = closedTrades(trades);
   if (!source.length) return 0;
-  const leaks = source.filter((trade) => !trade.rule || trade.grade === "C").length;
+  const leaks = source.filter((trade) => getTradeRuleStatus(trade) === "violated" || trade.grade === "C").length;
   return leaks / source.length;
 }
 
@@ -716,7 +716,9 @@ function sopProgress(sopId = state.activeSopId) {
   const m = metrics(closed);
   const screenshots = trades.filter((trade) => imageFor(trade)).length;
   const aGrades = closed.filter((trade) => trade.grade === "A").length;
-  const followed = closed.filter((trade) => trade.rule).length;
+  const followed = closed.filter((trade) => getTradeRuleStatus(trade) === "followed").length;
+  const incomplete = closed.filter((trade) => getTradeRuleStatus(trade) === "incomplete").length;
+  const validForRule = Math.max(closed.length - incomplete, 1);
   return {
     records: trades.length,
     closed: closed.length,
@@ -724,8 +726,9 @@ function sopProgress(sopId = state.activeSopId) {
     expectancy: m.expectancy,
     totalR: m.totalR,
     winRate: m.winRate,
-    ruleRate: closed.length ? followed / closed.length : 0,
+    ruleRate: closed.length ? followed / validForRule : 0,
     aGradeRate: closed.length ? aGrades / closed.length : 0,
+    incompleteCount: incomplete,
     lastUsed: trades.slice().sort((a, b) => (b.closedAt || b.date).localeCompare(a.closedAt || a.date))[0]?.date || ""
   };
 }
@@ -1356,11 +1359,18 @@ function insightCard(title, value, note, insightKey = "") {
 }
 
 function renderJournal() {
-  const filter = document.getElementById("setupFilter").value;
+  const setupFilter = document.getElementById("setupFilter")?.value || "All";
+  const ruleFilter = document.getElementById("ruleFilterSelect")?.value || "All";
   const scoped = visibleTrades();
-  const filtered = filter === "All" ? scoped : scoped.filter((trade) => trade.setup === filter);
-  const open = openTrades(filtered).slice().sort((a, b) => b.date.localeCompare(a.date));
+  
+  let filtered = setupFilter === "All" ? scoped : scoped.filter((trade) => trade.setup === setupFilter);
+  if (ruleFilter !== "All") {
+    filtered = filtered.filter((trade) => getTradeRuleStatus(trade) === ruleFilter);
+  }
+
+  const open = openTrades(filtered).slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   const closed = closedTrades(filtered).slice().sort((a, b) => (b.closedAt || b.date).localeCompare(a.closedAt || a.date));
+  
   document.getElementById("openTradeCards").innerHTML = open.length ? open.map(tradeCard).join("") : emptyState(t("noOpenTrades"));
   document.getElementById("tradeRows").innerHTML = closed.map(tradeRow).join("");
   document.getElementById("mobileTradeCards").innerHTML = closed.map(tradeCard).join("");
@@ -2916,6 +2926,7 @@ document.querySelector('#tradeForm [name="openTime"]')?.addEventListener("change
 });
 document.getElementById("cancelEditBtn")?.addEventListener("click", resetTradeForm);
 document.getElementById("setupFilter")?.addEventListener("change", renderJournal);
+document.getElementById("ruleFilterSelect")?.addEventListener("change", renderJournal);
 document.getElementById("activeSopSelect")?.addEventListener("change", (event) => {
   state.activeSopId = event.target.value;
   state.activeAccountId = accountsForSop(state.activeSopId)[0]?.id || "";
