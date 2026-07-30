@@ -767,7 +767,7 @@ function sopLevel(progress) {
 function sopWeaknessProfile(sopId = state.activeSopId) {
   const closed = closedTrades(sopId === state.activeSopId ? visibleTrades() : sopTrades(sopId));
   if (!closed.length) return "Needs more records";
-  const leaks = closed.filter((trade) => !trade.rule || trade.grade === "C");
+  const leaks = closed.filter((trade) => getTradeRuleStatus(trade) === "violated" || trade.grade === "C");
   const emotionRows = Object.entries(groupBy(leaks.length ? leaks : closed, "emotion"))
     .map(([name, list]) => ({ name, count: list.length, ...metrics(list) }))
     .sort((a, b) => b.count - a.count || a.expectancy - b.expectancy);
@@ -4124,7 +4124,7 @@ function updateRewardMission() {
   } else if (mission.targetType === "compliance") {
     target = 9;
     const last10 = closed.slice(-10);
-    current = last10.filter(t => t.rule === true || t.rule === "true" || t.rule === "Yes" || t.rule === "y").length;
+    current = last10.filter(t => getTradeRuleStatus(t) === "followed").length;
     goalTitle = "90% Compliance (Last 10 trades)";
     if (last10.length >= 10 && current >= target) {
       isDone = true;
@@ -4422,7 +4422,7 @@ function renderDisciplineHeatmap() {
       tradeMap[dStr] = { total: 0, compliant: 0 };
     }
     tradeMap[dStr].total++;
-    if (t.rule === true || t.rule === "true" || t.rule === "Yes" || t.rule === "y") {
+    if (getTradeRuleStatus(t) === "followed") {
       tradeMap[dStr].compliant++;
     }
   });
@@ -4917,7 +4917,7 @@ function renderReflections() {
   const listTarget = document.getElementById("shameTradesList");
   if (!summaryTarget || !listTarget) return;
 
-  const violationTrades = state.trades.filter(t => t.rule === false);
+  const violationTrades = state.trades.filter(t => getTradeRuleStatus(t) === "violated");
   violationTrades.sort((a, b) => b.date.localeCompare(a.date));
 
   if (violationTrades.length === 0) {

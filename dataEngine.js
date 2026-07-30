@@ -214,7 +214,7 @@ class TRDDataEngine {
                   <td>$${t.risk || 0}</td>
                   <td class="${r >= 0 ? 'win' : 'loss'}">${r >= 0 ? '+' : ''}${r}R</td>
                   <td class="${t.pnl >= 0 ? 'win' : 'loss'}">${t.pnl >= 0 ? '+' : ''}$${t.pnl || 0}</td>
-                  <td>${t.rule ? 'Yes ✓' : 'No ✕'}</td>
+                  <td>${t.ruleStatus === "incomplete" || t.rule === "incomplete" ? '🟠 Incomplete' : (t.ruleStatus === "violated" || t.rule === false ? 'No ✕' : 'Yes ✓')}</td>
                 </tr>
               `;
             }).join('')}

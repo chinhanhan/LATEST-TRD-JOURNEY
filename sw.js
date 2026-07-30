@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v83-fix-sop-orange-missing-css-and-ruleStatus-normalization';
+const CACHE_NAME = 'trd-journey-v84-full-audit-fix-sop3tier-all-surfaces';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v83-fix-sop-orange-missing-css-and-ruleStatus-normalization',
-  './audioEngine.js?v=v83-fix-sop-orange-missing-css-and-ruleStatus-normalization',
-  './dataEngine.js?v=v83-fix-sop-orange-missing-css-and-ruleStatus-normalization',
-  './dock.js?v=v83-fix-sop-orange-missing-css-and-ruleStatus-normalization',
-  './gallery.js?v=v83-fix-sop-orange-missing-css-and-ruleStatus-normalization',
-  './app.js?v=v83-fix-sop-orange-missing-css-and-ruleStatus-normalization',
+  './styles.css?v=v84-full-audit-fix-sop3tier-all-surfaces',
+  './audioEngine.js?v=v84-full-audit-fix-sop3tier-all-surfaces',
+  './dataEngine.js?v=v84-full-audit-fix-sop3tier-all-surfaces',
+  './dock.js?v=v84-full-audit-fix-sop3tier-all-surfaces',
+  './gallery.js?v=v84-full-audit-fix-sop3tier-all-surfaces',
+  './app.js?v=v84-full-audit-fix-sop3tier-all-surfaces',
   './manifest.json'
 ];
 
