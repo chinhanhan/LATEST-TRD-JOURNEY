@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v79-critical-fix-add-missing-opentrades-function-definition';
+const CACHE_NAME = 'trd-journey-v80-add-orange-sop-option-to-all-trade-form-selects';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v79-critical-fix-add-missing-opentrades-function-definition',
-  './audioEngine.js?v=v79-critical-fix-add-missing-opentrades-function-definition',
-  './dataEngine.js?v=v79-critical-fix-add-missing-opentrades-function-definition',
-  './dock.js?v=v79-critical-fix-add-missing-opentrades-function-definition',
-  './gallery.js?v=v79-critical-fix-add-missing-opentrades-function-definition',
-  './app.js?v=v79-critical-fix-add-missing-opentrades-function-definition',
+  './styles.css?v=v80-add-orange-sop-option-to-all-trade-form-selects',
+  './audioEngine.js?v=v80-add-orange-sop-option-to-all-trade-form-selects',
+  './dataEngine.js?v=v80-add-orange-sop-option-to-all-trade-form-selects',
+  './dock.js?v=v80-add-orange-sop-option-to-all-trade-form-selects',
+  './gallery.js?v=v80-add-orange-sop-option-to-all-trade-form-selects',
+  './app.js?v=v80-add-orange-sop-option-to-all-trade-form-selects',
   './manifest.json'
 ];
 

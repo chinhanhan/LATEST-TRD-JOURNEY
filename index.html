@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=v79-critical-fix-add-missing-opentrades-function-definition" />
+    <link rel="stylesheet" href="styles.css?v=v80-add-orange-sop-option-to-all-trade-form-selects" />
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -1216,8 +1216,9 @@
                 <div class="form-row">
                   <div class="form-group">
                     <select name="rule">
-                      <option value="true">Yes</option>
-                      <option value="false">No</option>
+                      <option value="true">🟢 Followed (遵守SOP)</option>
+                      <option value="false">🔴 Violated (违反SOP)</option>
+                      <option value="incomplete">🟠 SOP Incomplete (SOP待完善)</option>
                     </select>
                     <label class="floating-label">Rule followed</label>
                   </div>
@@ -1292,10 +1293,10 @@
     <!-- React Bits Inspired Floating Dock Container -->
     <div class="dock-outer" id="reactBitsDock"></div>
     <canvas id="clickSparkCanvas" class="click-spark-canvas"></canvas>
-    <script defer src="audioEngine.js?v=v79-critical-fix-add-missing-opentrades-function-definition"></script>
-    <script defer src="dataEngine.js?v=v79-critical-fix-add-missing-opentrades-function-definition"></script>
-    <script defer src="dock.js?v=v79-critical-fix-add-missing-opentrades-function-definition"></script>
-    <script type="module" src="gallery.js?v=v79-critical-fix-add-missing-opentrades-function-definition"></script>
-    <script defer src="app.js?v=v79-critical-fix-add-missing-opentrades-function-definition"></script>
+    <script defer src="audioEngine.js?v=v80-add-orange-sop-option-to-all-trade-form-selects"></script>
+    <script defer src="dataEngine.js?v=v80-add-orange-sop-option-to-all-trade-form-selects"></script>
+    <script defer src="dock.js?v=v80-add-orange-sop-option-to-all-trade-form-selects"></script>
+    <script type="module" src="gallery.js?v=v80-add-orange-sop-option-to-all-trade-form-selects"></script>
+    <script defer src="app.js?v=v80-add-orange-sop-option-to-all-trade-form-selects"></script>
   </body>
 </html>

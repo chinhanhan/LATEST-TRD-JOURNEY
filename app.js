@@ -2535,7 +2535,7 @@ function openCloseTradeModal(id) {
       </div>
       <p class="muted">${t("rHint")} ${t("pnlWins")}</p>
       <div class="form-row">
-        <label>Rule followed<select name="rule"><option value="true">Yes</option><option value="false">No</option></select></label>
+        <label>Rule followed<select name="rule"><option value="true">🟢 Followed (遵守SOP)</option><option value="false">🔴 Violated (违反SOP)</option><option value="incomplete">🟠 SOP Incomplete (SOP待完善)</option></select></label>
         <label>Emotion<select name="emotion"><option>Calm</option><option>Focused</option><option>FOMO</option><option>Revenge</option><option>Hesitant</option></select></label>
       </div>
       <label>Exit Note
