@@ -591,8 +591,8 @@ function metrics(trades = closedTrades()) {
   const rList = source.map(rValue);
   const pnlList = source.map((t) => Number(t.pnl || (rValue(t) * Number(t.risk || 0)) || 0));
 
-  const winningTrades = source.filter((t) => rValue(t) > 0);
-  const losingTrades = source.filter((t) => rValue(t) < 0);
+  const winningTrades = source.filter((t) => rValue(t) > 0 || Number(t.pnl || 0) > 0);
+  const losingTrades = source.filter((t) => rValue(t) < 0 || Number(t.pnl || 0) < 0);
 
   const grossWinR = winningTrades.reduce((sum, t) => sum + rValue(t), 0);
   const grossLossR = losingTrades.reduce((sum, t) => sum + rValue(t), 0);
@@ -2495,6 +2495,8 @@ function deleteTrade(id) {
   if (!confirm(`Delete ${trade.symbol} ${formatR(rValue(trade))}?`)) return;
   state.trades = state.trades.filter((item) => item.id !== id);
   saveState();
+  closeSheet("detailSheet");
+  closeSheet("tradeFormSheet");
   renderAll();
   toast("Trade deleted.", "delete");
 }
@@ -2586,7 +2588,8 @@ async function closeTradeFromModal(event) {
 
 function imagesFor(trade) {
   if (!trade) return [];
-  return trade.images?.length ? trade.images : [trade.imageData || trade.imageUrl].filter(Boolean);
+  const list = trade.images?.length ? trade.images : [trade.imageData || trade.imageUrl];
+  return list.filter((item) => typeof item === "string" && item.trim().length > 0);
 }
 
 function openDetail(id) {

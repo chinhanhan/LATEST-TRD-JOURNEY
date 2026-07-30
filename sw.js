@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v76-multi-bugfix-hold-duration-date-only-csv-rule-export-open-trade-close-time';
+const CACHE_NAME = 'trd-journey-v77-multi-bugfix-images-for-filter-metrics-winrate-pnl-delete-trade-cleanup';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v76-multi-bugfix-hold-duration-date-only-csv-rule-export-open-trade-close-time',
-  './audioEngine.js?v=v76-multi-bugfix-hold-duration-date-only-csv-rule-export-open-trade-close-time',
-  './dataEngine.js?v=v76-multi-bugfix-hold-duration-date-only-csv-rule-export-open-trade-close-time',
-  './dock.js?v=v76-multi-bugfix-hold-duration-date-only-csv-rule-export-open-trade-close-time',
-  './gallery.js?v=v76-multi-bugfix-hold-duration-date-only-csv-rule-export-open-trade-close-time',
-  './app.js?v=v76-multi-bugfix-hold-duration-date-only-csv-rule-export-open-trade-close-time',
+  './styles.css?v=v77-multi-bugfix-images-for-filter-metrics-winrate-pnl-delete-trade-cleanup',
+  './audioEngine.js?v=v77-multi-bugfix-images-for-filter-metrics-winrate-pnl-delete-trade-cleanup',
+  './dataEngine.js?v=v77-multi-bugfix-images-for-filter-metrics-winrate-pnl-delete-trade-cleanup',
+  './dock.js?v=v77-multi-bugfix-images-for-filter-metrics-winrate-pnl-delete-trade-cleanup',
+  './gallery.js?v=v77-multi-bugfix-images-for-filter-metrics-winrate-pnl-delete-trade-cleanup',
+  './app.js?v=v77-multi-bugfix-images-for-filter-metrics-winrate-pnl-delete-trade-cleanup',
   './manifest.json'
 ];
 
