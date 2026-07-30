@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v75-multi-bugfix-format-time-image-merge-form-reset';
+const CACHE_NAME = 'trd-journey-v76-multi-bugfix-hold-duration-date-only-csv-rule-export-open-trade-close-time';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v75-multi-bugfix-format-time-image-merge-form-reset',
-  './audioEngine.js?v=v75-multi-bugfix-format-time-image-merge-form-reset',
-  './dataEngine.js?v=v75-multi-bugfix-format-time-image-merge-form-reset',
-  './dock.js?v=v75-multi-bugfix-format-time-image-merge-form-reset',
-  './gallery.js?v=v75-multi-bugfix-format-time-image-merge-form-reset',
-  './app.js?v=v75-multi-bugfix-format-time-image-merge-form-reset',
+  './styles.css?v=v76-multi-bugfix-hold-duration-date-only-csv-rule-export-open-trade-close-time',
+  './audioEngine.js?v=v76-multi-bugfix-hold-duration-date-only-csv-rule-export-open-trade-close-time',
+  './dataEngine.js?v=v76-multi-bugfix-hold-duration-date-only-csv-rule-export-open-trade-close-time',
+  './dock.js?v=v76-multi-bugfix-hold-duration-date-only-csv-rule-export-open-trade-close-time',
+  './gallery.js?v=v76-multi-bugfix-hold-duration-date-only-csv-rule-export-open-trade-close-time',
+  './app.js?v=v76-multi-bugfix-hold-duration-date-only-csv-rule-export-open-trade-close-time',
   './manifest.json'
 ];
 

@@ -112,7 +112,7 @@ class TRDDataEngine {
         rVal,
         t.pnl || 0,
         esc(t.grade || "A"),
-        t.rule ? "Yes" : "No",
+        esc(t.ruleStatus === "incomplete" || t.rule === "incomplete" ? "Incomplete" : (t.rule ? "Yes" : "No")),
         esc(t.emotion || "Calm"),
         esc(t.entryPlan || ""),
         esc(t.exitNote || "")

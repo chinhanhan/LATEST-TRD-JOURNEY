@@ -540,6 +540,7 @@ function formatHoldDuration(openTimeStr, closeTimeStr) {
   if (!openTimeStr || !closeTimeStr) return "";
   let sStr = String(openTimeStr).trim().replace(" ", "T");
   let eStr = String(closeTimeStr).trim().replace(" ", "T");
+  const hasTime = sStr.includes("T") || eStr.includes("T");
   if (sStr.length === 16 && sStr.includes("T")) sStr += ":00";
   if (eStr.length === 16 && eStr.includes("T")) eStr += ":00";
   const start = new Date(sStr.includes("T") ? sStr : `${sStr}T00:00:00`);
@@ -547,6 +548,10 @@ function formatHoldDuration(openTimeStr, closeTimeStr) {
   if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return "";
   const diffMs = end - start;
   const diffMins = Math.floor(diffMs / (1000 * 60));
+  if (!hasTime) {
+    const daysOnly = Math.round(diffMs / (1000 * 60 * 60 * 24));
+    return daysOnly > 0 ? `${daysOnly}d` : "Same day";
+  }
   if (diffMins < 1) return "<1m";
   const days = Math.floor(diffMins / (60 * 24));
   const hours = Math.floor((diffMins % (60 * 24)) / 60);
@@ -2364,7 +2369,7 @@ function editTrade(id) {
   form.elements.id.value = trade.id;
   form.date.value = trade.date;
   if (form.openTime) form.openTime.value = trade.openTime || (trade.date ? `${trade.date}T09:30` : nowDatetimeLocal());
-  if (form.closeTime) form.closeTime.value = trade.closeTime || (trade.closedAt ? `${trade.closedAt}T10:30` : "");
+  if (form.closeTime) form.closeTime.value = trade.status === "open" ? "" : (trade.closeTime || (trade.closedAt ? `${trade.closedAt}T10:30` : ""));
   form.symbol.value = trade.symbol;
   state.activeSopId = trade.sopId || state.activeSopId;
   const account = state.accounts.find((item) => item.id === trade.accountId);
