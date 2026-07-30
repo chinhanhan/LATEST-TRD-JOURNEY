@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v77-multi-bugfix-images-for-filter-metrics-winrate-pnl-delete-trade-cleanup';
+const CACHE_NAME = 'trd-journey-v78-multi-bugfix-money-negative-zero-histogram-breakeven-bin-account-sop-name-fallback';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v77-multi-bugfix-images-for-filter-metrics-winrate-pnl-delete-trade-cleanup',
-  './audioEngine.js?v=v77-multi-bugfix-images-for-filter-metrics-winrate-pnl-delete-trade-cleanup',
-  './dataEngine.js?v=v77-multi-bugfix-images-for-filter-metrics-winrate-pnl-delete-trade-cleanup',
-  './dock.js?v=v77-multi-bugfix-images-for-filter-metrics-winrate-pnl-delete-trade-cleanup',
-  './gallery.js?v=v77-multi-bugfix-images-for-filter-metrics-winrate-pnl-delete-trade-cleanup',
-  './app.js?v=v77-multi-bugfix-images-for-filter-metrics-winrate-pnl-delete-trade-cleanup',
+  './styles.css?v=v78-multi-bugfix-money-negative-zero-histogram-breakeven-bin-account-sop-name-fallback',
+  './audioEngine.js?v=v78-multi-bugfix-money-negative-zero-histogram-breakeven-bin-account-sop-name-fallback',
+  './dataEngine.js?v=v78-multi-bugfix-money-negative-zero-histogram-breakeven-bin-account-sop-name-fallback',
+  './dock.js?v=v78-multi-bugfix-money-negative-zero-histogram-breakeven-bin-account-sop-name-fallback',
+  './gallery.js?v=v78-multi-bugfix-money-negative-zero-histogram-breakeven-bin-account-sop-name-fallback',
+  './app.js?v=v78-multi-bugfix-money-negative-zero-histogram-breakeven-bin-account-sop-name-fallback',
   './manifest.json'
 ];
 

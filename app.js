@@ -7,8 +7,8 @@ const localISO = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
 const todayISO = () => localISO(new Date());
 const money = (value) => {
   const num = Number(value || 0);
-  if (isNaN(num)) return "$0";
-  const absStr = Math.abs(num).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  if (isNaN(num) || Math.abs(num) < 0.005) return "$0.00";
+  const absStr = Math.abs(num).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return num < 0 ? `-$${absStr}` : `$${absStr}`;
 };
 const uid = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -461,6 +461,7 @@ function sopTrades(sopId) {
 }
 
 function accountName(id) {
+  if (!id) return activeAccount()?.name || "Main Account";
   return state.accounts.find((account) => account.id === id)?.name || "Archived Account";
 }
 
@@ -470,6 +471,7 @@ function accountLabel(account = activeAccount()) {
 }
 
 function sopName(id) {
+  if (!id) return activeSop()?.name || "Main SOP";
   return state.sops.find((sop) => sop.id === id)?.name || "Archived SOP";
 }
 
@@ -1704,13 +1706,20 @@ function renderGroupedBars(id, grouped) {
 }
 
 function renderDistribution() {
-  const bins = [-2, -1, -0.5, 0, 0.5, 1, 2, Infinity];
   const labels = ["<-2", "-2/-1", "-1/-.5", "-.5/0", "0/.5", ".5/1", "1/2", ">2"];
   const counts = Array(labels.length).fill(0);
   closedTrades().forEach((trade) => {
     const r = rValue(trade);
-    const index = bins.findIndex((bin) => r <= bin);
-    counts[Math.max(index, 0)] += 1;
+    let index;
+    if (r < -2) index = 0;
+    else if (r < -1) index = 1;
+    else if (r < -0.5) index = 2;
+    else if (r < 0) index = 3;
+    else if (r < 0.5) index = 4;
+    else if (r < 1) index = 5;
+    else if (r < 2) index = 6;
+    else index = 7;
+    counts[index] += 1;
   });
   const max = Math.max(...counts, 1);
   document.getElementById("distributionChart").innerHTML = counts.map((count, index) => `
