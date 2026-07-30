@@ -342,7 +342,14 @@ function normalizeTrade(trade) {
     risk: Number(trade.risk || 0),
     rMultiple: trade.rMultiple !== undefined && trade.rMultiple !== "" && !isNaN(Number(trade.rMultiple)) ? Number(trade.rMultiple) : "",
     pnl: trade.pnl === "" || trade.pnl == null ? 0 : Number(trade.pnl || 0),
-    rule: trade.rule !== false,
+    rule: (trade.ruleStatus === "incomplete" || trade.rule === "incomplete" || trade.rule === "Incomplete") ? "incomplete" : (trade.ruleStatus === "violated" || trade.rule === false || trade.rule === "false" ? false : true),
+    ruleStatus: (() => {
+      // Priority: explicit ruleStatus > derive from rule field
+      if (trade.ruleStatus === "incomplete" || trade.ruleStatus === "violated" || trade.ruleStatus === "followed") return trade.ruleStatus;
+      if (trade.rule === "incomplete" || trade.rule === "Incomplete" || trade.rule === "orange") return "incomplete";
+      if (trade.rule === false || trade.rule === "false" || trade.rule === "No" || trade.rule === "broken") return "violated";
+      return "followed";
+    })(),
     emotion: trade.emotion || "Calm",
     note: trade.note || "",
     entryPlan: trade.entryPlan || trade.entryNote || "",
@@ -2628,7 +2635,7 @@ function openDetail(id) {
         insightCard("Status", trade.status === "open" ? "Open" : "Closed", trade.status === "open" ? "Not in statistics yet" : formatR(rValue(trade))),
         insightCard("SOP", sopName(trade.sopId), accountName(trade.accountId)),
         insightCard("Setup", trade.setup, `Grade ${trade.grade}`),
-        insightCard("Process", trade.rule ? "Followed" : "Broken", trade.emotion)
+        insightCard("Process", getTradeRuleStatus(trade) === "incomplete" ? "SOP Incomplete" : (getTradeRuleStatus(trade) === "violated" ? "Broken" : "Followed"), trade.emotion)
       ].join("")}</div>
       ${imageHtml}
       <div class="rich-text-content" style="margin:20px 0;">${parseMarkdown(safe(trade.status === "open" ? trade.entryPlan || "No entry plan." : trade.exitNote || trade.note || "No note."))}</div>
@@ -2756,7 +2763,7 @@ function renderActivityRings() {
   const totalCount = todayTrades.length;
   
   // 2. Rules followed percentage
-  let ruleFollowedCount = todayTrades.filter(t => t.rule).length;
+  let ruleFollowedCount = todayTrades.filter(t => getTradeRuleStatus(t) === "followed").length;
   let rulePercent = totalCount > 0 ? Math.round((ruleFollowedCount / totalCount) * 100) : 100;
   
   // 3. Today's total R multiple
@@ -3531,17 +3538,19 @@ function openInsightDetail(key) {
     title.textContent = "Rule adherence over time";
     let followed = 0;
     seriesData = closed.map((t, i) => {
-      if (t.rule) followed++;
+      const st = getTradeRuleStatus(t);
+      if (st === "followed") followed++;
       const rate = Math.round(followed / (i + 1) * 100);
-      return { value: rate, label: t.date, detail: `${t.symbol} · ${t.rule ? "Followed" : "Broken"}` };
+      const labelText = st === "incomplete" ? "SOP Incomplete" : (st === "violated" ? "Broken" : "Followed");
+      return { value: rate, label: t.date, detail: `${t.symbol} · ${labelText}` };
     });
-    const ruleFollowed = closed.filter((t) => t.rule).length;
+    const ruleFollowed = closed.filter((t) => getTradeRuleStatus(t) === "followed").length;
     const gradeA = closed.filter((t) => t.grade === "A").length;
     detailCards = [
       insightCard("Rules Followed", `${Math.round(ruleFollowed / closed.length * 100)}%`, `${ruleFollowed} of ${closed.length}`),
       insightCard("A-Grade Trades", `${Math.round(gradeA / closed.length * 100)}%`, `${gradeA} of ${closed.length}`),
-      insightCard("Avg R (Rule ✓)", formatR(metrics(closed.filter((t) => t.rule)).expectancy), "When following rules"),
-      insightCard("Avg R (Rule ✗)", formatR(metrics(closed.filter((t) => !t.rule)).expectancy), "When breaking rules"),
+      insightCard("Avg R (Rule ✓)", formatR(metrics(closed.filter((t) => getTradeRuleStatus(t) === "followed")).expectancy), "When following rules"),
+      insightCard("Avg R (Rule ✗)", formatR(metrics(closed.filter((t) => getTradeRuleStatus(t) === "violated")).expectancy), "When breaking rules"),
     ];
   } else {
     return;

@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v81-multi-bugfix-parse-markdown-string-badges-nan-rvalue-pnl-fallback';
+const CACHE_NAME = 'trd-journey-v83-fix-sop-orange-missing-css-and-ruleStatus-normalization';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v81-multi-bugfix-parse-markdown-string-badges-nan-rvalue-pnl-fallback',
-  './audioEngine.js?v=v81-multi-bugfix-parse-markdown-string-badges-nan-rvalue-pnl-fallback',
-  './dataEngine.js?v=v81-multi-bugfix-parse-markdown-string-badges-nan-rvalue-pnl-fallback',
-  './dock.js?v=v81-multi-bugfix-parse-markdown-string-badges-nan-rvalue-pnl-fallback',
-  './gallery.js?v=v81-multi-bugfix-parse-markdown-string-badges-nan-rvalue-pnl-fallback',
-  './app.js?v=v81-multi-bugfix-parse-markdown-string-badges-nan-rvalue-pnl-fallback',
+  './styles.css?v=v83-fix-sop-orange-missing-css-and-ruleStatus-normalization',
+  './audioEngine.js?v=v83-fix-sop-orange-missing-css-and-ruleStatus-normalization',
+  './dataEngine.js?v=v83-fix-sop-orange-missing-css-and-ruleStatus-normalization',
+  './dock.js?v=v83-fix-sop-orange-missing-css-and-ruleStatus-normalization',
+  './gallery.js?v=v83-fix-sop-orange-missing-css-and-ruleStatus-normalization',
+  './app.js?v=v83-fix-sop-orange-missing-css-and-ruleStatus-normalization',
   './manifest.json'
 ];
 
@@ -35,10 +35,8 @@ self.addEventListener('message', (e) => {
   }
 });
 
-// Network-first strategy to ensure users always get the latest app version
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
-  
   e.respondWith(
     fetch(e.request).then((networkRes) => {
       if (networkRes && networkRes.status === 200 && networkRes.type === 'basic') {
@@ -49,9 +47,7 @@ self.addEventListener('fetch', (e) => {
     }).catch(() => {
       return caches.match(e.request).then((res) => {
         if (res) return res;
-        if (e.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
+        if (e.request.mode === 'navigate') return caches.match('./index.html');
       });
     })
   );
