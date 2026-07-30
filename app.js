@@ -479,6 +479,10 @@ function closedTrades(trades = visibleTrades()) {
   return trades.filter((trade) => trade.status !== "open");
 }
 
+function openTrades(trades = visibleTrades()) {
+  return trades.filter((trade) => trade.status === "open");
+}
+
 function getTradeRuleStatus(trade) {
   if (!trade) return "followed";
   if (trade.ruleStatus) return trade.ruleStatus;

@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v78-multi-bugfix-money-negative-zero-histogram-breakeven-bin-account-sop-name-fallback';
+const CACHE_NAME = 'trd-journey-v79-critical-fix-add-missing-opentrades-function-definition';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v78-multi-bugfix-money-negative-zero-histogram-breakeven-bin-account-sop-name-fallback',
-  './audioEngine.js?v=v78-multi-bugfix-money-negative-zero-histogram-breakeven-bin-account-sop-name-fallback',
-  './dataEngine.js?v=v78-multi-bugfix-money-negative-zero-histogram-breakeven-bin-account-sop-name-fallback',
-  './dock.js?v=v78-multi-bugfix-money-negative-zero-histogram-breakeven-bin-account-sop-name-fallback',
-  './gallery.js?v=v78-multi-bugfix-money-negative-zero-histogram-breakeven-bin-account-sop-name-fallback',
-  './app.js?v=v78-multi-bugfix-money-negative-zero-histogram-breakeven-bin-account-sop-name-fallback',
+  './styles.css?v=v79-critical-fix-add-missing-opentrades-function-definition',
+  './audioEngine.js?v=v79-critical-fix-add-missing-opentrades-function-definition',
+  './dataEngine.js?v=v79-critical-fix-add-missing-opentrades-function-definition',
+  './dock.js?v=v79-critical-fix-add-missing-opentrades-function-definition',
+  './gallery.js?v=v79-critical-fix-add-missing-opentrades-function-definition',
+  './app.js?v=v79-critical-fix-add-missing-opentrades-function-definition',
   './manifest.json'
 ];
 
