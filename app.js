@@ -16,7 +16,7 @@ const safe = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "
 
 function parseMarkdown(text) {
   if (!text) return "";
-  let html = text;
+  let html = String(text);
   // Bold
   html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
   // Italic
@@ -513,6 +513,8 @@ function rValue(trade) {
     const res = Number(trade.pnl || 0) / riskNum;
     return Number.isFinite(res) ? res : 0;
   }
+  const pnlNum = Number(trade.pnl || 0);
+  if (pnlNum !== 0) return pnlNum > 0 ? 1 : -1;
   return 0;
 }
 
@@ -834,7 +836,7 @@ const BADGES = [
     desc: "Accumulate +10.00R in net total profit",
     category: "Growth",
     target: 10,
-    getProgress: () => Math.max(0, Math.round(metrics().totalR))
+    getProgress: () => Math.max(0, Math.round(metrics().totalR || 0))
   },
   {
     id: "hot_streak",
@@ -855,7 +857,7 @@ const BADGES = [
     desc: "Attach chart screenshots to 5 trades",
     category: "Journaling",
     target: 5,
-    getProgress: () => closedTrades().filter(t => imageFor(t)).length
+    getProgress: () => visibleTrades().filter(t => imageFor(t)).length
   },
   {
     id: "journal_master",

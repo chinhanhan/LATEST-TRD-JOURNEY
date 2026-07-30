@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v80-add-orange-sop-option-to-all-trade-form-selects';
+const CACHE_NAME = 'trd-journey-v81-multi-bugfix-parse-markdown-string-badges-nan-rvalue-pnl-fallback';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v80-add-orange-sop-option-to-all-trade-form-selects',
-  './audioEngine.js?v=v80-add-orange-sop-option-to-all-trade-form-selects',
-  './dataEngine.js?v=v80-add-orange-sop-option-to-all-trade-form-selects',
-  './dock.js?v=v80-add-orange-sop-option-to-all-trade-form-selects',
-  './gallery.js?v=v80-add-orange-sop-option-to-all-trade-form-selects',
-  './app.js?v=v80-add-orange-sop-option-to-all-trade-form-selects',
+  './styles.css?v=v81-multi-bugfix-parse-markdown-string-badges-nan-rvalue-pnl-fallback',
+  './audioEngine.js?v=v81-multi-bugfix-parse-markdown-string-badges-nan-rvalue-pnl-fallback',
+  './dataEngine.js?v=v81-multi-bugfix-parse-markdown-string-badges-nan-rvalue-pnl-fallback',
+  './dock.js?v=v81-multi-bugfix-parse-markdown-string-badges-nan-rvalue-pnl-fallback',
+  './gallery.js?v=v81-multi-bugfix-parse-markdown-string-badges-nan-rvalue-pnl-fallback',
+  './app.js?v=v81-multi-bugfix-parse-markdown-string-badges-nan-rvalue-pnl-fallback',
   './manifest.json'
 ];
 
