@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v84-full-audit-fix-sop3tier-all-surfaces';
+const CACHE_NAME = 'trd-journey-v85-fix-backup-json-use-idb-not-localstorage';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v84-full-audit-fix-sop3tier-all-surfaces',
-  './audioEngine.js?v=v84-full-audit-fix-sop3tier-all-surfaces',
-  './dataEngine.js?v=v84-full-audit-fix-sop3tier-all-surfaces',
-  './dock.js?v=v84-full-audit-fix-sop3tier-all-surfaces',
-  './gallery.js?v=v84-full-audit-fix-sop3tier-all-surfaces',
-  './app.js?v=v84-full-audit-fix-sop3tier-all-surfaces',
+  './styles.css?v=v85-fix-backup-json-use-idb-not-localstorage',
+  './audioEngine.js?v=v85-fix-backup-json-use-idb-not-localstorage',
+  './dataEngine.js?v=v85-fix-backup-json-use-idb-not-localstorage',
+  './dock.js?v=v85-fix-backup-json-use-idb-not-localstorage',
+  './gallery.js?v=v85-fix-backup-json-use-idb-not-localstorage',
+  './app.js?v=v85-fix-backup-json-use-idb-not-localstorage',
   './manifest.json'
 ];
 

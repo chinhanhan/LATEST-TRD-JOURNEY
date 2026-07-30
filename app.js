@@ -262,6 +262,10 @@ async function idbSet(key, val) {
   });
 }
 
+// Expose IDB helpers globally so dataEngine.js can use them for backup/restore
+window.idbGet = idbGet;
+window.idbSet = idbSet;
+
 async function loadState() {
   try {
     const idbSaved = await idbGet(STORAGE_KEY);

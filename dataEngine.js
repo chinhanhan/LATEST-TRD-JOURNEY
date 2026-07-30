@@ -22,63 +22,117 @@ class TRDDataEngine {
     }
   }
 
-  exportJSON() {
-    const trades = this.getTrades();
-    const sop = localStorage.getItem("trd_sop_v1") || "";
-    const accounts = localStorage.getItem("trd_accounts_v1") || "";
-    const settings = localStorage.getItem("trd_settings_v1") || "";
-    const plans = localStorage.getItem("trd_daily_plans_v1") || "";
-    const reviews = localStorage.getItem("trd_daily_reviews_v1") || "";
-    const reflections = localStorage.getItem("trd_reflections_v1") || "";
-    const playbook = localStorage.getItem("trd_playbook_v1") || "";
+  async exportJSON() {
+    try {
+      // Read directly from IndexedDB — the single source of truth used by app.js
+      const STORAGE_KEY = "trd-journey-os-v1";
+      let stateData = null;
+      try {
+        if (window.idbGet) {
+          stateData = await window.idbGet(STORAGE_KEY);
+        }
+      } catch (e) {}
 
-    const backupData = {
-      app: "TRD Journey",
-      version: "1.1",
-      exportDate: new Date().toISOString(),
-      trades,
-      sop,
-      accounts,
-      settings,
-      plans,
-      reviews,
-      reflections,
-      playbook
-    };
+      // Fallback: use live window.state if IDB not available yet
+      if (!stateData && window.state) {
+        stateData = JSON.parse(JSON.stringify(window.state));
+      }
 
-    const jsonStr = JSON.stringify(backupData, null, 2);
-    const blob = new Blob([jsonStr], { type: "application/json" });
-    const dateStr = new Date().toISOString().slice(0, 10);
-    this.downloadBlob(blob, `TRD_Journey_Backup_${dateStr}.json`);
+      // Final fallback: localStorage (legacy support)
+      if (!stateData) {
+        const lsRaw = localStorage.getItem(STORAGE_KEY);
+        if (lsRaw) stateData = JSON.parse(lsRaw);
+      }
 
-    if (window.appleAudioEngine) window.appleAudioEngine.play('checklist');
+      if (!stateData) {
+        alert("No data found to back up.");
+        return;
+      }
+
+      const backupData = {
+        app: "TRD Journey",
+        version: "2.0",
+        exportDate: new Date().toISOString(),
+        state: stateData
+      };
+
+      const jsonStr = JSON.stringify(backupData, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const dateStr = new Date().toISOString().slice(0, 10);
+      this.downloadBlob(blob, `TRD_Journey_Backup_${dateStr}.json`);
+
+      if (window.appleAudioEngine) window.appleAudioEngine.play('checklist');
+    } catch (err) {
+      alert("Export failed: " + err.message);
+    }
   }
 
-  importJSON(fileInput) {
+  async importJSON(fileInput) {
     if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
     const file = fileInput.files[0];
     const reader = new FileReader();
 
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const data = JSON.parse(e.target.result);
-        if (data.trades && Array.isArray(data.trades)) {
-          localStorage.setItem("trd_trades_v1", JSON.stringify(data.trades));
-          if (data.sop) localStorage.setItem("trd_sop_v1", typeof data.sop === 'string' ? data.sop : JSON.stringify(data.sop));
-          if (data.accounts) localStorage.setItem("trd_accounts_v1", typeof data.accounts === 'string' ? data.accounts : JSON.stringify(data.accounts));
-          if (data.settings) localStorage.setItem("trd_settings_v1", typeof data.settings === 'string' ? data.settings : JSON.stringify(data.settings));
-          if (data.plans) localStorage.setItem("trd_daily_plans_v1", typeof data.plans === 'string' ? data.plans : JSON.stringify(data.plans));
-          if (data.reviews) localStorage.setItem("trd_daily_reviews_v1", typeof data.reviews === 'string' ? data.reviews : JSON.stringify(data.reviews));
-          if (data.reflections) localStorage.setItem("trd_reflections_v1", typeof data.reflections === 'string' ? data.reflections : JSON.stringify(data.reflections));
-          if (data.playbook) localStorage.setItem("trd_playbook_v1", typeof data.playbook === 'string' ? data.playbook : JSON.stringify(data.playbook));
+        const STORAGE_KEY = "trd-journey-os-v1";
 
-          alert(`Successfully imported ${data.trades.length} trade record(s) and system data! Page will reload now.`);
-          window.location.reload();
+        // --- Support both new v2.0 format (data.state) and legacy format ---
+        let stateToRestore = null;
+
+        if (data.state && typeof data.state === "object") {
+          // New v2.0 backup format: { app, version, exportDate, state: {...} }
+          stateToRestore = data.state;
+        } else if (data.trades && Array.isArray(data.trades)) {
+          // Legacy v1.x backup format: { trades: [], sop: "...", accounts: "...", ... }
+          // Reconstruct a minimal state object from the old fragmented format
+          let sops = [];
+          let accounts = [];
+          let preferences = {};
+          let dailyPlans = {};
+          let dailyReviews = {};
+          let reflections = {};
+          let playbook = {};
+
+          try { sops = data.sop ? (typeof data.sop === "string" ? JSON.parse(data.sop) : data.sop) : []; } catch (e) {}
+          try { accounts = data.accounts ? (typeof data.accounts === "string" ? JSON.parse(data.accounts) : data.accounts) : []; } catch (e) {}
+          try { preferences = data.settings ? (typeof data.settings === "string" ? JSON.parse(data.settings) : data.settings) : {}; } catch (e) {}
+          try { dailyPlans = data.plans ? (typeof data.plans === "string" ? JSON.parse(data.plans) : data.plans) : {}; } catch (e) {}
+          try { dailyReviews = data.reviews ? (typeof data.reviews === "string" ? JSON.parse(data.reviews) : data.reviews) : {}; } catch (e) {}
+          try { reflections = data.reflections ? (typeof data.reflections === "string" ? JSON.parse(data.reflections) : data.reflections) : {}; } catch (e) {}
+          try { playbook = data.playbook ? (typeof data.playbook === "string" ? JSON.parse(data.playbook) : data.playbook) : {}; } catch (e) {}
+
+          stateToRestore = {
+            version: 1,
+            trades: data.trades,
+            sops: Array.isArray(sops) ? sops : [],
+            accounts: Array.isArray(accounts) ? accounts : [],
+            preferences,
+            dailyPlans,
+            dailyReviews,
+            reflections,
+            playbook,
+            activeSopId: sops[0]?.id || "",
+            activeAccountId: accounts[0]?.id || ""
+          };
         } else {
-          alert("Invalid backup file format. Missing trades array.");
+          alert("Invalid backup file: not a recognized TRD Journey backup format.");
+          return;
         }
+
+        // Write to IndexedDB (primary store)
+        if (window.idbSet) {
+          await window.idbSet(STORAGE_KEY, stateToRestore);
+        } else {
+          // Fallback: write to localStorage
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToRestore));
+        }
+
+        const tradeCount = (stateToRestore.trades || []).length;
+        alert(`✅ Successfully restored ${tradeCount} trade record(s)!\nPage will reload now.`);
+        window.location.reload();
       } catch (err) {
-        alert("Error parsing backup JSON file: " + err.message);
+        alert("Error restoring backup: " + err.message);
       }
     };
 
