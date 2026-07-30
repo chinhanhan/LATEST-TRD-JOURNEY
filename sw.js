@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v72-multi-bugfix-csv-escaping-rvalue-finite-json-full-backup';
+const CACHE_NAME = 'trd-journey-v73-3tier-sop-orange-incomplete-status';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v72-multi-bugfix-csv-escaping-rvalue-finite-json-full-backup',
-  './audioEngine.js?v=v72-multi-bugfix-csv-escaping-rvalue-finite-json-full-backup',
-  './dataEngine.js?v=v72-multi-bugfix-csv-escaping-rvalue-finite-json-full-backup',
-  './dock.js?v=v72-multi-bugfix-csv-escaping-rvalue-finite-json-full-backup',
-  './gallery.js?v=v72-multi-bugfix-csv-escaping-rvalue-finite-json-full-backup',
-  './app.js?v=v72-multi-bugfix-csv-escaping-rvalue-finite-json-full-backup',
+  './styles.css?v=v73-3tier-sop-orange-incomplete-status',
+  './audioEngine.js?v=v73-3tier-sop-orange-incomplete-status',
+  './dataEngine.js?v=v73-3tier-sop-orange-incomplete-status',
+  './dock.js?v=v73-3tier-sop-orange-incomplete-status',
+  './gallery.js?v=v73-3tier-sop-orange-incomplete-status',
+  './app.js?v=v73-3tier-sop-orange-incomplete-status',
   './manifest.json'
 ];
 

@@ -477,8 +477,23 @@ function closedTrades(trades = visibleTrades()) {
   return trades.filter((trade) => trade.status !== "open");
 }
 
-function openTrades(trades = visibleTrades()) {
-  return trades.filter((trade) => trade.status === "open");
+function getTradeRuleStatus(trade) {
+  if (!trade) return "followed";
+  if (trade.ruleStatus) return trade.ruleStatus;
+  if (trade.rule === "incomplete" || trade.rule === "Incomplete" || trade.rule === "orange") return "incomplete";
+  if (trade.rule === false || trade.rule === "false" || trade.rule === "No" || trade.rule === "broken") return "violated";
+  return "followed";
+}
+
+function ruleTag(trade) {
+  const status = getTradeRuleStatus(trade);
+  if (status === "incomplete") {
+    return '<span class="tag orange" title="SOP incomplete / sandbox trade">🟠 SOP Incomplete</span>';
+  }
+  if (status === "violated") {
+    return '<span class="tag bad" title="SOP rule broken">🔴 Violated</span>';
+  }
+  return '<span class="tag good" title="Strictly followed SOP">🟢 Followed</span>';
 }
 
 function rValue(trade) {
@@ -1486,7 +1501,7 @@ function timelineCard(trade) {
       ${img ? `<img class="thumbnail" src="${img}" alt="Chart screenshot" />` : ""}
       ${trade.tradingViewUrl ? '<span class="tag info">TV</span>' : ""}
       <span class="tag">${safe(trade.grade)}</span>
-      <span class="tag ${trade.rule ? "good" : "bad"}">${trade.rule ? "Followed" : "Broken"}</span>
+      ${ruleTag(trade)}
     </div>
     <div class="muted" style="margin:8px 0; font-size:0.88rem; line-height:1.5;">${parseMarkdown(safe(trade.status === "open" ? trade.entryPlan || "In progress" : trade.exitNote || trade.note || "Record completed."))}</div>
     <div class="row-actions">
@@ -1552,7 +1567,7 @@ function tradeRow(trade) {
     <td>${safe(trade.setup)}</td>
     <td>${resultTag(trade)}</td>
     <td>${safe(trade.grade)}</td>
-    <td>${trade.rule ? "Yes" : "No"}</td>
+    <td>${ruleTag(trade)}</td>
     <td>${mediaBadges(trade)}</td>
     <td>
       <button class="ghost-button action-trigger-btn" data-trade-actions="${trade.id}" style="padding:4px 8px; min-height:auto;">•••</button>
@@ -1582,7 +1597,7 @@ function tradeCard(trade) {
       ${resultTag(trade)}
     </div>
     <div class="trade-card-meta" style="margin-top:8px;">
-      <span>${trade.status === "open" ? safe(trade.entryPlan || "In progress") : `Grade ${safe(trade.grade)} | Rule ${trade.rule ? "Yes" : "No"}`}</span>
+      <span>${trade.status === "open" ? safe(trade.entryPlan || "In progress") : `Grade ${safe(trade.grade)} | ${ruleTag(trade)}`}</span>
       ${img ? `<img class="thumbnail" src="${img}" alt="Chart screenshot" />` : ""}
     </div>
     ${trade.status === "open" ? `
@@ -2348,7 +2363,8 @@ function editTrade(id) {
   form.grade.value = trade.grade;
   form.risk.value = trade.risk;
   form.pnl.value = trade.status === "open" ? "" : trade.pnl;
-  form.rule.value = String(trade.rule);
+  const rSt = getTradeRuleStatus(trade);
+  form.rule.value = rSt === "incomplete" ? "incomplete" : (rSt === "violated" ? "false" : "true");
   form.emotion.value = trade.emotion;
   form.tradingViewUrl.value = trade.tradingViewUrl || "";
   form.imageUrl.value = trade.imageUrl || "";
@@ -2398,7 +2414,8 @@ async function saveTradeFromForm(event) {
       grade: form.grade.value,
       risk: Number(form.risk.value),
       pnl: hasResult ? Number(form.pnl.value) : "",
-      rule: form.rule.value === "true",
+      rule: form.rule.value === "incomplete" ? "incomplete" : form.rule.value === "true",
+      ruleStatus: form.rule.value === "incomplete" ? "incomplete" : (form.rule.value === "false" ? "violated" : "followed"),
       emotion: form.emotion.value,
       note: form.note.value,
       entryPlan: form.entryPlan.value.trim(),
@@ -2515,7 +2532,8 @@ async function closeTradeFromModal(event) {
     trade.closedAt = closeTimeVal.split("T")[0];
     if (rInput !== "") trade.rMultiple = Number(rInput);
     trade.pnl = pnlInput !== "" ? Number(pnlInput) : (rInput !== "" ? Number(rInput) * Number(trade.risk || 0) : 0);
-    trade.rule = form.rule.value === "true";
+    trade.rule = form.rule.value === "incomplete" ? "incomplete" : form.rule.value === "true";
+    trade.ruleStatus = form.rule.value === "incomplete" ? "incomplete" : (form.rule.value === "false" ? "violated" : "followed");
     trade.emotion = form.emotion.value;
     trade.exitNote = form.exitNote.value.trim();
     if (imagesData.length) trade.images = imagesData;
@@ -3774,9 +3792,14 @@ function getDisciplineStreak() {
   const closed = closedTrades().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
   let streak = 0;
   for (let i = closed.length - 1; i >= 0; i--) {
-    if (closed[i].rule === true || closed[i].rule === "true" || closed[i].rule === "Yes" || closed[i].rule === "y") {
+    const status = getTradeRuleStatus(closed[i]);
+    if (status === "followed") {
       streak++;
+    } else if (status === "incomplete") {
+      // 🟠 Incomplete SOP / Sandbox trade: preserves the discipline streak 🔥
+      continue;
     } else {
+      // 🔴 Violated SOP: resets the discipline streak
       break;
     }
   }
