@@ -564,9 +564,11 @@ function formatTimeDisplay(isoStr) {
   const s = String(isoStr).trim().replace(" ", "T");
   if (s.includes("T")) {
     const [d, t] = s.split("T");
-    return `${d.slice(5).replace("-", ".")} ${t.slice(0, 5)}`;
+    const datePart = d.length >= 10 ? d.slice(5).replace(/-/g, ".") : d;
+    const timePart = (t || "").slice(0, 5);
+    return timePart ? `${datePart} ${timePart}` : datePart;
   }
-  return s.slice(5).replace("-", ".");
+  return s.length >= 10 ? s.slice(5).replace(/-/g, ".") : s;
 }
 
 function nowDatetimeLocal() {
@@ -2342,6 +2344,8 @@ function resetTradeForm() {
   form.targetPlan.value = "";
   form.exitNote.value = "";
   form.note.value = "";
+  form.rule.value = "true";
+  document.getElementById("tradeFormNewsAlert")?.classList.add("hidden");
   const adv = document.querySelector(".advanced-fields");
   if (adv) adv.open = false;
   const mode = document.getElementById("tradeFormMode");
@@ -2408,6 +2412,20 @@ async function saveTradeFromForm(event) {
     const tradeDate = openTimeVal ? openTimeVal.split("T")[0] : form.date.value;
     const closedAtDate = closeTimeVal ? closeTimeVal.split("T")[0] : (nextStatus === "closed" ? tradeDate : "");
 
+    let finalImages = [...(current.images || [])];
+    if (current.imageData && !finalImages.includes(current.imageData)) {
+      finalImages.unshift(current.imageData);
+    }
+    const enteredUrl = form.imageUrl.value.trim();
+    if (enteredUrl && !finalImages.includes(enteredUrl)) {
+      finalImages.push(enteredUrl);
+    }
+    if (imagesData.length) {
+      imagesData.forEach(img => {
+        if (!finalImages.includes(img)) finalImages.push(img);
+      });
+    }
+
     const trade = normalizeTrade({
       ...current,
       id: form.elements.id.value || uid(),
@@ -2433,8 +2451,8 @@ async function saveTradeFromForm(event) {
       targetPlan: form.targetPlan.value.trim(),
       exitNote: form.exitNote.value.trim(),
       tradingViewUrl: form.tradingViewUrl.value.trim(),
-      imageUrl: form.imageUrl.value.trim(),
-      images: imagesData.length ? imagesData : (current.images || (current.imageData ? [current.imageData] : [])),
+      imageUrl: enteredUrl,
+      images: finalImages,
       imageData: "",
       checklist: {
         hasPlan: form.hasPlan.checked,
