@@ -217,7 +217,8 @@ function defaultState() {
     dailyPlans: {
       [todayISO()]: { bias: "Wait for confirmation near key levels.", levels: "Previous high / low, session open", allowedSetups: "Opening Drive, Liquidity Sweep", maxLossR: -2, maxTrades: 3 }
     },
-    dailyReviews: {}
+    dailyReviews: {},
+    redNews: []
   };
   return ensureSopState(base);
 }
@@ -306,6 +307,7 @@ function normalizeState(raw) {
     trades: (raw.trades || []).map(normalizeTrade),
     dailyPlans: raw.dailyPlans || {},
     dailyReviews: raw.dailyReviews || {},
+    redNews: Array.isArray(raw.redNews) ? raw.redNews : [],
     sops: raw.sops || [],
     accounts: raw.accounts || [],
     activeSopId: raw.activeSopId || "",
@@ -443,6 +445,38 @@ async function saveState() {
   } catch (e) {
     console.error("IDB save failed", e);
   }
+}
+
+// ── Red News Management ─────────────────────────────────────────────────────
+function addRedNewsEvent(evt) {
+  if (!state.redNews) state.redNews = [];
+  const entry = {
+    id: uid(),
+    date: evt.date || todayISO(),
+    time: evt.time || "00:00",
+    currency: (evt.currency || "USD").toUpperCase(),
+    title: evt.title || "News Event",
+    impact: "red",
+    forecast: evt.forecast || "",
+    previous: evt.previous || "",
+    actual: evt.actual || ""
+  };
+  state.redNews.push(entry);
+  saveState();
+  return entry;
+}
+
+function deleteRedNewsEvent(id) {
+  if (!state.redNews) return;
+  state.redNews = state.redNews.filter(e => e.id !== id);
+  saveState();
+}
+
+function clearPastRedNewsEvents() {
+  if (!state.redNews) return;
+  const cutoff = todayISO();
+  state.redNews = state.redNews.filter(e => e.date >= cutoff);
+  saveState();
 }
 
 function activeSop() {
@@ -5054,6 +5088,30 @@ function initNewsBar() {
     });
   }
 
+  // Expose news management to global scope for inline HTML handlers
+  window.addRedNewsEvent = addRedNewsEvent;
+  window.deleteRedNewsEvent = deleteRedNewsEvent;
+  window.clearPastRedNewsEvents = clearPastRedNewsEvents;
+
+  window.submitRedNewsEvent = function(event) {
+    event.preventDefault();
+    const date = document.getElementById("rnDate")?.value?.trim();
+    const time = document.getElementById("rnTime")?.value?.trim();
+    const currency = document.getElementById("rnCurrency")?.value?.trim();
+    const title = document.getElementById("rnTitle")?.value?.trim();
+    const forecast = document.getElementById("rnForecast")?.value?.trim();
+    const previous = document.getElementById("rnPrevious")?.value?.trim();
+    if (!date || !time || !title) return;
+    addRedNewsEvent({ date, time, currency, title, forecast, previous });
+    // Reset title/forecast/previous but keep date+currency for fast batch entry
+    document.getElementById("rnTitle").value = "";
+    document.getElementById("rnForecast").value = "";
+    document.getElementById("rnPrevious").value = "";
+    renderRedNewsTable(currentRedNewsCurrencyFilter);
+    renderHomeRedNewsWidget();
+    updateNewsBarCountdown();
+  };
+
   updateNewsBarCountdown();
   renderHomeRedNewsWidget();
   if (!window.newsBarTimer) {
@@ -5101,23 +5159,35 @@ function renderRedNewsTable(currency = "All") {
   if (!tbody || !window.forexFactoryRedNewsEngine) return;
 
   const events = window.forexFactoryRedNewsEngine.filterByCurrency(currency);
+
+  // Always show the add-event form in a fixed area above the table
+  const addFormEl = document.getElementById("redNewsAddForm");
+  if (addFormEl) addFormEl.style.display = "";
+
   if (!events.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:24px; color:var(--muted);">No high-impact red news found for ${safe(currency)}.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:32px 24px;">
+      <div style="font-size:2rem; margin-bottom:10px;">🗓️</div>
+      <div style="font-weight:700; margin-bottom:6px;">No events added yet${currency !== 'All' ? ' for ' + safe(currency) : ''}</div>
+      <div style="color:var(--muted); font-size:0.82rem; max-width:320px; margin:0 auto; line-height:1.5;">
+        Go to <strong>forexfactory.com/calendar</strong>, find the red-folder 🔴 events for the week,<br>and add them using the form above.
+      </div>
+    </td></tr>`;
     return;
   }
 
   tbody.innerHTML = events.map(e => {
     const currClass = e.currency.toLowerCase();
-    const actualClass = !e.actual ? "style='color:var(--muted);'" : (e.actual === e.forecast || e.actual.startsWith("0")) ? "style='color:var(--text); font-weight:700;'" : e.actual.startsWith("-") ? "style='color:#ef4444; font-weight:700;'" : "style='color:#22c55e; font-weight:700;'";
+    const actualClass = !e.actual ? "style='color:var(--muted);'" : e.actual.includes("-") ? "style='color:#ef4444; font-weight:700;'" : "style='color:#22c55e; font-weight:700;'";
     return `
       <tr>
         <td><strong>${safe(e.date)}</strong> <span style="color:var(--muted); margin-left:4px;">${safe(e.time)}</span></td>
         <td><span class="badge-currency ${currClass}">${safe(e.currency)}</span></td>
-        <td><span class="red-folder-icon" title="High Impact Red Folder">🔴</span></td>
+        <td><span class="red-folder-icon" title="High Impact">🔴</span></td>
         <td><strong>${safe(e.title)}</strong></td>
         <td ${actualClass}>${safe(e.actual || "—")}</td>
         <td>${safe(e.forecast || "—")}</td>
         <td>${safe(e.previous || "—")}</td>
+        <td><button onclick="window.forexFactoryRedNewsEngine.deleteEvent('${safe(e.id)}'); renderRedNewsTable(currentRedNewsCurrencyFilter); renderHomeRedNewsWidget(); updateNewsBarCountdown();" style="background:none; border:none; cursor:pointer; color:var(--red); font-size:1rem; padding:2px 6px;" title="Delete event">✕</button></td>
       </tr>
     `;
   }).join("");
@@ -5137,7 +5207,9 @@ function renderHomeRedNewsWidget() {
   }
 
   if (!displayEvents.length) {
-    bodyEl.innerHTML = `<div style="color:var(--muted); font-size:0.8rem; padding:8px 0;">No upcoming high-impact red folder events found.</div>`;
+    bodyEl.innerHTML = `<div style="color:var(--muted); font-size:0.8rem; padding:8px 0; line-height:1.5;">
+      No upcoming events. Open the <button onclick="openRedNewsModal()" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:0.8rem;padding:0;text-decoration:underline;">News Calendar</button> to add real red-folder events from ForexFactory.
+    </div>`;
     return;
   }
 

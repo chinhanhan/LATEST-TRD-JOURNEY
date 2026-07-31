@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v85-fix-backup-json-use-idb-not-localstorage';
+const CACHE_NAME = 'trd-journey-v86-news-manual-entry-delete-fake-data';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v85-fix-backup-json-use-idb-not-localstorage',
-  './audioEngine.js?v=v85-fix-backup-json-use-idb-not-localstorage',
-  './dataEngine.js?v=v85-fix-backup-json-use-idb-not-localstorage',
-  './dock.js?v=v85-fix-backup-json-use-idb-not-localstorage',
-  './gallery.js?v=v85-fix-backup-json-use-idb-not-localstorage',
-  './app.js?v=v85-fix-backup-json-use-idb-not-localstorage',
+  './styles.css?v=v86-news-manual-entry-delete-fake-data',
+  './audioEngine.js?v=v86-news-manual-entry-delete-fake-data',
+  './dataEngine.js?v=v86-news-manual-entry-delete-fake-data',
+  './dock.js?v=v86-news-manual-entry-delete-fake-data',
+  './gallery.js?v=v86-news-manual-entry-delete-fake-data',
+  './app.js?v=v86-news-manual-entry-delete-fake-data',
   './manifest.json'
 ];
 

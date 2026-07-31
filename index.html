@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=v85-fix-backup-json-use-idb-not-localstorage" />
+    <link rel="stylesheet" href="styles.css?v=v86-news-manual-entry-delete-fake-data" />
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -995,17 +995,37 @@
             <button class="filter-chip" data-currency="JPY">🇯🇵 JPY</button>
             <button class="filter-chip" data-currency="CAD">🇨🇦 CAD</button>
           </div>
+          <!-- Add Event Form -->
+          <form id="redNewsAddForm" onsubmit="window.submitRedNewsEvent(event)" style="background:var(--paper); border:1px solid var(--hairline); border-radius:12px; padding:14px 16px; margin-bottom:14px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end;">
+            <div style="font-size:0.78rem; font-weight:700; color:var(--muted); width:100%; margin-bottom:2px;">
+              ➕ Add Red Folder Event from 
+              <a href="https://www.forexfactory.com/calendar" target="_blank" rel="noreferrer" style="color:var(--blue);">ForexFactory</a>
+            </div>
+            <input id="rnDate" type="date" required style="flex:1; min-width:120px;" />
+            <input id="rnTime" type="time" required placeholder="HH:MM" style="flex:0.6; min-width:90px;" />
+            <select id="rnCurrency" style="flex:0.6; min-width:80px;">
+              <option>USD</option><option>AUD</option><option>EUR</option><option>GBP</option><option>JPY</option><option>CAD</option><option>CHF</option><option>NZD</option><option>CNY</option>
+            </select>
+            <input id="rnTitle" type="text" required placeholder="Event title (e.g. NFP)" style="flex:2; min-width:150px;" />
+            <input id="rnForecast" type="text" placeholder="Forecast" style="flex:0.7; min-width:80px;" />
+            <input id="rnPrevious" type="text" placeholder="Previous" style="flex:0.7; min-width:80px;" />
+            <button type="submit" class="primary-button" style="min-height:36px; padding:0 14px; font-size:0.82rem;">Add</button>
+          </form>
+          <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+            <button onclick="window.forexFactoryRedNewsEngine.clearPast(); renderRedNewsTable(currentRedNewsCurrencyFilter); renderHomeRedNewsWidget(); updateNewsBarCountdown();" class="ghost-button" style="font-size:0.75rem; padding:4px 12px; min-height:auto; color:var(--muted);">🗑 Clear past events</button>
+          </div>
           <div class="table-wrap news-table-wrap">
             <table class="news-table" id="redNewsTable">
               <thead>
                 <tr>
-                  <th>Date & Time</th>
+                  <th>Date &amp; Time</th>
                   <th>Currency</th>
                   <th>Impact</th>
                   <th>Event Title</th>
                   <th>Actual</th>
                   <th>Forecast</th>
                   <th>Previous</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody id="redNewsTableBody"></tbody>
@@ -1293,10 +1313,10 @@
     <!-- React Bits Inspired Floating Dock Container -->
     <div class="dock-outer" id="reactBitsDock"></div>
     <canvas id="clickSparkCanvas" class="click-spark-canvas"></canvas>
-    <script defer src="audioEngine.js?v=v85-fix-backup-json-use-idb-not-localstorage"></script>
-    <script defer src="dataEngine.js?v=v85-fix-backup-json-use-idb-not-localstorage"></script>
-    <script defer src="dock.js?v=v85-fix-backup-json-use-idb-not-localstorage"></script>
-    <script type="module" src="gallery.js?v=v85-fix-backup-json-use-idb-not-localstorage"></script>
-    <script defer src="app.js?v=v85-fix-backup-json-use-idb-not-localstorage"></script>
+    <script defer src="audioEngine.js?v=v86-news-manual-entry-delete-fake-data"></script>
+    <script defer src="dataEngine.js?v=v86-news-manual-entry-delete-fake-data"></script>
+    <script defer src="dock.js?v=v86-news-manual-entry-delete-fake-data"></script>
+    <script type="module" src="gallery.js?v=v86-news-manual-entry-delete-fake-data"></script>
+    <script defer src="app.js?v=v86-news-manual-entry-delete-fake-data"></script>
   </body>
 </html>

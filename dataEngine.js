@@ -293,49 +293,17 @@ class TRDDataEngine {
 }
 
 class ForexFactoryRedNewsEngine {
-  constructor() {
-    this.cacheKey = "trd_red_news_cache_v1";
-    this.events = this.loadDefaultEvents();
-  }
+  // All data comes from state.redNews (persisted in IndexedDB via app.js)
+  // NO hardcoded fake events — users manually enter real events from ForexFactory
 
-  loadDefaultEvents() {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    const todayStr = `${yyyy}-${mm}-${dd}`;
-
-    // Helper to generate dynamic dates relative to current week
-    const dateOffset = (days) => {
-      const d = new Date(today);
-      d.setDate(today.getDate() + days);
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const da = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${da}`;
-    };
-
-    return [
-      { id: "e1", date: dateOffset(-1), time: "09:30", currency: "AUD", title: "CPI m/m", impact: "red", forecast: "0.2%", previous: "-0.7%", actual: "-0.1%" },
-      { id: "e2", date: dateOffset(-1), time: "09:30", currency: "AUD", title: "CPI y/y", impact: "red", forecast: "4.0%", previous: "4.0%", actual: "3.8%" },
-      { id: "e3", date: dateOffset(-1), time: "09:30", currency: "AUD", title: "Trimmed Mean CPI m/m", impact: "red", forecast: "0.3%", previous: "0.4%", actual: "0.3%" },
-      { id: "e4", date: todayStr, time: "20:30", currency: "USD", title: "Core CPI m/m", impact: "red", forecast: "0.3%", previous: "0.3%", actual: "" },
-      { id: "e5", date: todayStr, time: "20:30", currency: "USD", title: "CPI m/m", impact: "red", forecast: "0.2%", previous: "0.1%", actual: "" },
-      { id: "e6", date: todayStr, time: "20:30", currency: "USD", title: "CPI y/y", impact: "red", forecast: "3.1%", previous: "3.3%", actual: "" },
-      { id: "e7", date: todayStr, time: "02:00", currency: "USD", title: "FOMC Statement & Rate Decision", impact: "red", forecast: "5.25%", previous: "5.50%", actual: "" },
-      { id: "e8", date: dateOffset(1), time: "20:30", currency: "USD", title: "PPI m/m", impact: "red", forecast: "0.2%", previous: "0.2%", actual: "" },
-      { id: "e9", date: dateOffset(1), time: "20:30", currency: "USD", title: "Unemployment Claims", impact: "red", forecast: "220K", previous: "223K", actual: "" },
-      { id: "e10", date: dateOffset(2), time: "20:30", currency: "USD", title: "Non-Farm Employment Change (NFP)", impact: "red", forecast: "185K", previous: "206K", actual: "" },
-      { id: "e11", date: dateOffset(2), time: "20:30", currency: "USD", title: "Unemployment Rate", impact: "red", forecast: "4.1%", previous: "4.1%", actual: "" },
-      { id: "e12", date: dateOffset(2), time: "20:30", currency: "CAD", title: "Employment Change", impact: "red", forecast: "22.5K", previous: "-1.4K", actual: "" },
-      { id: "e13", date: dateOffset(3), time: "14:00", currency: "EUR", title: "German Flash Manufacturing PMI", impact: "red", forecast: "43.2", previous: "43.5", actual: "" },
-      { id: "e14", date: dateOffset(3), time: "19:00", currency: "GBP", title: "Official Bank Rate", impact: "red", forecast: "5.00%", previous: "5.25%", actual: "" },
-      { id: "e15", date: dateOffset(4), time: "11:00", currency: "JPY", title: "BOJ Monetary Policy Statement", impact: "red", forecast: "0.25%", previous: "0.10%", actual: "" }
-    ];
+  getEvents() {
+    return Array.isArray(window.state?.redNews) ? window.state.redNews : [];
   }
 
   getAllRedEvents() {
-    return this.events.sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
+    return this.getEvents().slice().sort((a, b) =>
+      `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`)
+    );
   }
 
   filterByCurrency(currency = "All") {
@@ -363,7 +331,7 @@ class ForexFactoryRedNewsEngine {
     const isDateOnly = !cleanStr.includes("T");
 
     const windowMs = windowMins * 60 * 1000;
-    for (const evt of this.events) {
+    for (const evt of this.getEvents()) {
       if (isDateOnly) {
         if (evt.date === dateOnly) {
           return { event: evt, diffMins: 0, sameDay: true };
@@ -381,7 +349,21 @@ class ForexFactoryRedNewsEngine {
     }
     return null;
   }
+
+  // Delegates to app.js state management functions
+  addEvent(evt) {
+    if (window.addRedNewsEvent) return window.addRedNewsEvent(evt);
+  }
+
+  deleteEvent(id) {
+    if (window.deleteRedNewsEvent) window.deleteRedNewsEvent(id);
+  }
+
+  clearPast() {
+    if (window.clearPastRedNewsEvents) window.clearPastRedNewsEvents();
+  }
 }
 
 window.trdDataEngine = new TRDDataEngine();
 window.forexFactoryRedNewsEngine = new ForexFactoryRedNewsEngine();
+
