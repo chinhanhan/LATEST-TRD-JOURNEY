@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=v86-news-manual-entry-delete-fake-data" />
+    <link rel="stylesheet" href="styles.css?v=v87-auto-sync-forex-factory-xml-feed" />
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -983,8 +983,12 @@
             <p class="eyebrow" style="color:#ef4444; font-weight:700;">🔴 ForexFactory High Impact</p>
             <h2>Economic Calendar (红盒财经日历)</h2>
           </div>
-          <button class="icon-button sheet-close" id="closeRedNewsModalBtn" type="button" aria-label="Close sheet">✕</button>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button id="ffSyncBtn" onclick="window.syncFFNews(true)" class="ghost-button" type="button" style="font-size:0.78rem; padding:5px 12px; min-height:auto;">🔄 Sync Now</button>
+            <button class="icon-button sheet-close" id="closeRedNewsModalBtn" type="button" aria-label="Close sheet">✕</button>
+          </div>
         </div>
+        <div id="ffSyncStatus" style="font-size:0.76rem; color:var(--muted); padding:6px 20px 0; min-height:18px;"></div>
         <div class="sheet-body">
           <div class="news-currency-filters" id="newsCurrencyFilters">
             <button class="filter-chip active" data-currency="All">All Currencies</button>
@@ -1313,10 +1317,10 @@
     <!-- React Bits Inspired Floating Dock Container -->
     <div class="dock-outer" id="reactBitsDock"></div>
     <canvas id="clickSparkCanvas" class="click-spark-canvas"></canvas>
-    <script defer src="audioEngine.js?v=v86-news-manual-entry-delete-fake-data"></script>
-    <script defer src="dataEngine.js?v=v86-news-manual-entry-delete-fake-data"></script>
-    <script defer src="dock.js?v=v86-news-manual-entry-delete-fake-data"></script>
-    <script type="module" src="gallery.js?v=v86-news-manual-entry-delete-fake-data"></script>
-    <script defer src="app.js?v=v86-news-manual-entry-delete-fake-data"></script>
+    <script defer src="audioEngine.js?v=v87-auto-sync-forex-factory-xml-feed"></script>
+    <script defer src="dataEngine.js?v=v87-auto-sync-forex-factory-xml-feed"></script>
+    <script defer src="dock.js?v=v87-auto-sync-forex-factory-xml-feed"></script>
+    <script type="module" src="gallery.js?v=v87-auto-sync-forex-factory-xml-feed"></script>
+    <script defer src="app.js?v=v87-auto-sync-forex-factory-xml-feed"></script>
   </body>
 </html>

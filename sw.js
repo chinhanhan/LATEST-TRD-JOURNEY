@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v86-news-manual-entry-delete-fake-data';
+const CACHE_NAME = 'trd-journey-v87-auto-sync-forex-factory-xml-feed';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v86-news-manual-entry-delete-fake-data',
-  './audioEngine.js?v=v86-news-manual-entry-delete-fake-data',
-  './dataEngine.js?v=v86-news-manual-entry-delete-fake-data',
-  './dock.js?v=v86-news-manual-entry-delete-fake-data',
-  './gallery.js?v=v86-news-manual-entry-delete-fake-data',
-  './app.js?v=v86-news-manual-entry-delete-fake-data',
+  './styles.css?v=v87-auto-sync-forex-factory-xml-feed',
+  './audioEngine.js?v=v87-auto-sync-forex-factory-xml-feed',
+  './dataEngine.js?v=v87-auto-sync-forex-factory-xml-feed',
+  './dock.js?v=v87-auto-sync-forex-factory-xml-feed',
+  './gallery.js?v=v87-auto-sync-forex-factory-xml-feed',
+  './app.js?v=v87-auto-sync-forex-factory-xml-feed',
   './manifest.json'
 ];
 

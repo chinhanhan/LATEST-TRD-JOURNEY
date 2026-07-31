@@ -293,8 +293,7 @@ class TRDDataEngine {
 }
 
 class ForexFactoryRedNewsEngine {
-  // All data comes from state.redNews (persisted in IndexedDB via app.js)
-  // NO hardcoded fake events — users manually enter real events from ForexFactory
+  // Events come from state.redNews (IDB) — auto-synced from nfs.faireconomy.media XML feed
 
   getEvents() {
     return Array.isArray(window.state?.redNews) ? window.state.redNews : [];
@@ -314,12 +313,9 @@ class ForexFactoryRedNewsEngine {
 
   getNextRedEvent() {
     const now = new Date();
-    const sorted = this.getAllRedEvents();
-    for (const evt of sorted) {
+    for (const evt of this.getAllRedEvents()) {
       const evtDate = new Date(`${evt.date}T${evt.time}:00`);
-      if (evtDate > now) {
-        return { ...evt, eventDate: evtDate, diffMs: evtDate - now };
-      }
+      if (evtDate > now) return { ...evt, eventDate: evtDate, diffMs: evtDate - now };
     }
     return null;
   }
@@ -329,40 +325,185 @@ class ForexFactoryRedNewsEngine {
     const cleanStr = String(tradeDateStr).trim().replace(" ", "T");
     const dateOnly = cleanStr.split("T")[0];
     const isDateOnly = !cleanStr.includes("T");
-
     const windowMs = windowMins * 60 * 1000;
     for (const evt of this.getEvents()) {
       if (isDateOnly) {
-        if (evt.date === dateOnly) {
-          return { event: evt, diffMins: 0, sameDay: true };
-        }
+        if (evt.date === dateOnly) return { event: evt, diffMins: 0, sameDay: true };
       } else {
         const tradeTime = new Date(cleanStr);
         const evtTime = new Date(`${evt.date}T${evt.time}:00`);
-        if (!isNaN(tradeTime.getTime()) && !isNaN(evtTime.getTime())) {
-          const diffMs = Math.abs(tradeTime - evtTime);
-          if (diffMs <= windowMs) {
-            return { event: evt, diffMins: Math.round(diffMs / 60000), sameDay: false };
-          }
+        if (!isNaN(tradeTime) && !isNaN(evtTime) && Math.abs(tradeTime - evtTime) <= windowMs) {
+          return { event: evt, diffMins: Math.round(Math.abs(tradeTime - evtTime) / 60000), sameDay: false };
         }
       }
     }
     return null;
   }
 
-  // Delegates to app.js state management functions
-  addEvent(evt) {
-    if (window.addRedNewsEvent) return window.addRedNewsEvent(evt);
+  // ── Parse helpers ──────────────────────────────────────────────────────────
+
+  // Convert ForexFactory date "MM-DD-YYYY" → "YYYY-MM-DD"
+  _parseDate(raw) {
+    const s = (raw || "").trim();
+    const m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (m) return `${m[3]}-${m[1]}-${m[2]}`;
+    return s;
   }
 
-  deleteEvent(id) {
-    if (window.deleteRedNewsEvent) window.deleteRedNewsEvent(id);
+  // Convert 12h time "8:15am" / "12:30pm" / "Tentative" / "All Day" → 24h "HH:MM" local
+  // ForexFactory times are Eastern Time (ET). We convert to local browser time.
+  _parseTime(raw, dateYMD) {
+    const s = (raw || "").trim().toLowerCase();
+    if (!s || s === "tentative" || s === "all day" || s === "day 1" || s === "day 2") return "00:00";
+
+    const m = s.match(/^(\d{1,2}):(\d{2})(am|pm)$/);
+    if (!m) return "00:00";
+
+    let h = parseInt(m[1], 10);
+    const min = m[2];
+    const ampm = m[3];
+    if (ampm === "pm" && h !== 12) h += 12;
+    if (ampm === "am" && h === 12) h = 0;
+
+    // Build a Date in Eastern Time and convert to local
+    // ET offset: America/New_York — use Intl to get real offset
+    try {
+      const etStr = `${dateYMD}T${String(h).padStart(2,"0")}:${min}:00`;
+      // Create date as if it's ET by using a known ET timezone
+      const etDate = new Date(new Date(etStr).toLocaleString("en-US", { timeZone: "America/New_York" }));
+      const utcDate = new Date(etStr); // parsed as local
+      // Actual ET date object
+      const nyDate = new Date(
+        new Intl.DateTimeFormat("en-CA", {
+          timeZone: "America/New_York",
+          year: "numeric", month: "2-digit", day: "2-digit",
+          hour: "2-digit", minute: "2-digit", hour12: false
+        }).formatToParts(new Date(`${dateYMD}T00:00:00`))
+          .reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {})
+      );
+      // Convert ET wall-clock time to UTC then to local
+      const nyOffsetMs = (() => {
+        const probe = new Date(`${dateYMD}T12:00:00Z`);
+        const nyHour = parseInt(new Intl.DateTimeFormat("en-US", {
+          timeZone: "America/New_York", hour: "numeric", hour12: false
+        }).format(probe), 10);
+        return (12 - nyHour) * 60; // offset in minutes from UTC
+      })();
+      // ET time in UTC ms
+      const etMs = Date.UTC(
+        parseInt(dateYMD.slice(0,4)),
+        parseInt(dateYMD.slice(5,7)) - 1,
+        parseInt(dateYMD.slice(8,10)),
+        h, parseInt(min)
+      ) + nyOffsetMs * 60000;
+      const localDate = new Date(etMs);
+      const lh = String(localDate.getHours()).padStart(2, "0");
+      const lm = String(localDate.getMinutes()).padStart(2, "0");
+      return `${lh}:${lm}`;
+    } catch (e) {
+      return `${String(h).padStart(2,"0")}:${min}`;
+    }
   }
 
-  clearPast() {
-    if (window.clearPastRedNewsEvents) window.clearPastRedNewsEvents();
+  // Extract CDATA or text content from an XML element
+  _getText(el, tag) {
+    const node = el.querySelector(tag);
+    if (!node) return "";
+    return (node.textContent || "").trim();
   }
+
+  // ── Main sync method ───────────────────────────────────────────────────────
+  async syncFromFeed({ onlyHighImpact = true, clearExisting = false } = {}) {
+    const FEED_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.xml";
+    const CACHE_KEY = "trd_ff_sync_cache_v1";
+
+    // Rate-limit: only fetch once per hour
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { ts, xml } = JSON.parse(cached);
+        if (Date.now() - ts < 60 * 60 * 1000 && xml) {
+          return this._parseAndMerge(xml, { onlyHighImpact, clearExisting });
+        }
+      }
+    } catch (e) {}
+
+    try {
+      const res = await fetch(FEED_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const xml = await res.text();
+
+      // Cache for 1 hour to respect their rate limit
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), xml })); } catch (e) {}
+
+      return this._parseAndMerge(xml, { onlyHighImpact, clearExisting });
+    } catch (err) {
+      return { success: false, error: err.message, added: 0 };
+    }
+  }
+
+  _parseAndMerge(xmlText, { onlyHighImpact, clearExisting }) {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xmlText, "text/xml");
+      const eventEls = doc.querySelectorAll("event");
+
+      const parsed = [];
+      eventEls.forEach(el => {
+        const impact = this._getText(el, "impact");
+        if (onlyHighImpact && impact !== "High") return;
+
+        const rawDate = this._getText(el, "date");
+        const rawTime = this._getText(el, "time");
+        const dateYMD = this._parseDate(rawDate);
+        const timeHHMM = this._parseTime(rawTime, dateYMD);
+
+        parsed.push({
+          id: uid(),
+          date: dateYMD,
+          time: timeHHMM,
+          currency: this._getText(el, "country"),
+          title: this._getText(el, "title"),
+          impact: "red",
+          forecast: this._getText(el, "forecast"),
+          previous: this._getText(el, "previous"),
+          actual: this._getText(el, "actual") || "",
+          ffUrl: this._getText(el, "url"),
+          autoSynced: true
+        });
+      });
+
+      if (!window.state) return { success: false, error: "App not ready", added: 0 };
+      if (!Array.isArray(window.state.redNews)) window.state.redNews = [];
+
+      if (clearExisting) {
+        // Remove previously auto-synced events before re-importing
+        window.state.redNews = window.state.redNews.filter(e => !e.autoSynced);
+      }
+
+      // Deduplicate: skip events already in state with same date+time+title+currency
+      const existing = new Set(
+        window.state.redNews.map(e => `${e.date}|${e.time}|${e.currency}|${e.title}`)
+      );
+      const toAdd = parsed.filter(e => !existing.has(`${e.date}|${e.time}|${e.currency}|${e.title}`));
+      window.state.redNews.push(...toAdd);
+
+      if (window.saveState) window.saveState();
+
+      return { success: true, added: toAdd.length, total: parsed.length };
+    } catch (err) {
+      return { success: false, error: err.message, added: 0 };
+    }
+  }
+
+  // Delegates to app.js state management
+  addEvent(evt) { if (window.addRedNewsEvent) return window.addRedNewsEvent(evt); }
+  deleteEvent(id) { if (window.deleteRedNewsEvent) window.deleteRedNewsEvent(id); }
+  clearPast() { if (window.clearPastRedNewsEvents) window.clearPastRedNewsEvents(); }
 }
+
+// Helper available globally for the engine
+function uid() { return `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
 
 window.trdDataEngine = new TRDDataEngine();
 window.forexFactoryRedNewsEngine = new ForexFactoryRedNewsEngine();

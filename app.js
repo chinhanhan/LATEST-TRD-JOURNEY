@@ -5103,13 +5103,40 @@ function initNewsBar() {
     const previous = document.getElementById("rnPrevious")?.value?.trim();
     if (!date || !time || !title) return;
     addRedNewsEvent({ date, time, currency, title, forecast, previous });
-    // Reset title/forecast/previous but keep date+currency for fast batch entry
     document.getElementById("rnTitle").value = "";
     document.getElementById("rnForecast").value = "";
     document.getElementById("rnPrevious").value = "";
     renderRedNewsTable(currentRedNewsCurrencyFilter);
     renderHomeRedNewsWidget();
     updateNewsBarCountdown();
+  };
+
+  // Global sync function for button and auto-sync
+  window.syncFFNews = async function(force = false) {
+    const syncBtn = document.getElementById("ffSyncBtn");
+    const syncStatus = document.getElementById("ffSyncStatus");
+    if (syncBtn) { syncBtn.disabled = true; syncBtn.textContent = "⏳ Syncing..."; }
+    if (syncStatus) syncStatus.textContent = "Connecting to ForexFactory...";
+
+    if (force && window.forexFactoryRedNewsEngine) {
+      // Clear the 1h cache to force a fresh fetch
+      try { localStorage.removeItem("trd_ff_sync_cache_v1"); } catch(e) {}
+    }
+
+    const result = await window.forexFactoryRedNewsEngine?.syncFromFeed({ onlyHighImpact: true, clearExisting: force });
+    if (syncBtn) { syncBtn.disabled = false; syncBtn.textContent = "🔄 Sync Now"; }
+
+    if (result?.success) {
+      const msg = result.added > 0
+        ? `✅ Added ${result.added} new high-impact events (${result.total} total this week)`
+        : `✅ Already up to date (${result.total} events this week)`;
+      if (syncStatus) syncStatus.textContent = msg;
+      renderRedNewsTable(currentRedNewsCurrencyFilter);
+      renderHomeRedNewsWidget();
+      updateNewsBarCountdown();
+    } else {
+      if (syncStatus) syncStatus.textContent = `⚠️ Sync failed: ${result?.error || "Network error"}. You can add events manually below.`;
+    }
   };
 
   updateNewsBarCountdown();
@@ -5148,6 +5175,8 @@ function updateNewsBarCountdown() {
 function openRedNewsModal() {
   renderRedNewsTable(currentRedNewsCurrencyFilter);
   openSheet("redNewsModal");
+  // Auto-sync from ForexFactory when opening the modal (respects 1h rate-limit cache)
+  if (window.syncFFNews) window.syncFFNews(false);
 }
 
 function closeRedNewsModal() {
