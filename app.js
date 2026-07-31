@@ -5279,8 +5279,16 @@ function checkTradeFormNewsRisk() {
   if (nearNews) {
     const evt = nearNews.event;
     alertEl.classList.remove("hidden");
-    if (titleEl) titleEl.textContent = `🔴 ${evt.currency} High Impact Event Nearby (${evt.title})`;
-    if (metaEl) metaEl.textContent = nearNews.sameDay ? `Red folder news scheduled for ${evt.date} at ${evt.time}.` : `Trade logged within ${nearNews.diffMins} minutes of ${evt.title} (${evt.time}).`;
+    if (titleEl) titleEl.textContent = `🔴 ${evt.currency} High Impact Event (${evt.title})`;
+    if (metaEl) {
+      if (nearNews.isAllDay) {
+        metaEl.textContent = `High-impact event scheduled for today (${evt.date}) — All Day / Tentative timing.`;
+      } else if (nearNews.sameDay) {
+        metaEl.textContent = `Red folder news scheduled for ${evt.date} at ${evt.time}.`;
+      } else {
+        metaEl.textContent = `Trade logged within ${nearNews.diffMins} minutes of ${evt.title} (${evt.time}).`;
+      }
+    }
   } else {
     alertEl.classList.add("hidden");
   }

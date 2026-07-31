@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v87-auto-sync-forex-factory-xml-feed';
+const CACHE_NAME = 'trd-journey-v88-audit-fix-3-critical-new-feature-bugs';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v87-auto-sync-forex-factory-xml-feed',
-  './audioEngine.js?v=v87-auto-sync-forex-factory-xml-feed',
-  './dataEngine.js?v=v87-auto-sync-forex-factory-xml-feed',
-  './dock.js?v=v87-auto-sync-forex-factory-xml-feed',
-  './gallery.js?v=v87-auto-sync-forex-factory-xml-feed',
-  './app.js?v=v87-auto-sync-forex-factory-xml-feed',
+  './styles.css?v=v88-audit-fix-3-critical-new-feature-bugs',
+  './audioEngine.js?v=v88-audit-fix-3-critical-new-feature-bugs',
+  './dataEngine.js?v=v88-audit-fix-3-critical-new-feature-bugs',
+  './dock.js?v=v88-audit-fix-3-critical-new-feature-bugs',
+  './gallery.js?v=v88-audit-fix-3-critical-new-feature-bugs',
+  './app.js?v=v88-audit-fix-3-critical-new-feature-bugs',
   './manifest.json'
 ];
 

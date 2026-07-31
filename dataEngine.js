@@ -128,6 +128,13 @@ class TRDDataEngine {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToRestore));
         }
 
+        // Issue Fix #2: Instantly update in-memory state and disable auto-save before reload
+        if (window.state) {
+          Object.keys(window.state).forEach(k => delete window.state[k]);
+          Object.assign(window.state, stateToRestore);
+        }
+        window.saveState = async () => {}; // Block any async auto-save race condition during reload
+
         const tradeCount = (stateToRestore.trades || []).length;
         alert(`✅ Successfully restored ${tradeCount} trade record(s)!\nPage will reload now.`);
         window.location.reload();
@@ -326,14 +333,21 @@ class ForexFactoryRedNewsEngine {
     const dateOnly = cleanStr.split("T")[0];
     const isDateOnly = !cleanStr.includes("T");
     const windowMs = windowMins * 60 * 1000;
+
     for (const evt of this.getEvents()) {
-      if (isDateOnly) {
-        if (evt.date === dateOnly) return { event: evt, diffMins: 0, sameDay: true };
-      } else {
+      const isEvtAllDay = evt.isAllDay || evt.time === "00:00";
+
+      // Issue Fix #3: All-Day or Tentative events on the same day trigger alert regardless of trade time
+      if (evt.date === dateOnly && (isDateOnly || isEvtAllDay)) {
+        return { event: evt, diffMins: 0, sameDay: true, isAllDay: isEvtAllDay };
+      }
+
+      // Proximity check for timed events and timed trades
+      if (!isDateOnly && !isEvtAllDay) {
         const tradeTime = new Date(cleanStr);
         const evtTime = new Date(`${evt.date}T${evt.time}:00`);
         if (!isNaN(tradeTime) && !isNaN(evtTime) && Math.abs(tradeTime - evtTime) <= windowMs) {
-          return { event: evt, diffMins: Math.round(Math.abs(tradeTime - evtTime) / 60000), sameDay: false };
+          return { event: evt, diffMins: Math.round(Math.abs(tradeTime - evtTime) / 60000), sameDay: evt.date === dateOnly, isAllDay: false };
         }
       }
     }
@@ -350,14 +364,17 @@ class ForexFactoryRedNewsEngine {
     return s;
   }
 
-  // Convert 12h time "8:15am" / "12:30pm" / "Tentative" / "All Day" → 24h "HH:MM" local
-  // ForexFactory times are Eastern Time (ET). We convert to local browser time.
-  _parseTime(raw, dateYMD) {
-    const s = (raw || "").trim().toLowerCase();
-    if (!s || s === "tentative" || s === "all day" || s === "day 1" || s === "day 2") return "00:00";
+  // Issue Fix #1: Convert ForexFactory ET Date + 12h Time ("8:15am", "11:30pm") → Local YYYY-MM-DD + 24h HH:MM
+  // Accommodates midnight date shifts across timezones (e.g. 11:30 PM ET → Next Day in Asia/Australia)
+  _parseDateTime(rawDate, rawTime) {
+    const dateYMD = this._parseDate(rawDate);
+    const s = (rawTime || "").trim().toLowerCase();
+    if (!s || s === "tentative" || s === "all day" || s.startsWith("day ")) {
+      return { date: dateYMD, time: "00:00", isAllDay: true };
+    }
 
     const m = s.match(/^(\d{1,2}):(\d{2})(am|pm)$/);
-    if (!m) return "00:00";
+    if (!m) return { date: dateYMD, time: "00:00", isAllDay: true };
 
     let h = parseInt(m[1], 10);
     const min = m[2];
@@ -365,43 +382,27 @@ class ForexFactoryRedNewsEngine {
     if (ampm === "pm" && h !== 12) h += 12;
     if (ampm === "am" && h === 12) h = 0;
 
-    // Build a Date in Eastern Time and convert to local
-    // ET offset: America/New_York — use Intl to get real offset
     try {
-      const etStr = `${dateYMD}T${String(h).padStart(2,"0")}:${min}:00`;
-      // Create date as if it's ET by using a known ET timezone
-      const etDate = new Date(new Date(etStr).toLocaleString("en-US", { timeZone: "America/New_York" }));
-      const utcDate = new Date(etStr); // parsed as local
-      // Actual ET date object
-      const nyDate = new Date(
-        new Intl.DateTimeFormat("en-CA", {
-          timeZone: "America/New_York",
-          year: "numeric", month: "2-digit", day: "2-digit",
-          hour: "2-digit", minute: "2-digit", hour12: false
-        }).formatToParts(new Date(`${dateYMD}T00:00:00`))
-          .reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {})
-      );
-      // Convert ET wall-clock time to UTC then to local
-      const nyOffsetMs = (() => {
-        const probe = new Date(`${dateYMD}T12:00:00Z`);
-        const nyHour = parseInt(new Intl.DateTimeFormat("en-US", {
-          timeZone: "America/New_York", hour: "numeric", hour12: false
-        }).format(probe), 10);
-        return (12 - nyHour) * 60; // offset in minutes from UTC
-      })();
-      // ET time in UTC ms
-      const etMs = Date.UTC(
-        parseInt(dateYMD.slice(0,4)),
-        parseInt(dateYMD.slice(5,7)) - 1,
-        parseInt(dateYMD.slice(8,10)),
-        h, parseInt(min)
-      ) + nyOffsetMs * 60000;
-      const localDate = new Date(etMs);
+      const probe = new Date(`${dateYMD}T12:00:00Z`);
+      const nyHour = parseInt(new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York", hour: "numeric", hour12: false
+      }).format(probe), 10);
+      const nyOffsetHours = 12 - nyHour;
+      const offsetStr = `-${String(nyOffsetHours).padStart(2, "0")}:00`;
+
+      const localDate = new Date(`${dateYMD}T${String(h).padStart(2, "0")}:${min}:00${offsetStr}`);
+      if (isNaN(localDate.getTime())) throw new Error("Invalid date");
+
+      const yyyy = localDate.getFullYear();
+      const mm = String(localDate.getMonth() + 1).padStart(2, "0");
+      const dd = String(localDate.getDate()).padStart(2, "0");
+      const localYMD = `${yyyy}-${mm}-${dd}`;
       const lh = String(localDate.getHours()).padStart(2, "0");
       const lm = String(localDate.getMinutes()).padStart(2, "0");
-      return `${lh}:${lm}`;
+
+      return { date: localYMD, time: `${lh}:${lm}`, isAllDay: false };
     } catch (e) {
-      return `${String(h).padStart(2,"0")}:${min}`;
+      return { date: dateYMD, time: `${String(h).padStart(2, "0")}:${min}`, isAllDay: false };
     }
   }
 
@@ -417,13 +418,15 @@ class ForexFactoryRedNewsEngine {
     const FEED_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.xml";
     const CACHE_KEY = "trd_ff_sync_cache_v1";
 
-    // Rate-limit: only fetch once per hour
+    // Rate-limit: only fetch once per hour unless clearExisting (force sync) is requested
     try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (cached) {
-        const { ts, xml } = JSON.parse(cached);
-        if (Date.now() - ts < 60 * 60 * 1000 && xml) {
-          return this._parseAndMerge(xml, { onlyHighImpact, clearExisting });
+      if (!clearExisting) {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          const { ts, xml } = JSON.parse(cached);
+          if (Date.now() - ts < 60 * 60 * 1000 && xml) {
+            return this._parseAndMerge(xml, { onlyHighImpact, clearExisting });
+          }
         }
       }
     } catch (e) {}
@@ -433,7 +436,7 @@ class ForexFactoryRedNewsEngine {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const xml = await res.text();
 
-      // Cache for 1 hour to respect their rate limit
+      // Cache for 1 hour to respect rate limit
       try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), xml })); } catch (e) {}
 
       return this._parseAndMerge(xml, { onlyHighImpact, clearExisting });
@@ -455,13 +458,13 @@ class ForexFactoryRedNewsEngine {
 
         const rawDate = this._getText(el, "date");
         const rawTime = this._getText(el, "time");
-        const dateYMD = this._parseDate(rawDate);
-        const timeHHMM = this._parseTime(rawTime, dateYMD);
+        const { date, time, isAllDay } = this._parseDateTime(rawDate, rawTime);
 
         parsed.push({
           id: uid(),
-          date: dateYMD,
-          time: timeHHMM,
+          date,
+          time,
+          isAllDay: !!isAllDay,
           currency: this._getText(el, "country"),
           title: this._getText(el, "title"),
           impact: "red",
