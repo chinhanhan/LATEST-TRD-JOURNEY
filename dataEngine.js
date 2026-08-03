@@ -70,6 +70,7 @@ class TRDDataEngine {
   async importJSON(fileInput) {
     if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
     const file = fileInput.files[0];
+    fileInput.value = ""; // Reset value so change event triggers on re-select
     const reader = new FileReader();
 
     reader.onload = async (e) => {

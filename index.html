@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=v88-audit-fix-3-critical-new-feature-bugs" />
+    <link rel="stylesheet" href="styles.css?v=v89-fix-unresponsive-clicks-and-modal-triggers" />
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -1016,7 +1016,7 @@
             <button type="submit" class="primary-button" style="min-height:36px; padding:0 14px; font-size:0.82rem;">Add</button>
           </form>
           <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
-            <button onclick="window.forexFactoryRedNewsEngine.clearPast(); renderRedNewsTable(currentRedNewsCurrencyFilter); renderHomeRedNewsWidget(); updateNewsBarCountdown();" class="ghost-button" style="font-size:0.75rem; padding:4px 12px; min-height:auto; color:var(--muted);">🗑 Clear past events</button>
+            <button onclick="window.clearPastNews()" class="ghost-button" style="font-size:0.75rem; padding:4px 12px; min-height:auto; color:var(--muted);">🗑 Clear past events</button>
           </div>
           <div class="table-wrap news-table-wrap">
             <table class="news-table" id="redNewsTable">
@@ -1317,10 +1317,10 @@
     <!-- React Bits Inspired Floating Dock Container -->
     <div class="dock-outer" id="reactBitsDock"></div>
     <canvas id="clickSparkCanvas" class="click-spark-canvas"></canvas>
-    <script defer src="audioEngine.js?v=v88-audit-fix-3-critical-new-feature-bugs"></script>
-    <script defer src="dataEngine.js?v=v88-audit-fix-3-critical-new-feature-bugs"></script>
-    <script defer src="dock.js?v=v88-audit-fix-3-critical-new-feature-bugs"></script>
-    <script type="module" src="gallery.js?v=v88-audit-fix-3-critical-new-feature-bugs"></script>
-    <script defer src="app.js?v=v88-audit-fix-3-critical-new-feature-bugs"></script>
+    <script defer src="audioEngine.js?v=v89-fix-unresponsive-clicks-and-modal-triggers"></script>
+    <script defer src="dataEngine.js?v=v89-fix-unresponsive-clicks-and-modal-triggers"></script>
+    <script defer src="dock.js?v=v89-fix-unresponsive-clicks-and-modal-triggers"></script>
+    <script type="module" src="gallery.js?v=v89-fix-unresponsive-clicks-and-modal-triggers"></script>
+    <script defer src="app.js?v=v89-fix-unresponsive-clicks-and-modal-triggers"></script>
   </body>
 </html>

@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v88-audit-fix-3-critical-new-feature-bugs';
+const CACHE_NAME = 'trd-journey-v89-fix-unresponsive-clicks-and-modal-triggers';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v88-audit-fix-3-critical-new-feature-bugs',
-  './audioEngine.js?v=v88-audit-fix-3-critical-new-feature-bugs',
-  './dataEngine.js?v=v88-audit-fix-3-critical-new-feature-bugs',
-  './dock.js?v=v88-audit-fix-3-critical-new-feature-bugs',
-  './gallery.js?v=v88-audit-fix-3-critical-new-feature-bugs',
-  './app.js?v=v88-audit-fix-3-critical-new-feature-bugs',
+  './styles.css?v=v89-fix-unresponsive-clicks-and-modal-triggers',
+  './audioEngine.js?v=v89-fix-unresponsive-clicks-and-modal-triggers',
+  './dataEngine.js?v=v89-fix-unresponsive-clicks-and-modal-triggers',
+  './dock.js?v=v89-fix-unresponsive-clicks-and-modal-triggers',
+  './gallery.js?v=v89-fix-unresponsive-clicks-and-modal-triggers',
+  './app.js?v=v89-fix-unresponsive-clicks-and-modal-triggers',
   './manifest.json'
 ];
 

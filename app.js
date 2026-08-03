@@ -294,6 +294,10 @@ async function loadState() {
 }
 
 function normalizeState(raw) {
+  if (!raw) raw = {};
+  if (raw.state && typeof raw.state === "object") {
+    raw = raw.state;
+  }
   return ensureSopState({
     version: 1,
     preferences: {
@@ -2885,6 +2889,34 @@ function closeSheet(id) {
   }
 }
 
+// Expose core UI functions globally on window for inline HTML & external module triggers
+window.openSheet = openSheet;
+window.closeSheet = closeSheet;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.openRedNewsModal = openRedNewsModal;
+window.closeRedNewsModal = closeRedNewsModal;
+window.renderRedNewsTable = renderRedNewsTable;
+window.renderHomeRedNewsWidget = renderHomeRedNewsWidget;
+window.updateNewsBarCountdown = updateNewsBarCountdown;
+
+window.clearPastNews = function() {
+  if (window.forexFactoryRedNewsEngine) window.forexFactoryRedNewsEngine.clearPast();
+  if (typeof renderRedNewsTable === "function") renderRedNewsTable(currentRedNewsCurrencyFilter);
+  if (typeof renderHomeRedNewsWidget === "function") renderHomeRedNewsWidget();
+  if (typeof updateNewsBarCountdown === "function") updateNewsBarCountdown();
+};
+
+window.triggerBentoAction = function(actionStr, moduleName) {
+  if (actionStr === "open-capture") {
+    openSheet("tradeFormSheet");
+    return;
+  }
+  if (moduleName && typeof openModule === "function") {
+    openModule(moduleName);
+  }
+};
+
 function updateWorkflowTiles() {
   const day = todayISO();
   const hasPlan = !!(state.dailyPlans[day] && state.dailyPlans[day].bias);
@@ -3039,7 +3071,12 @@ document.getElementById("tradeAccountSelect")?.addEventListener("change", (event
 });
 document.getElementById("exportCsvBtn")?.addEventListener("click", exportCsv);
 document.getElementById("exportJsonBtn")?.addEventListener("click", exportJson);
-document.getElementById("importJsonInput")?.addEventListener("change", (event) => importJson(event.target.files[0]));
+document.getElementById("importJsonInput")?.addEventListener("change", (event) => {
+  if (event.target.files && event.target.files[0]) {
+    importJson(event.target.files[0]);
+    event.target.value = "";
+  }
+});
 document.getElementById("resetBtn")?.addEventListener("click", resetDemo);
 document.getElementById("addSopBtn")?.addEventListener("click", () => openSopModal());
 document.getElementById("addAccountBtn")?.addEventListener("click", () => openAccountModal());
