@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v89-fix-unresponsive-clicks-and-modal-triggers';
+const CACHE_NAME = 'trd-journey-v90-fix-initial-landing-pointer-events-and-logo-return';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v89-fix-unresponsive-clicks-and-modal-triggers',
-  './audioEngine.js?v=v89-fix-unresponsive-clicks-and-modal-triggers',
-  './dataEngine.js?v=v89-fix-unresponsive-clicks-and-modal-triggers',
-  './dock.js?v=v89-fix-unresponsive-clicks-and-modal-triggers',
-  './gallery.js?v=v89-fix-unresponsive-clicks-and-modal-triggers',
-  './app.js?v=v89-fix-unresponsive-clicks-and-modal-triggers',
+  './styles.css?v=v90-fix-initial-landing-pointer-events-and-logo-return',
+  './audioEngine.js?v=v90-fix-initial-landing-pointer-events-and-logo-return',
+  './dataEngine.js?v=v90-fix-initial-landing-pointer-events-and-logo-return',
+  './dock.js?v=v90-fix-initial-landing-pointer-events-and-logo-return',
+  './gallery.js?v=v90-fix-initial-landing-pointer-events-and-logo-return',
+  './app.js?v=v90-fix-initial-landing-pointer-events-and-logo-return',
   './manifest.json'
 ];
 

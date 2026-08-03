@@ -4589,13 +4589,15 @@ body, .panel, .workflow-tile, .metric-item, .dock-item, .app-header, input, sele
   align-items: center;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.8s ease;
+  visibility: hidden;
+  transition: opacity 0.8s ease, visibility 0.8s ease;
   overflow: hidden;
 }
 
 #landing-gallery.active {
   opacity: 1;
   pointer-events: auto;
+  visibility: visible;
 }
 
 /* === React Bits Inspired LaserFlow & Interactive Mouse Reveal Layer === */

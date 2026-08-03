@@ -2946,21 +2946,25 @@ function openModule(id, source = null) {
   const view = document.getElementById(id);
   if (!view) return;
   
-  if (window.css3dCarousel && typeof window.css3dCarousel.collapseCard === 'function') {
-    window.css3dCarousel.collapseCard();
-  }
-  
-  if (window.resetInternalSelection) window.resetInternalSelection();
-  playSound("switch");
-  if (window.appleAudioEngine) window.appleAudioEngine.play('module');
+  try {
+    if (window.css3dCarousel && typeof window.css3dCarousel.collapseCard === 'function') {
+      window.css3dCarousel.collapseCard();
+    }
+    if (window.resetInternalSelection) window.resetInternalSelection();
+    playSound("switch");
+    if (window.appleAudioEngine) window.appleAudioEngine.play('module');
+  } catch (e) {}
+
   activeModule = id;
-  window.dispatchEvent(new CustomEvent('moduleChanged', { detail: { moduleId: id } }));
+  try {
+    window.dispatchEvent(new CustomEvent('moduleChanged', { detail: { moduleId: id } }));
+  } catch (e) {}
   
   if (id === "landing-gallery") {
-    // Overlay mode: Keep the current view active, just show the gallery on top
+    // Overlay mode: Keep current view active, show landing gallery on top
     view.classList.add("active");
   } else {
-    // Normal mode: Hide the gallery overlay and switch the active view
+    // Normal mode: Hide landing gallery overlay and switch active view
     const landing = document.getElementById("landing-gallery");
     if (landing) landing.classList.remove("active");
     
@@ -2996,6 +3000,7 @@ function openModule(id, source = null) {
 }
 
 window.openModule = openModule;
+window.closeModule = closeModule;
 
 function closeModule() {
   openModule("landing-gallery");
