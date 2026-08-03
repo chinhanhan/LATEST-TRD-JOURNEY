@@ -4839,6 +4839,20 @@ function initLayoutListeners() {
 
 async function initApp() {
   try {
+    const APP_VERSION = "v92-cache-purge";
+    try {
+      if (localStorage.getItem("trd_app_version") !== APP_VERSION) {
+        localStorage.setItem("trd_app_version", APP_VERSION);
+        if ("caches" in window) {
+          caches.keys().then(keys => {
+            keys.forEach(k => {
+              if (!k.includes("v92")) caches.delete(k);
+            });
+          });
+        }
+      }
+    } catch (e) {}
+
     console.log("initApp: Starting application initialization...");
     state = await loadState();
     window.state = state;

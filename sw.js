@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v91-fix-duplicate-uid-syntax-error-and-restore-all-clicks';
+const CACHE_NAME = 'trd-journey-v92-cache-purge';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v91-fix-duplicate-uid-syntax-error-and-restore-all-clicks',
-  './audioEngine.js?v=v91-fix-duplicate-uid-syntax-error-and-restore-all-clicks',
-  './dataEngine.js?v=v91-fix-duplicate-uid-syntax-error-and-restore-all-clicks',
-  './dock.js?v=v91-fix-duplicate-uid-syntax-error-and-restore-all-clicks',
-  './gallery.js?v=v91-fix-duplicate-uid-syntax-error-and-restore-all-clicks',
-  './app.js?v=v91-fix-duplicate-uid-syntax-error-and-restore-all-clicks',
+  './styles.css?v=v92-cache-purge',
+  './audioEngine.js?v=v92-cache-purge',
+  './dataEngine.js?v=v92-cache-purge',
+  './dock.js?v=v92-cache-purge',
+  './gallery.js?v=v92-cache-purge',
+  './app.js?v=v92-cache-purge',
   './manifest.json'
 ];
 
@@ -24,9 +24,8 @@ self.addEventListener('activate', (e) => {
       return Promise.all(
         keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('message', (e) => {
