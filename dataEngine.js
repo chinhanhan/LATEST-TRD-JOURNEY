@@ -462,7 +462,7 @@ class ForexFactoryRedNewsEngine {
         const { date, time, isAllDay } = this._parseDateTime(rawDate, rawTime);
 
         parsed.push({
-          id: uid(),
+          id: _deUid(),
           date,
           time,
           isAllDay: !!isAllDay,
@@ -507,7 +507,7 @@ class ForexFactoryRedNewsEngine {
 }
 
 // Helper available globally for the engine
-function uid() { return `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
+function _deUid() { return `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
 
 window.trdDataEngine = new TRDDataEngine();
 window.forexFactoryRedNewsEngine = new ForexFactoryRedNewsEngine();

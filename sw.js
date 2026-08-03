@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v90-fix-initial-landing-pointer-events-and-logo-return';
+const CACHE_NAME = 'trd-journey-v91-fix-duplicate-uid-syntax-error-and-restore-all-clicks';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v90-fix-initial-landing-pointer-events-and-logo-return',
-  './audioEngine.js?v=v90-fix-initial-landing-pointer-events-and-logo-return',
-  './dataEngine.js?v=v90-fix-initial-landing-pointer-events-and-logo-return',
-  './dock.js?v=v90-fix-initial-landing-pointer-events-and-logo-return',
-  './gallery.js?v=v90-fix-initial-landing-pointer-events-and-logo-return',
-  './app.js?v=v90-fix-initial-landing-pointer-events-and-logo-return',
+  './styles.css?v=v91-fix-duplicate-uid-syntax-error-and-restore-all-clicks',
+  './audioEngine.js?v=v91-fix-duplicate-uid-syntax-error-and-restore-all-clicks',
+  './dataEngine.js?v=v91-fix-duplicate-uid-syntax-error-and-restore-all-clicks',
+  './dock.js?v=v91-fix-duplicate-uid-syntax-error-and-restore-all-clicks',
+  './gallery.js?v=v91-fix-duplicate-uid-syntax-error-and-restore-all-clicks',
+  './app.js?v=v91-fix-duplicate-uid-syntax-error-and-restore-all-clicks',
   './manifest.json'
 ];
 
