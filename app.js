@@ -375,7 +375,8 @@ function normalizeTrade(trade) {
     accountId: trade.accountId || "",
     reflection: trade.reflection || "",
     images: Array.isArray(trade.images) ? trade.images : [],
-    preFlightChecklist: trade.preFlightChecklist || null
+    preFlightChecklist: trade.preFlightChecklist || null,
+    sopSnapshot: trade.sopSnapshot || null
   };
 }
 
@@ -394,6 +395,7 @@ function ensureSopState(rawState) {
   ])];
   const existingSops = (rawState.sops || []).map((sop) => ({
     id: sop.id || makeSopId(sop.name),
+    version: Number(sop.version || 1),
     name: sop.name || "Untitled SOP",
     createdAt: sop.createdAt || todayISO(),
     archivedAt: sop.archivedAt || "",
@@ -2029,8 +2031,23 @@ function saveSopFromModal(event) {
   const form = event.target;
   const existing = state.sops.find((sop) => sop.id === form.dataset.sopId);
   const id = existing?.id || makeSopId(form.name.value);
+  const newChecklist = parseSopChecklistRules(form.checklist.value);
+  
+  let version = Number(existing?.version || 1);
+  if (existing) {
+    const checklistChanged = JSON.stringify(existing.checklist || []) !== JSON.stringify(newChecklist);
+    const rulesChanged = (existing.entryRules || "").trim() !== form.entryRules.value.trim() ||
+                         (existing.exitRules || "").trim() !== form.exitRules.value.trim() ||
+                         (existing.riskRules || "").trim() !== form.riskRules.value.trim() ||
+                         (existing.noTradeRules || "").trim() !== form.noTradeRules.value.trim();
+    if (checklistChanged || rulesChanged) {
+      version += 1;
+    }
+  }
+
   const sop = {
     id,
+    version,
     name: form.name.value.trim() || "Untitled SOP",
     market: form.market.value.trim() || "Futures",
     timeframe: form.timeframe.value.trim() || "Intraday",
@@ -2040,7 +2057,7 @@ function saveSopFromModal(event) {
     exitRules: form.exitRules.value.trim(),
     riskRules: form.riskRules.value.trim(),
     noTradeRules: form.noTradeRules.value.trim(),
-    checklist: parseSopChecklistRules(form.checklist.value),
+    checklist: newChecklist,
     weaknesses: form.weaknesses.value.split("\n").map((item) => item.trim()).filter(Boolean),
     createdAt: existing?.createdAt || todayISO(),
     archivedAt: form.status.value === "archived" ? existing?.archivedAt || todayISO() : ""
@@ -2478,8 +2495,36 @@ function renderPreFlightChecklist(sopId = null, existingSavedChecklist = null) {
   });
 
   updatePreFlightChecklistProgress(true);
+  updateRedNewsHUD();
 }
 
+function updateRedNewsHUD() {
+  const container = document.getElementById("preflightRedNewsAlert");
+  if (!container) return;
+
+  const tradeDate = document.querySelector("#tradeForm [name='openTime']")?.value?.split("T")[0] || todayISO();
+  const nearNews = window.forexFactoryRedNewsEngine?.isTradeNearRedNews ? window.forexFactoryRedNewsEngine.isTradeNearRedNews(tradeDate) : null;
+
+  if (nearNews && nearNews.event) {
+    container.classList.remove("hidden");
+    container.innerHTML = `
+      <div style="display:flex; align-items:center; gap:8px; width:100%;">
+        <span style="font-size:16px;">🔴</span>
+        <div>
+          <strong style="color:#ff3b30; font-size:12px;">High-Impact ${safe(nearNews.event.currency)} Red News Alert</strong>
+          <p style="margin:2px 0 0 0; font-size:11px; color:var(--text); opacity:0.9;">
+            ${safe(nearNews.event.title)} (${safe(nearNews.event.time || "Today")}) - High Volatility Risk Alert
+          </p>
+        </div>
+      </div>
+    `;
+  } else {
+    container.classList.add("hidden");
+    container.innerHTML = "";
+  }
+}
+
+window.updateRedNewsHUD = updateRedNewsHUD;
 window.renderPreFlightChecklist = renderPreFlightChecklist;
 window.updatePreFlightChecklistProgress = updatePreFlightChecklistProgress;
 
@@ -2643,6 +2688,7 @@ async function saveTradeFromForm(event) {
     }));
     const preflightPassed = preflightItems.length > 0 && preflightItems.every((i) => i.checked);
 
+    const activeSopObj = state.sops.find((s) => s.id === form.sopId.value) || activeSop();
     const trade = normalizeTrade({
       ...current,
       id: form.elements.id.value || uid(),
@@ -2682,6 +2728,13 @@ async function saveTradeFromForm(event) {
         passed: preflightPassed,
         items: preflightItems,
         checkedAt: current.preFlightChecklist?.checkedAt || new Date().toISOString()
+      },
+      sopSnapshot: current.sopSnapshot || {
+        version: activeSopObj?.version || 1,
+        sopId: activeSopObj?.id || "",
+        sopName: activeSopObj?.name || "",
+        savedAt: new Date().toISOString(),
+        checklist: parseSopChecklistRules(activeSopObj?.checklist)
       }
     });
     const index = state.trades.findIndex((item) => item.id === trade.id);
@@ -2844,10 +2897,25 @@ function openDetail(id) {
     `;
   }
 
+  const sopVer = trade.sopSnapshot?.version || 1;
+  const snapshotDrawer = trade.sopSnapshot?.checklist?.length
+    ? `
+      <details class="sop-snapshot-drawer" style="margin:12px 0; padding:10px 14px; border-radius:14px; background:rgba(0,113,227,0.06); border:1px solid rgba(0,113,227,0.2);">
+        <summary style="font-size:12px; font-weight:600; color:var(--blue); cursor:pointer; display:flex; align-items:center; justify-content:space-between;">
+          <span>📜 SOP v${sopVer} 开仓规则快照 (Checklist at Entry)</span>
+          <span class="tag info" style="font-size:10px; padding:2px 6px;">v${sopVer} Snapshot</span>
+        </summary>
+        <ul style="margin:8px 0 0 18px; font-size:12px; color:var(--text); line-height:1.5;">
+          ${(trade.sopSnapshot.checklist || []).map((item) => `<li>${safe(item)}</li>`).join("")}
+        </ul>
+      </details>
+    `
+    : "";
+
   const preflightHtml = trade.preFlightChecklist?.passed
     ? `
       <div class="preflight-detail-box" style="margin:14px 0; padding:12px 14px; border-radius:14px; background:rgba(52,199,89,0.08); border:1px solid rgba(52,199,89,0.3);">
-        <strong style="color:#34c759; display:flex; align-items:center; gap:6px; font-size:13px;">✓ 100% Pre-Flight Verified (开仓前 5 项风控检查全通过)</strong>
+        <strong style="color:#34c759; display:flex; align-items:center; gap:6px; font-size:13px;">✓ 100% Pre-Flight Verified (开仓前风控检查全通过)</strong>
         <ul style="margin:8px 0 0 18px; font-size:12px; color:var(--text); line-height:1.6;">
           ${(trade.preFlightChecklist.items || []).map((i) => `<li>${safe(i.text)}</li>`).join("")}
         </ul>
@@ -2860,10 +2928,12 @@ function openDetail(id) {
       <div class="insight-grid">${[
         insightCard("Symbol", trade.symbol, trade.direction),
         insightCard("Status", trade.status === "open" ? "Open" : "Closed", trade.status === "open" ? "Not in statistics yet" : formatR(rValue(trade))),
-        insightCard("SOP", sopName(trade.sopId), accountName(trade.accountId)),
+        insightCard("SOP", `${sopName(trade.sopId)} (v${sopVer})`, accountName(trade.accountId)),
         insightCard("Setup", trade.setup, `Grade ${trade.grade}`),
         insightCard("Process", getTradeRuleStatus(trade) === "incomplete" ? "SOP Incomplete" : (getTradeRuleStatus(trade) === "violated" ? "Broken" : "Followed"), trade.emotion)
       ].join("")}</div>
+      ${snapshotDrawer}
+      ${preflightHtml}
       ${imageHtml}
       <div class="rich-text-content" style="margin:20px 0;">${parseMarkdown(safe(trade.status === "open" ? trade.entryPlan || "No entry plan." : trade.exitNote || trade.note || "No note."))}</div>
       <div class="row-actions">

@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v99-dimension1-ui-ux-design-tokens-and-skeleton-shimmer';
+const CACHE_NAME = 'trd-journey-v100-dimension2-sop-version-snapshotting-and-red-news-hud';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v99-dimension1-ui-ux-design-tokens-and-skeleton-shimmer',
-  './audioEngine.js?v=v99-dimension1-ui-ux-design-tokens-and-skeleton-shimmer',
-  './dataEngine.js?v=v99-dimension1-ui-ux-design-tokens-and-skeleton-shimmer',
-  './dock.js?v=v99-dimension1-ui-ux-design-tokens-and-skeleton-shimmer',
-  './gallery.js?v=v99-dimension1-ui-ux-design-tokens-and-skeleton-shimmer',
-  './app.js?v=v99-dimension1-ui-ux-design-tokens-and-skeleton-shimmer',
+  './styles.css?v=v100-dimension2-sop-version-snapshotting-and-red-news-hud',
+  './audioEngine.js?v=v100-dimension2-sop-version-snapshotting-and-red-news-hud',
+  './dataEngine.js?v=v100-dimension2-sop-version-snapshotting-and-red-news-hud',
+  './dock.js?v=v100-dimension2-sop-version-snapshotting-and-red-news-hud',
+  './gallery.js?v=v100-dimension2-sop-version-snapshotting-and-red-news-hud',
+  './app.js?v=v100-dimension2-sop-version-snapshotting-and-red-news-hud',
   './manifest.json'
 ];
 
