@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v100-dimension2-sop-version-snapshotting-and-red-news-hud';
+const CACHE_NAME = 'trd-journey-v101-dimension3-indexeddb-storage-and-canvas-compression';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v100-dimension2-sop-version-snapshotting-and-red-news-hud',
-  './audioEngine.js?v=v100-dimension2-sop-version-snapshotting-and-red-news-hud',
-  './dataEngine.js?v=v100-dimension2-sop-version-snapshotting-and-red-news-hud',
-  './dock.js?v=v100-dimension2-sop-version-snapshotting-and-red-news-hud',
-  './gallery.js?v=v100-dimension2-sop-version-snapshotting-and-red-news-hud',
-  './app.js?v=v100-dimension2-sop-version-snapshotting-and-red-news-hud',
+  './styles.css?v=v101-dimension3-indexeddb-storage-and-canvas-compression',
+  './audioEngine.js?v=v101-dimension3-indexeddb-storage-and-canvas-compression',
+  './dataEngine.js?v=v101-dimension3-indexeddb-storage-and-canvas-compression',
+  './dock.js?v=v101-dimension3-indexeddb-storage-and-canvas-compression',
+  './gallery.js?v=v101-dimension3-indexeddb-storage-and-canvas-compression',
+  './app.js?v=v101-dimension3-indexeddb-storage-and-canvas-compression',
   './manifest.json'
 ];
 

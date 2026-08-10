@@ -1164,7 +1164,43 @@ function populateSettings() {
   form.checklistLabelStop.value = labels.hasStop;
   form.checklistLabelTarget.value = labels.hasTarget;
   form.checklistLabelEmotion.value = labels.emotionControlled;
+  
+  if (typeof updateStorageDiagnostics === "function") {
+    updateStorageDiagnostics();
+  }
 }
+
+async function updateStorageDiagnostics() {
+  const usedEl = document.getElementById("storageUsedMb");
+  const quotaEl = document.getElementById("storageQuotaMb");
+  const imgCountEl = document.getElementById("storageImageCount");
+  if (!usedEl || !quotaEl || !imgCountEl) return;
+
+  try {
+    if (navigator.storage && navigator.storage.estimate) {
+      const estimate = await navigator.storage.estimate();
+      const usedMb = ((estimate.usage || 0) / (1024 * 1024)).toFixed(2);
+      const quotaGb = estimate.quota ? `${((estimate.quota) / (1024 * 1024 * 1024)).toFixed(1)} GB` : "No limit";
+      usedEl.textContent = `${usedMb} MB`;
+      quotaEl.textContent = `${quotaGb} (IndexedDB G-Level)`;
+    } else {
+      usedEl.textContent = "Supported";
+      quotaEl.textContent = "IndexedDB G-Level";
+    }
+
+    let totalImages = 0;
+    (state?.trades || []).forEach((t) => {
+      if (Array.isArray(t.images)) totalImages += t.images.length;
+      else if (t.imageData || t.imageUrl) totalImages += 1;
+    });
+    imgCountEl.textContent = `${totalImages} 张 (Canvas 高清压缩)`;
+
+  } catch (e) {
+    usedEl.textContent = "IndexedDB Active";
+  }
+}
+
+window.updateStorageDiagnostics = updateStorageDiagnostics;
 
 function populateWorkflowForms() {
   const day = selectedDay || todayISO();
