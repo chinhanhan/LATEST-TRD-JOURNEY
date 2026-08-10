@@ -3034,8 +3034,14 @@ function openSheet(id) {
   document.body.style.overflow = "hidden";
   document.body.classList.add("sheet-open");
 
-  if (id === "tradeFormSheet" && typeof checkTradeFormNewsRisk === "function") {
-    setTimeout(checkTradeFormNewsRisk, 50);
+  if (id === "tradeFormSheet") {
+    const form = document.getElementById("tradeForm");
+    if (form && !form.elements.id.value) {
+      renderPreFlightChecklist(state.activeSopId);
+    }
+    if (typeof checkTradeFormNewsRisk === "function") {
+      setTimeout(checkTradeFormNewsRisk, 50);
+    }
   }
 
   // Hide dock

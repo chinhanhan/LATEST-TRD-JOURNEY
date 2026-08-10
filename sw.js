@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v97-deep-audit-rule-matching-and-closed-trade-editing-fix';
+const CACHE_NAME = 'trd-journey-v98-deep-audit-open-sheet-fresh-preflight-render';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v97-deep-audit-rule-matching-and-closed-trade-editing-fix',
-  './audioEngine.js?v=v97-deep-audit-rule-matching-and-closed-trade-editing-fix',
-  './dataEngine.js?v=v97-deep-audit-rule-matching-and-closed-trade-editing-fix',
-  './dock.js?v=v97-deep-audit-rule-matching-and-closed-trade-editing-fix',
-  './gallery.js?v=v97-deep-audit-rule-matching-and-closed-trade-editing-fix',
-  './app.js?v=v97-deep-audit-rule-matching-and-closed-trade-editing-fix',
+  './styles.css?v=v98-deep-audit-open-sheet-fresh-preflight-render',
+  './audioEngine.js?v=v98-deep-audit-open-sheet-fresh-preflight-render',
+  './dataEngine.js?v=v98-deep-audit-open-sheet-fresh-preflight-render',
+  './dock.js?v=v98-deep-audit-open-sheet-fresh-preflight-render',
+  './gallery.js?v=v98-deep-audit-open-sheet-fresh-preflight-render',
+  './app.js?v=v98-deep-audit-open-sheet-fresh-preflight-render',
   './manifest.json'
 ];
 
