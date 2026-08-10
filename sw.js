@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix';
+const CACHE_NAME = 'trd-journey-v103-dimensions-1-to-5-deep-audit-refinement-and-csv-export-fix';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix',
-  './audioEngine.js?v=v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix',
-  './dataEngine.js?v=v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix',
-  './dock.js?v=v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix',
-  './gallery.js?v=v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix',
-  './app.js?v=v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix',
+  './styles.css?v=v103-dimensions-1-to-5-deep-audit-refinement-and-csv-export-fix',
+  './audioEngine.js?v=v103-dimensions-1-to-5-deep-audit-refinement-and-csv-export-fix',
+  './dataEngine.js?v=v103-dimensions-1-to-5-deep-audit-refinement-and-csv-export-fix',
+  './dock.js?v=v103-dimensions-1-to-5-deep-audit-refinement-and-csv-export-fix',
+  './gallery.js?v=v103-dimensions-1-to-5-deep-audit-refinement-and-csv-export-fix',
+  './app.js?v=v103-dimensions-1-to-5-deep-audit-refinement-and-csv-export-fix',
   './manifest.json'
 ];
 

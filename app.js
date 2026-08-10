@@ -5293,6 +5293,15 @@ async function initApp() {
     initRewardListeners();
     initLayoutListeners();
     console.log("initApp: Listeners and modules initialized successfully");
+    
+    const tradeForm = document.getElementById("tradeForm");
+    if (tradeForm) {
+      ["change", "input"].forEach((evtName) => {
+        tradeForm.elements.openTime?.addEventListener(evtName, updateRedNewsHUD);
+        tradeForm.elements.date?.addEventListener(evtName, updateRedNewsHUD);
+      });
+    }
+
     updateStorageEstimate();
     updateSyncStatus();
     

@@ -14,6 +14,17 @@ class TRDDataEngine {
   }
 
   getTrades() {
+    if (window.state && Array.isArray(window.state.trades) && window.state.trades.length > 0) {
+      return window.state.trades;
+    }
+    try {
+      const STORAGE_KEY = "trd-journey-os-v1";
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && Array.isArray(parsed.trades)) return parsed.trades;
+      }
+    } catch (e) {}
     try {
       const stored = localStorage.getItem("trd_trades_v1");
       return stored ? JSON.parse(stored) : [];
@@ -156,12 +167,15 @@ class TRDDataEngine {
 
     const esc = (val) => `"${String(val ?? "").replace(/"/g, '""')}"`;
 
-    const headers = ["Open Time", "Close Time", "Duration", "Date", "Symbol", "Direction", "Setup", "Risk ($)", "R-Multiple", "Net PnL ($)", "Grade", "Rule Followed", "Emotion", "Entry Plan", "Exit Note"];
+    const headers = ["Open Time", "Close Time", "Duration", "Date", "Symbol", "Direction", "Setup", "Risk ($)", "R-Multiple", "Net PnL ($)", "Grade", "Rule Followed", "Emotion", "MAE (R)", "MFE (R)", "SOP Version", "Entry Plan", "Exit Note"];
     const rows = trades.map(t => {
       const openDisp = t.openTime ? t.openTime.replace("T", " ") : t.date || "";
       const closeDisp = t.closeTime ? t.closeTime.replace("T", " ") : (t.closedAt || "");
       const duration = (window.formatHoldDuration ? window.formatHoldDuration(t.openTime || t.date, t.closeTime || t.closedAt) : "");
       const rVal = t.pnl && t.risk && Number(t.risk) > 0 ? (Number(t.pnl) / Number(t.risk)).toFixed(2) : 0;
+      const mae = t.maeR !== undefined && t.maeR !== null ? t.maeR : "";
+      const mfe = t.mfeR !== undefined && t.mfeR !== null ? t.mfeR : "";
+      const sopVer = t.sopSnapshot?.version || 1;
       return [
         esc(openDisp),
         esc(closeDisp),
@@ -176,6 +190,9 @@ class TRDDataEngine {
         esc(t.grade || "A"),
         esc(t.ruleStatus === "incomplete" || t.rule === "incomplete" ? "Incomplete" : (t.rule ? "Yes" : "No")),
         esc(t.emotion || "Calm"),
+        esc(mae),
+        esc(mfe),
+        esc(`v${sopVer}`),
         esc(t.entryPlan || ""),
         esc(t.exitNote || "")
       ];
