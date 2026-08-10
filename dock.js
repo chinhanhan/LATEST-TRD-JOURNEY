@@ -73,12 +73,12 @@ class ReactBitsDockEngine {
     panel.addEventListener('mousemove', (e) => {
       this.isHovered = true;
       this.mouseX = e.pageX;
-    });
+    }, { passive: true });
 
     panel.addEventListener('mouseleave', () => {
       this.isHovered = false;
       this.mouseX = Infinity;
-    });
+    }, { passive: true });
 
     this.itemStates.forEach(state => {
       state.el.addEventListener('click', () => {

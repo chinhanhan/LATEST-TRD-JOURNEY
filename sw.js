@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v104-dimensions-1-to-4-deep-edge-cases-and-mae-mfe-sign-normalization';
+const CACHE_NAME = 'trd-journey-v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v104-dimensions-1-to-4-deep-edge-cases-and-mae-mfe-sign-normalization',
-  './audioEngine.js?v=v104-dimensions-1-to-4-deep-edge-cases-and-mae-mfe-sign-normalization',
-  './dataEngine.js?v=v104-dimensions-1-to-4-deep-edge-cases-and-mae-mfe-sign-normalization',
-  './dock.js?v=v104-dimensions-1-to-4-deep-edge-cases-and-mae-mfe-sign-normalization',
-  './gallery.js?v=v104-dimensions-1-to-4-deep-edge-cases-and-mae-mfe-sign-normalization',
-  './app.js?v=v104-dimensions-1-to-4-deep-edge-cases-and-mae-mfe-sign-normalization',
+  './styles.css?v=v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards',
+  './audioEngine.js?v=v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards',
+  './dataEngine.js?v=v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards',
+  './dock.js?v=v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards',
+  './gallery.js?v=v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards',
+  './app.js?v=v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards',
   './manifest.json'
 ];
 

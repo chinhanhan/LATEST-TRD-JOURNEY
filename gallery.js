@@ -433,7 +433,7 @@ class VisionOSBentoLauncher {
           inner.style.setProperty('--glare-y', `${glareY.toFixed(2)}%`);
           inner.style.setProperty('--glare-opacity', '0.45');
         }
-      });
+      }, { passive: true });
       
       card.addEventListener('mouseleave', () => {
         const inner = card.querySelector('.card-inner');
@@ -442,7 +442,7 @@ class VisionOSBentoLauncher {
           inner.style.setProperty('--tilt-y', '0deg');
           inner.style.setProperty('--glare-opacity', '0');
         }
-      });
+      }, { passive: true });
     });
   }
   

@@ -1,3 +1,36 @@
+/**
+ * @typedef {Object} SopSnapshot
+ * @property {number} version
+ * @property {string} sopId
+ * @property {string} sopName
+ * @property {string} savedAt
+ * @property {Array<string>} checklist
+ */
+
+/**
+ * @typedef {Object} Trade
+ * @property {string} id
+ * @property {string} status
+ * @property {string} date
+ * @property {string} [closedAt]
+ * @property {string} [openTime]
+ * @property {string} [closeTime]
+ * @property {string} symbol
+ * @property {string} direction
+ * @property {string} sopId
+ * @property {string} accountId
+ * @property {string} setup
+ * @property {string} grade
+ * @property {number} risk
+ * @property {number|string} pnl
+ * @property {number|null} [maeR]
+ * @property {number|null} [mfeR]
+ * @property {boolean|string} rule
+ * @property {string} ruleStatus
+ * @property {string} emotion
+ * @property {SopSnapshot|null} [sopSnapshot]
+ */
+
 const STORAGE_KEY = "trd-journey-os-v1";
 const LEGACY_KEY = "trd-journey-v1";
 const LANGUAGE_KEY = "trd-journey-language";
