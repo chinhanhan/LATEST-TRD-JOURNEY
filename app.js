@@ -410,8 +410,8 @@ function normalizeTrade(trade) {
     images: Array.isArray(trade.images) ? trade.images : [],
     preFlightChecklist: trade.preFlightChecklist || null,
     sopSnapshot: trade.sopSnapshot || null,
-    maeR: trade.maeR !== undefined && trade.maeR !== "" && trade.maeR !== null ? Number(trade.maeR) : null,
-    mfeR: trade.mfeR !== undefined && trade.mfeR !== "" && trade.mfeR !== null ? Number(trade.mfeR) : null
+    maeR: trade.maeR !== undefined && trade.maeR !== "" && trade.maeR !== null ? -Math.abs(Number(trade.maeR)) : null,
+    mfeR: trade.mfeR !== undefined && trade.mfeR !== "" && trade.mfeR !== null ? Math.abs(Number(trade.mfeR)) : null
   };
 }
 

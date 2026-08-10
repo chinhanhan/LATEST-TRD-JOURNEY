@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v108-dimensions-1-to-6-complete-audit-and-account-filtering-sync';
+const CACHE_NAME = 'trd-journey-v109-dimensions-1-to-5-deep-normalization-refinement';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v108-dimensions-1-to-6-complete-audit-and-account-filtering-sync',
-  './audioEngine.js?v=v108-dimensions-1-to-6-complete-audit-and-account-filtering-sync',
-  './dataEngine.js?v=v108-dimensions-1-to-6-complete-audit-and-account-filtering-sync',
-  './dock.js?v=v108-dimensions-1-to-6-complete-audit-and-account-filtering-sync',
-  './gallery.js?v=v108-dimensions-1-to-6-complete-audit-and-account-filtering-sync',
-  './app.js?v=v108-dimensions-1-to-6-complete-audit-and-account-filtering-sync',
+  './styles.css?v=v109-dimensions-1-to-5-deep-normalization-refinement',
+  './audioEngine.js?v=v109-dimensions-1-to-5-deep-normalization-refinement',
+  './dataEngine.js?v=v109-dimensions-1-to-5-deep-normalization-refinement',
+  './dock.js?v=v109-dimensions-1-to-5-deep-normalization-refinement',
+  './gallery.js?v=v109-dimensions-1-to-5-deep-normalization-refinement',
+  './app.js?v=v109-dimensions-1-to-5-deep-normalization-refinement',
   './manifest.json'
 ];
 
