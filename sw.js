@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v103-dimensions-1-to-5-deep-audit-refinement-and-csv-export-fix';
+const CACHE_NAME = 'trd-journey-v104-dimensions-1-to-4-deep-edge-cases-and-mae-mfe-sign-normalization';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v103-dimensions-1-to-5-deep-audit-refinement-and-csv-export-fix',
-  './audioEngine.js?v=v103-dimensions-1-to-5-deep-audit-refinement-and-csv-export-fix',
-  './dataEngine.js?v=v103-dimensions-1-to-5-deep-audit-refinement-and-csv-export-fix',
-  './dock.js?v=v103-dimensions-1-to-5-deep-audit-refinement-and-csv-export-fix',
-  './gallery.js?v=v103-dimensions-1-to-5-deep-audit-refinement-and-csv-export-fix',
-  './app.js?v=v103-dimensions-1-to-5-deep-audit-refinement-and-csv-export-fix',
+  './styles.css?v=v104-dimensions-1-to-4-deep-edge-cases-and-mae-mfe-sign-normalization',
+  './audioEngine.js?v=v104-dimensions-1-to-4-deep-edge-cases-and-mae-mfe-sign-normalization',
+  './dataEngine.js?v=v104-dimensions-1-to-4-deep-edge-cases-and-mae-mfe-sign-normalization',
+  './dock.js?v=v104-dimensions-1-to-4-deep-edge-cases-and-mae-mfe-sign-normalization',
+  './gallery.js?v=v104-dimensions-1-to-4-deep-edge-cases-and-mae-mfe-sign-normalization',
+  './app.js?v=v104-dimensions-1-to-4-deep-edge-cases-and-mae-mfe-sign-normalization',
   './manifest.json'
 ];
 

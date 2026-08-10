@@ -1182,12 +1182,15 @@ async function updateStorageDiagnostics() {
   try {
     if (navigator.storage && navigator.storage.estimate) {
       const estimate = await navigator.storage.estimate();
-      const usedMb = ((estimate.usage || 0) / (1024 * 1024)).toFixed(2);
+      const bytes = estimate.usage || 0;
+      const usedStr = bytes >= 1024 * 1024
+        ? `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+        : `${(bytes / 1024).toFixed(1)} KB`;
       const quotaGb = estimate.quota ? `${((estimate.quota) / (1024 * 1024 * 1024)).toFixed(1)} GB` : "No limit";
-      usedEl.textContent = `${usedMb} MB`;
+      usedEl.textContent = usedStr;
       quotaEl.textContent = `${quotaGb} (IndexedDB G-Level)`;
     } else {
-      usedEl.textContent = "Supported";
+      usedEl.textContent = "Active";
       quotaEl.textContent = "IndexedDB G-Level";
     }
 
@@ -1857,7 +1860,11 @@ function renderSessionHeatmap() {
         ? `<strong>${formatR(rSum)}</strong><div style="font-size:10px; opacity:0.85; margin-top:2px;">${winRate}% WR (${count}T)</div>`
         : `<span style="opacity:0.4;">-</span>`;
 
-      html += `<td class="heatmap-cell ${levelClass}">${cellText}</td>`;
+      const titleTooltip = count > 0
+        ? `${day} ${s.label}: ${formatR(rSum)} Total, ${cellData.wins} Wins / ${count - cellData.wins} Losses (${winRate}% Win Rate)`
+        : `${day} ${s.label}: No trade records`;
+
+      html += `<td class="heatmap-cell ${levelClass}" title="${safe(titleTooltip)}">${cellText}</td>`;
     });
     html += `</tr>`;
   });
@@ -2683,7 +2690,7 @@ function updatePreFlightChecklistProgress(silent = false) {
 
   const formId = document.getElementById("tradeForm")?.elements?.id?.value;
   const currentTrade = formId ? state.trades.find((t) => t.id === formId) : null;
-  const isEditingClosed = currentTrade && currentTrade.status === "closed";
+  const isEditingExisting = Boolean(formId && currentTrade);
 
   if (isFull) {
     card.classList.add("is-verified");
@@ -2695,10 +2702,10 @@ function updatePreFlightChecklistProgress(silent = false) {
       if (window.appleAudioEngine) window.appleAudioEngine.play("dockClick");
     }
     _prevChecklistFull = true;
-  } else if (isEditingClosed) {
+  } else if (isEditingExisting) {
     card.classList.remove("is-verified");
     pill.textContent = `${checkedCount}/${total} Rules Checked`;
-    if (hint) hint.textContent = `📝 正在编辑历史平仓记录 (${checkedCount}/${total})。`;
+    if (hint) hint.textContent = `📝 正在修改已有交易记录 (${checkedCount}/${total})。`;
     submitBtn.disabled = false;
     _prevChecklistFull = false;
   } else {
@@ -2847,8 +2854,8 @@ async function saveTradeFromForm(event) {
       grade: form.grade.value,
       risk: Number(form.risk.value),
       pnl: hasResult ? Number(form.pnl.value) : "",
-      maeR: form.maeR?.value.trim() !== "" ? Number(form.maeR.value) : "",
-      mfeR: form.mfeR?.value.trim() !== "" ? Number(form.mfeR.value) : "",
+      maeR: form.maeR?.value.trim() !== "" ? -Math.abs(Number(form.maeR.value)) : "",
+      mfeR: form.mfeR?.value.trim() !== "" ? Math.abs(Number(form.mfeR.value)) : "",
       rule: form.rule.value === "incomplete" ? "incomplete" : form.rule.value === "true",
       ruleStatus: form.rule.value === "incomplete" ? "incomplete" : (form.rule.value === "false" ? "violated" : "followed"),
       emotion: form.emotion.value,
