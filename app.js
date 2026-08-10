@@ -2391,6 +2391,93 @@ async function compressImage(dataUrl) {
   return output;
 }
 
+let _prevChecklistFull = false;
+
+function renderPreFlightChecklist(sopId = null, existingSavedChecklist = null) {
+  const container = document.getElementById("preflightChecklistContainer");
+  if (!container) return;
+
+  const targetSopId = sopId || state?.activeSopId;
+  const sop = state?.sops?.find((s) => s.id === targetSopId) || activeSop();
+  
+  let rawRules = Array.isArray(sop?.checklist) ? sop.checklist : [];
+  if (typeof rawRules === "string") {
+    rawRules = rawRules.split("\n").map((s) => s.trim()).filter(Boolean);
+  }
+  
+  const defaultRules = [
+    "1. 交易计划符合 HTF 大周期关键位与趋势方向",
+    "2. 确认入场信号 Trigger 成立，不挂盲单/不追单",
+    "3. 止损点位明确，严格按照 SOP 计算风险 R",
+    "4. 避开高影响红盒新闻发布前后 15 分钟",
+    "5. 情绪平静稳定，无 FOMO/报复心理"
+  ];
+
+  let rules = [...rawRules];
+  if (rules.length < 5) {
+    rules = rules.concat(defaultRules.slice(rules.length, 5));
+  } else {
+    rules = rules.slice(0, 5);
+  }
+
+  _prevChecklistFull = false;
+
+  container.innerHTML = rules.map((rule, idx) => {
+    let isChecked = false;
+    if (existingSavedChecklist?.items && existingSavedChecklist.items[idx]) {
+      isChecked = Boolean(existingSavedChecklist.items[idx].checked);
+    }
+    return `
+      <label class="preflight-item ${isChecked ? 'checked' : ''}">
+        <input type="checkbox" class="preflight-checkbox" data-idx="${idx}" data-rule-text="${safe(rule)}" ${isChecked ? 'checked' : ''} />
+        <span class="preflight-item-text">${safe(rule)}</span>
+      </label>
+    `;
+  }).join("");
+
+  container.querySelectorAll(".preflight-checkbox").forEach((cb) => {
+    cb.addEventListener("change", (e) => {
+      const label = e.target.closest(".preflight-item");
+      if (label) label.classList.toggle("checked", e.target.checked);
+      updatePreFlightChecklistProgress();
+    });
+  });
+
+  updatePreFlightChecklistProgress(true);
+}
+
+function updatePreFlightChecklistProgress(silent = false) {
+  const container = document.getElementById("preflightChecklistContainer");
+  const card = document.getElementById("preFlightCard");
+  const pill = document.getElementById("preflightProgressPill");
+  const hint = document.getElementById("preflightHint");
+  const submitBtn = document.getElementById("saveTradeBtn");
+  if (!container || !card || !pill || !submitBtn) return;
+
+  const checkboxes = Array.from(container.querySelectorAll(".preflight-checkbox"));
+  const total = checkboxes.length;
+  const checkedCount = checkboxes.filter((cb) => cb.checked).length;
+  const isFull = total > 0 && checkedCount === total;
+
+  if (isFull) {
+    card.classList.add("is-verified");
+    pill.textContent = `✓ ${total}/${total} Verified`;
+    if (hint) hint.textContent = "✅ 风控检查已 100% 通过！允许提交开仓。";
+    submitBtn.disabled = false;
+    if (!silent && !_prevChecklistFull) {
+      playSound("success");
+      if (window.appleAudioEngine) window.appleAudioEngine.play("dockClick");
+    }
+    _prevChecklistFull = true;
+  } else {
+    card.classList.remove("is-verified");
+    pill.textContent = `${checkedCount}/${total} Rules Checked`;
+    if (hint) hint.textContent = `⚠️ 必须打勾确认所有 ${total} 项注意事项后，方可开启交易。`;
+    submitBtn.disabled = true;
+    _prevChecklistFull = false;
+  }
+}
+
 function resetTradeForm() {
   const form = document.getElementById("tradeForm");
   if (!form) return;
@@ -2423,6 +2510,7 @@ function resetTradeForm() {
   if (btn) btn.textContent = "Start Trade";
   const cancel = document.getElementById("cancelEditBtn");
   if (cancel) cancel.classList.add("hidden");
+  renderPreFlightChecklist(state.activeSopId);
   closeSheet("tradeFormSheet");
 }
 
@@ -2461,6 +2549,11 @@ function editTrade(id) {
   document.getElementById("tradeFormMode").textContent = trade.status === "open" ? "Update open trade" : "Edit closed trade";
   document.getElementById("saveTradeBtn").textContent = trade.status === "open" ? "Update Trade" : "Save Trade";
   document.getElementById("cancelEditBtn").classList.remove("hidden");
+  renderPreFlightChecklist(trade.sopId, trade.preFlightChecklist);
+  if (trade.status === "closed") {
+    const saveBtn = document.getElementById("saveTradeBtn");
+    if (saveBtn) saveBtn.disabled = false;
+  }
   openSheet("tradeFormSheet");
 }
 
@@ -2494,6 +2587,14 @@ async function saveTradeFromForm(event) {
         if (!finalImages.includes(img)) finalImages.push(img);
       });
     }
+
+    const preflightContainer = document.getElementById("preflightChecklistContainer");
+    const preflightCbs = preflightContainer ? Array.from(preflightContainer.querySelectorAll(".preflight-checkbox")) : [];
+    const preflightItems = preflightCbs.map((cb) => ({
+      text: cb.dataset.ruleText || "",
+      checked: Boolean(cb.checked)
+    }));
+    const preflightPassed = preflightItems.length > 0 && preflightItems.every((i) => i.checked);
 
     const trade = normalizeTrade({
       ...current,
@@ -2529,6 +2630,11 @@ async function saveTradeFromForm(event) {
         hasStop: form.hasStop.checked,
         hasTarget: form.hasTarget.checked,
         emotionControlled: form.emotionControlled.checked
+      },
+      preFlightChecklist: {
+        passed: preflightPassed,
+        items: preflightItems,
+        checkedAt: current.preFlightChecklist?.checkedAt || new Date().toISOString()
       }
     });
     const index = state.trades.findIndex((item) => item.id === trade.id);
@@ -2607,6 +2713,16 @@ function openCloseTradeModal(id) {
   `);
 }
 
+function mediaBadges(trade) {
+  const imgCount = imagesFor(trade).length;
+  const imgBadge = imgCount > 1 ? `<span class="tag info">${imgCount} Images</span> ` : imgCount === 1 ? '<span class="tag info">Image</span> ' : "";
+  const tvBadge = trade.tradingViewUrl ? '<span class="tag info">TV</span> ' : "";
+  const nearNews = window.forexFactoryRedNewsEngine?.isTradeNearRedNews(trade.date);
+  const newsBadge = nearNews ? `<span class="trade-red-news-tag" title="${safe(nearNews.event.title)}">🔴 ${safe(nearNews.event.currency)} News</span> ` : "";
+  const preflightBadge = trade.preFlightChecklist?.passed ? '<span class="preflight-verified-badge" title="开仓前 5 项风控检查已全通过">✓ Verified</span> ' : "";
+  return `${preflightBadge}${imgBadge}${tvBadge}${newsBadge}` || '<span class="muted">None</span>';
+}
+
 async function closeTradeFromModal(event) {
   event.preventDefault();
   const form = event.target;
@@ -2670,6 +2786,18 @@ function openDetail(id) {
   } else if (imgs.length === 1) {
     imageHtml = `<button class="text-button" data-image="${trade.id}" data-index="0"><img src="${imgs[0]}" alt="Chart screenshot" /></button>`;
   }
+
+  const preflightHtml = trade.preFlightChecklist?.passed
+    ? `
+      <div class="preflight-detail-box" style="margin:14px 0; padding:12px 14px; border-radius:14px; background:rgba(52,199,89,0.08); border:1px solid rgba(52,199,89,0.3);">
+        <strong style="color:#34c759; display:flex; align-items:center; gap:6px; font-size:13px;">✓ 100% Pre-Flight Verified (开仓前 5 项风控检查全通过)</strong>
+        <ul style="margin:8px 0 0 18px; font-size:12px; color:var(--text); line-height:1.6;">
+          ${(trade.preFlightChecklist.items || []).map((i) => `<li>${safe(i.text)}</li>`).join("")}
+        </ul>
+      </div>
+    `
+    : "";
+
   openModal("Trade detail", "Journal", `
     <div class="day-detail">
       <div class="insight-grid">${[

@@ -3099,6 +3099,170 @@ tbody tr:hover {
   background: rgba(255, 255, 255, 0.15);
 }
 
+/* --- Pre-Flight Risk Gate Card (开仓前 5 项风控检查卡片) --- */
+.pre-flight-card {
+  background: rgba(0, 113, 227, 0.04);
+  border: 1px solid rgba(0, 113, 227, 0.2);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 20px;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  backdrop-filter: blur(12px);
+}
+
+[data-theme="dark"] .pre-flight-card {
+  background: rgba(0, 113, 227, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.pre-flight-card.is-verified {
+  background: rgba(52, 199, 89, 0.08);
+  border-color: rgba(52, 199, 89, 0.4);
+}
+
+[data-theme="dark"] .pre-flight-card.is-verified {
+  background: rgba(52, 199, 89, 0.14);
+  border-color: rgba(52, 199, 89, 0.45);
+}
+
+.pre-flight-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.pre-flight-title-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pre-flight-icon {
+  font-size: 20px;
+}
+
+.pre-flight-title-box strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.pre-flight-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 2px 0 0 0;
+}
+
+.preflight-progress-pill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: rgba(255, 149, 0, 0.15);
+  color: #ff9500;
+  border: 1px solid rgba(255, 149, 0, 0.3);
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.pre-flight-card.is-verified .preflight-progress-pill {
+  background: rgba(52, 199, 89, 0.2);
+  color: #34c759;
+  border-color: rgba(52, 199, 89, 0.4);
+}
+
+.preflight-checklist-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preflight-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .preflight-item {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.preflight-item:hover {
+  background: rgba(0, 113, 227, 0.08);
+  border-color: rgba(0, 113, 227, 0.3);
+}
+
+.preflight-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--blue);
+  cursor: pointer;
+}
+
+.preflight-item.checked {
+  background: rgba(52, 199, 89, 0.1);
+  border-color: rgba(52, 199, 89, 0.35);
+}
+
+.preflight-item-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.preflight-item.checked .preflight-item-text {
+  color: var(--text);
+  text-decoration: line-through;
+  opacity: 0.85;
+}
+
+.preflight-footer-hint {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ff9500;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.3s ease;
+}
+
+.pre-flight-card.is-verified .preflight-footer-hint {
+  color: #34c759;
+}
+
+#tradeForm button[type="submit"]:disabled {
+  opacity: 0.45;
+  cursor: not-allowed !allowed;
+  pointer-events: none;
+  filter: grayscale(80%);
+}
+
+.preflight-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+  border: 1px solid rgba(52, 199, 89, 0.3);
+}
+
 /* 2. 智能工作流卡片样式 (Today Workflow Tiles) */
 .today-workflow-tiles {
   display: grid;

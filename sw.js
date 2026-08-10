@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v92-cache-purge';
+const CACHE_NAME = 'trd-journey-v93-preflight-gate-feature';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v92-cache-purge',
-  './audioEngine.js?v=v92-cache-purge',
-  './dataEngine.js?v=v92-cache-purge',
-  './dock.js?v=v92-cache-purge',
-  './gallery.js?v=v92-cache-purge',
-  './app.js?v=v92-cache-purge',
+  './styles.css?v=v93-preflight-gate-feature',
+  './audioEngine.js?v=v93-preflight-gate-feature',
+  './dataEngine.js?v=v93-preflight-gate-feature',
+  './dock.js?v=v93-preflight-gate-feature',
+  './gallery.js?v=v93-preflight-gate-feature',
+  './app.js?v=v93-preflight-gate-feature',
   './manifest.json'
 ];
 
