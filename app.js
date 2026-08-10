@@ -373,7 +373,9 @@ function normalizeTrade(trade) {
     imageData: trade.imageData || "",
     sopId: trade.sopId || "",
     accountId: trade.accountId || "",
-    reflection: trade.reflection || ""
+    reflection: trade.reflection || "",
+    images: Array.isArray(trade.images) ? trade.images : [],
+    preFlightChecklist: trade.preFlightChecklist || null
   };
 }
 

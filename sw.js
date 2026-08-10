@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v95-smart-multiline-sop-rule-parser-and-live-sync';
+const CACHE_NAME = 'trd-journey-v96-fix-normalize-trade-preflight-checklist-persistence';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v95-smart-multiline-sop-rule-parser-and-live-sync',
-  './audioEngine.js?v=v95-smart-multiline-sop-rule-parser-and-live-sync',
-  './dataEngine.js?v=v95-smart-multiline-sop-rule-parser-and-live-sync',
-  './dock.js?v=v95-smart-multiline-sop-rule-parser-and-live-sync',
-  './gallery.js?v=v95-smart-multiline-sop-rule-parser-and-live-sync',
-  './app.js?v=v95-smart-multiline-sop-rule-parser-and-live-sync',
+  './styles.css?v=v96-fix-normalize-trade-preflight-checklist-persistence',
+  './audioEngine.js?v=v96-fix-normalize-trade-preflight-checklist-persistence',
+  './dataEngine.js?v=v96-fix-normalize-trade-preflight-checklist-persistence',
+  './dock.js?v=v96-fix-normalize-trade-preflight-checklist-persistence',
+  './gallery.js?v=v96-fix-normalize-trade-preflight-checklist-persistence',
+  './app.js?v=v96-fix-normalize-trade-preflight-checklist-persistence',
   './manifest.json'
 ];
 
