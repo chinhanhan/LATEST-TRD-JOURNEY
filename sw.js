@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v96-fix-normalize-trade-preflight-checklist-persistence';
+const CACHE_NAME = 'trd-journey-v97-deep-audit-rule-matching-and-closed-trade-editing-fix';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v96-fix-normalize-trade-preflight-checklist-persistence',
-  './audioEngine.js?v=v96-fix-normalize-trade-preflight-checklist-persistence',
-  './dataEngine.js?v=v96-fix-normalize-trade-preflight-checklist-persistence',
-  './dock.js?v=v96-fix-normalize-trade-preflight-checklist-persistence',
-  './gallery.js?v=v96-fix-normalize-trade-preflight-checklist-persistence',
-  './app.js?v=v96-fix-normalize-trade-preflight-checklist-persistence',
+  './styles.css?v=v97-deep-audit-rule-matching-and-closed-trade-editing-fix',
+  './audioEngine.js?v=v97-deep-audit-rule-matching-and-closed-trade-editing-fix',
+  './dataEngine.js?v=v97-deep-audit-rule-matching-and-closed-trade-editing-fix',
+  './dock.js?v=v97-deep-audit-rule-matching-and-closed-trade-editing-fix',
+  './gallery.js?v=v97-deep-audit-rule-matching-and-closed-trade-editing-fix',
+  './app.js?v=v97-deep-audit-rule-matching-and-closed-trade-editing-fix',
   './manifest.json'
 ];
 

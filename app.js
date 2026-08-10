@@ -2453,8 +2453,13 @@ function renderPreFlightChecklist(sopId = null, existingSavedChecklist = null) {
 
   container.innerHTML = rules.map((rule, idx) => {
     let isChecked = false;
-    if (existingSavedChecklist?.items && existingSavedChecklist.items[idx]) {
-      isChecked = Boolean(existingSavedChecklist.items[idx].checked);
+    if (existingSavedChecklist?.items) {
+      const matchByText = existingSavedChecklist.items.find((i) => i.text === rule);
+      if (matchByText) {
+        isChecked = Boolean(matchByText.checked);
+      } else if (existingSavedChecklist.items[idx]) {
+        isChecked = Boolean(existingSavedChecklist.items[idx].checked);
+      }
     }
     return `
       <label class="preflight-item ${isChecked ? 'checked' : ''}">
@@ -2491,16 +2496,26 @@ function updatePreFlightChecklistProgress(silent = false) {
   const checkedCount = checkboxes.filter((cb) => cb.checked).length;
   const isFull = total > 0 && checkedCount === total;
 
+  const formId = document.getElementById("tradeForm")?.elements?.id?.value;
+  const currentTrade = formId ? state.trades.find((t) => t.id === formId) : null;
+  const isEditingClosed = currentTrade && currentTrade.status === "closed";
+
   if (isFull) {
     card.classList.add("is-verified");
     pill.textContent = `✓ ${total}/${total} Verified`;
-    if (hint) hint.textContent = "✅ 风控检查已 100% 通过！允许提交开仓。";
+    if (hint) hint.textContent = `✅ 风控检查已 100% 通过！解禁允许提交。`;
     submitBtn.disabled = false;
     if (!silent && !_prevChecklistFull) {
       playSound("success");
       if (window.appleAudioEngine) window.appleAudioEngine.play("dockClick");
     }
     _prevChecklistFull = true;
+  } else if (isEditingClosed) {
+    card.classList.remove("is-verified");
+    pill.textContent = `${checkedCount}/${total} Rules Checked`;
+    if (hint) hint.textContent = `📝 正在编辑历史平仓记录 (${checkedCount}/${total})。`;
+    submitBtn.disabled = false;
+    _prevChecklistFull = false;
   } else {
     card.classList.remove("is-verified");
     pill.textContent = `${checkedCount}/${total} Rules Checked`;
