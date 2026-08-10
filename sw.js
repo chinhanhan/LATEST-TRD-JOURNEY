@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v94-dynamic-sop-checklist-length-and-quick-edit';
+const CACHE_NAME = 'trd-journey-v95-smart-multiline-sop-rule-parser-and-live-sync';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v94-dynamic-sop-checklist-length-and-quick-edit',
-  './audioEngine.js?v=v94-dynamic-sop-checklist-length-and-quick-edit',
-  './dataEngine.js?v=v94-dynamic-sop-checklist-length-and-quick-edit',
-  './dock.js?v=v94-dynamic-sop-checklist-length-and-quick-edit',
-  './gallery.js?v=v94-dynamic-sop-checklist-length-and-quick-edit',
-  './app.js?v=v94-dynamic-sop-checklist-length-and-quick-edit',
+  './styles.css?v=v95-smart-multiline-sop-rule-parser-and-live-sync',
+  './audioEngine.js?v=v95-smart-multiline-sop-rule-parser-and-live-sync',
+  './dataEngine.js?v=v95-smart-multiline-sop-rule-parser-and-live-sync',
+  './dock.js?v=v95-smart-multiline-sop-rule-parser-and-live-sync',
+  './gallery.js?v=v95-smart-multiline-sop-rule-parser-and-live-sync',
+  './app.js?v=v95-smart-multiline-sop-rule-parser-and-live-sync',
   './manifest.json'
 ];
 

@@ -397,7 +397,7 @@ function ensureSopState(rawState) {
     archivedAt: sop.archivedAt || "",
     ...structuredClone(defaultSopDetails),
     ...sop,
-    checklist: Array.isArray(sop.checklist) ? sop.checklist : String(sop.checklist || defaultSopDetails.checklist.join("\n")).split("\n").map((item) => item.trim()).filter(Boolean),
+    checklist: parseSopChecklistRules(sop.checklist || defaultSopDetails.checklist),
     weaknesses: Array.isArray(sop.weaknesses) ? sop.weaknesses : String(sop.weaknesses || defaultSopDetails.weaknesses.join("\n")).split("\n").map((item) => item.trim()).filter(Boolean)
   }));
   const sopsByName = new Map(existingSops.map((sop) => [sop.name, sop]));
@@ -2038,7 +2038,7 @@ function saveSopFromModal(event) {
     exitRules: form.exitRules.value.trim(),
     riskRules: form.riskRules.value.trim(),
     noTradeRules: form.noTradeRules.value.trim(),
-    checklist: form.checklist.value.split("\n").map((item) => item.trim()).filter(Boolean),
+    checklist: parseSopChecklistRules(form.checklist.value),
     weaknesses: form.weaknesses.value.split("\n").map((item) => item.trim()).filter(Boolean),
     createdAt: existing?.createdAt || todayISO(),
     archivedAt: form.status.value === "archived" ? existing?.archivedAt || todayISO() : ""
@@ -2053,6 +2053,8 @@ function saveSopFromModal(event) {
   saveState();
   closeModal();
   renderAll();
+  populateSopControls();
+  renderPreFlightChecklist(id);
   toast(`${sop.name} SOP saved.`);
 }
 
@@ -2391,6 +2393,39 @@ async function compressImage(dataUrl) {
   return output;
 }
 
+function parseSopChecklistRules(text) {
+  if (!text) return [];
+  if (Array.isArray(text)) {
+    text = text.join("\n");
+  }
+  const lines = String(text).split("\n").map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) return [];
+  
+  const numberPrefixRegex = /^(\d+[\.\)]|\u2022|-|\*)\s*/;
+  const hasNumbering = lines.some((l) => numberPrefixRegex.test(l));
+
+  if (hasNumbering) {
+    const rules = [];
+    let currentRule = "";
+    for (const line of lines) {
+      if (numberPrefixRegex.test(line)) {
+        if (currentRule) rules.push(currentRule);
+        currentRule = line;
+      } else {
+        if (currentRule) {
+          currentRule += "\n" + line;
+        } else {
+          currentRule = line;
+        }
+      }
+    }
+    if (currentRule) rules.push(currentRule);
+    return rules;
+  }
+
+  return lines;
+}
+
 let _prevChecklistFull = false;
 
 function renderPreFlightChecklist(sopId = null, existingSavedChecklist = null) {
@@ -2400,10 +2435,7 @@ function renderPreFlightChecklist(sopId = null, existingSavedChecklist = null) {
   const targetSopId = sopId || state?.activeSopId;
   const sop = state?.sops?.find((s) => s.id === targetSopId) || activeSop();
   
-  let rawRules = Array.isArray(sop?.checklist) ? sop.checklist : [];
-  if (typeof rawRules === "string") {
-    rawRules = rawRules.split("\n").map((s) => s.trim()).filter(Boolean);
-  }
+  let rawRules = parseSopChecklistRules(sop?.checklist);
   
   const defaultRules = [
     "1. 交易计划符合 HTF 大周期关键位与趋势方向",

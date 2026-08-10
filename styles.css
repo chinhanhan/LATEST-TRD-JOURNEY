@@ -3220,6 +3220,7 @@ tbody tr:hover {
   font-weight: 500;
   color: var(--text);
   line-height: 1.35;
+  white-space: pre-line;
 }
 
 .preflight-item.checked .preflight-item-text {
