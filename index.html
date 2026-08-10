@@ -751,6 +751,7 @@
                 <section class="panel"><div class="panel-head"><div><p class="eyebrow">Distribution</p><h2>R multiple spread</h2></div></div><div class="histogram" id="distributionChart"></div></section>
               </div>
               <section class="panel"><div class="panel-head"><div><p class="eyebrow">Setups</p><h2>Performance by setup</h2></div></div><div class="bar-list" id="setupBars"></div></section>
+              <section class="panel" id="mistakesPanel"><div class="panel-head"><div><p class="eyebrow">Execution Analysis</p><h2>Cost of Mistakes (Observed Result)</h2></div></div><div class="bar-list" id="mistakeBars"></div></section>
               <div class="analytics-grid">
                 <section class="panel"><div class="panel-head"><div><p class="eyebrow">Timing</p><h2>Weekday performance</h2></div></div><div class="bar-list" id="weekdayBars"></div></section>
                 <section class="panel"><div class="panel-head"><div><p class="eyebrow">Direction</p><h2>Long vs Short</h2></div></div><div class="bar-list" id="directionBars"></div></section>
@@ -1350,6 +1351,69 @@
                   <label><input type="checkbox" name="hasTarget" /> <span id="labelHasTargetText">Target</span></label>
                   <label><input type="checkbox" name="emotionControlled" /> <span id="labelEmotionControlledText">Controlled</span></label>
                 </div>
+                
+                <!-- P0 Phase 2: Structured Audit -->
+                <fieldset style="border: 1px solid var(--border); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                  <legend style="color: var(--text-secondary); font-size: 12px; font-weight: bold; padding: 0 4px;">Structured Audit</legend>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <select name="auditCompliance">
+                        <option value="">-- Select --</option>
+                        <option value="fully">Fully followed</option>
+                        <option value="partially">Partially followed</option>
+                        <option value="violated">Violated</option>
+                      </select>
+                      <label class="floating-label">SOP Compliance</label>
+                    </div>
+                    <div class="form-group">
+                      <input type="number" name="auditEmotionScore" min="1" max="10" placeholder=" " />
+                      <label class="floating-label">Emotion Score (1-10)</label>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <select name="auditStopLoss">
+                        <option value="">-- Select --</option>
+                        <option value="planned_before">Planned before entry</option>
+                        <option value="changed_after">Changed after entry</option>
+                        <option value="none">No Stop Loss</option>
+                      </select>
+                      <label class="floating-label">Stop Loss Audit</label>
+                    </div>
+                    <div class="form-group">
+                      <select name="auditTakeProfit">
+                        <option value="">-- Select --</option>
+                        <option value="planned_before">Planned before entry</option>
+                        <option value="changed_after">Changed after entry</option>
+                        <option value="none">No Take Profit</option>
+                      </select>
+                      <label class="floating-label">Take Profit Audit</label>
+                    </div>
+                  </div>
+                </fieldset>
+
+                <!-- P0 Phase 3: Mistake Taxonomy -->
+                <fieldset style="border: 1px solid var(--border); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                  <legend style="color: var(--text-secondary); font-size: 12px; font-weight: bold; padding: 0 4px;">Execution Mistakes</legend>
+                  <div class="mistake-checklist" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; font-size: 13px;">
+                    <label><input type="checkbox" name="mistakes" value="FOMO" /> FOMO</label>
+                    <label><input type="checkbox" name="mistakes" value="Revenge Trade" /> Revenge Trade</label>
+                    <label><input type="checkbox" name="mistakes" value="Overtrading" /> Overtrading</label>
+                    <label><input type="checkbox" name="mistakes" value="Late Entry" /> Late Entry</label>
+                    <label><input type="checkbox" name="mistakes" value="Early Entry" /> Early Entry</label>
+                    <label><input type="checkbox" name="mistakes" value="Missed Entry" /> Missed Entry</label>
+                    <label><input type="checkbox" name="mistakes" value="Moved Stop Loss" /> Moved SL</label>
+                    <label><input type="checkbox" name="mistakes" value="Moved Take Profit" /> Moved TP</label>
+                    <label><input type="checkbox" name="mistakes" value="Oversized Risk" /> Oversized Risk</label>
+                    <label><input type="checkbox" name="mistakes" value="Ignored SOP" /> Ignored SOP</label>
+                    <label><input type="checkbox" name="mistakes" value="News Exposure" /> News Exposure</label>
+                    <label><input type="checkbox" name="mistakes" value="Correlated Position" /> Correlated Position</label>
+                    <label><input type="checkbox" name="mistakes" value="Emotional Trade" /> Emotional Trade</label>
+                    <label><input type="checkbox" name="mistakes" value="No Clear Setup" /> No Clear Setup</label>
+                    <label><input type="checkbox" name="mistakes" value="Other" /> Other</label>
+                  </div>
+                </fieldset>
+
                 <div class="form-group">
                   <input name="tradingViewUrl" type="url" placeholder=" " />
                   <label class="floating-label">TradingView Link</label>
@@ -1374,7 +1438,7 @@
                     <textarea name="exitNote" rows="3" placeholder="Fill after the trade is closed."></textarea>
                   </div>
                 </label>
-                <label>General Note
+                <label>General Note / Audit Notes
                   <div class="markdown-editor-container">
                     <div class="md-toolbar">
                       <button type="button" class="md-btn" onclick="insertMarkdown(this, '**', '**')" title="Bold">B</button>

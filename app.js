@@ -245,6 +245,7 @@ function t(key) {
 function defaultState() {
   const base = {
     version: 1,
+    schemaVersion: 110,
     preferences: structuredClone(defaultPreferences),
     trades: starterTrades.map((trade) => normalizeTrade(trade)),
     dailyPlans: {
@@ -300,28 +301,57 @@ async function idbSet(key, val) {
 window.idbGet = idbGet;
 window.idbSet = idbSet;
 
+async function migrateDatabase(raw) {
+  if (!raw) return raw;
+  let currentSchema = raw.schemaVersion || 1;
+  
+  if (currentSchema < 110) {
+    console.info(`Migrating database from v${currentSchema} to v110...`);
+    try {
+      localStorage.setItem(`trd_backup_pre_migration_v${currentSchema}_${Date.now()}`, JSON.stringify(raw));
+    } catch(e) {
+      console.warn("Could not create pre-migration backup in localStorage", e);
+    }
+    
+    // Future migration steps can be chained here (e.g., if currentSchema === 1)
+    
+    raw.schemaVersion = 110;
+  }
+  
+  return raw;
+}
+
 async function loadState() {
   try {
-    const idbSaved = await idbGet(STORAGE_KEY);
-    if (idbSaved) return normalizeState(idbSaved);
+    let idbSaved = await idbGet(STORAGE_KEY);
+    if (idbSaved) {
+      idbSaved = await migrateDatabase(idbSaved);
+      return normalizeState(idbSaved);
+    }
   } catch (e) {
     console.error("IDB load failed", e);
   }
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
     try {
-      const parsed = JSON.parse(saved);
+      let parsed = JSON.parse(saved);
+      parsed = await migrateDatabase(parsed);
       await idbSet(STORAGE_KEY, parsed);
       return normalizeState(parsed);
-    } catch (e) {}
+    } catch (e) {
+      console.error("localStorage load failed", e);
+    }
   }
   const legacy = localStorage.getItem(LEGACY_KEY);
   if (legacy) {
     try {
-      const parsed = { trades: JSON.parse(legacy) };
+      let parsed = { trades: JSON.parse(legacy) };
+      parsed = await migrateDatabase(parsed);
       await idbSet(STORAGE_KEY, parsed);
       return normalizeState(parsed);
-    } catch (e) {}
+    } catch (e) {
+      console.error("Legacy load failed", e);
+    }
   }
   return defaultState();
 }
@@ -333,6 +363,7 @@ function normalizeState(raw) {
   }
   return ensureSopState({
     version: 1,
+    schemaVersion: raw.schemaVersion || 110,
     preferences: {
       ...structuredClone(defaultPreferences),
       ...(raw.preferences || {}),
@@ -382,9 +413,9 @@ function normalizeTrade(trade) {
     setup: trade.setup || defaultPreferences.setups[0],
     direction: trade.direction || "Long",
     grade: trade.grade || "B",
-    risk: Number(trade.risk || 0),
-    rMultiple: trade.rMultiple !== undefined && trade.rMultiple !== "" && !isNaN(Number(trade.rMultiple)) ? Number(trade.rMultiple) : "",
-    pnl: trade.pnl === "" || trade.pnl == null ? 0 : Number(trade.pnl || 0),
+    risk: (() => { const n = Number(trade.risk); return (!isNaN(n) && isFinite(n)) ? n : 0; })(),
+    rMultiple: (() => { if (trade.rMultiple === undefined || trade.rMultiple === "") return ""; const n = Number(trade.rMultiple); return (!isNaN(n) && isFinite(n)) ? n : ""; })(),
+    pnl: (() => { if (trade.pnl === "" || trade.pnl == null) return 0; const n = Number(trade.pnl); return (!isNaN(n) && isFinite(n)) ? n : 0; })(),
     rule: (trade.ruleStatus === "incomplete" || trade.rule === "incomplete" || trade.rule === "Incomplete") ? "incomplete" : (trade.ruleStatus === "violated" || trade.rule === false || trade.rule === "false" ? false : true),
     ruleStatus: (() => {
       // Priority: explicit ruleStatus > derive from rule field
@@ -401,6 +432,8 @@ function normalizeTrade(trade) {
     targetPlan: trade.targetPlan || "",
     exitNote: trade.exitNote || "",
     checklist: { hasPlan: false, hasTrigger: false, hasStop: false, hasTarget: false, emotionControlled: false, ...(trade.checklist || {}) },
+    audit: { compliance: "", stopLoss: "", takeProfit: "", emotionScore: 0, notes: "", ...(trade.audit || {}) },
+    mistakes: Array.isArray(trade.mistakes) ? trade.mistakes : (typeof trade.mistakes === "string" ? trade.mistakes.split(",").map(m => m.trim()) : []),
     tradingViewUrl: trade.tradingViewUrl || "",
     imageUrl: trade.imageUrl || "",
     imageData: trade.imageData || "",
@@ -410,8 +443,8 @@ function normalizeTrade(trade) {
     images: Array.isArray(trade.images) ? trade.images : [],
     preFlightChecklist: trade.preFlightChecklist || null,
     sopSnapshot: trade.sopSnapshot || null,
-    maeR: trade.maeR !== undefined && trade.maeR !== "" && trade.maeR !== null ? -Math.abs(Number(trade.maeR)) : null,
-    mfeR: trade.mfeR !== undefined && trade.mfeR !== "" && trade.mfeR !== null ? Math.abs(Number(trade.mfeR)) : null
+    maeR: (() => { if (trade.maeR === undefined || trade.maeR === "" || trade.maeR === null) return null; const n = Number(trade.maeR); return (!isNaN(n) && isFinite(n)) ? -Math.abs(n) : null; })(),
+    mfeR: (() => { if (trade.mfeR === undefined || trade.mfeR === "" || trade.mfeR === null) return null; const n = Number(trade.mfeR); return (!isNaN(n) && isFinite(n)) ? Math.abs(n) : null; })()
   };
 }
 
@@ -1803,6 +1836,17 @@ function renderAnalytics() {
   
   renderDistribution();
   executeAndRenderMonteCarlo();
+  
+  // Phase 3: Mistake Analytics
+  const mistakeGroup = {};
+  closedTrades().forEach(trade => {
+    if (!trade.mistakes || !trade.mistakes.length) return;
+    trade.mistakes.forEach(mistake => {
+      if (!mistakeGroup[mistake]) mistakeGroup[mistake] = [];
+      mistakeGroup[mistake].push(trade);
+    });
+  });
+  renderGroupedBars("mistakeBars", mistakeGroup);
 }
 
 function getTradeExecutionEfficiency(trade) {
@@ -1986,15 +2030,23 @@ window.getTradeExecutionEfficiency = getTradeExecutionEfficiency;
 window.renderSessionHeatmap = renderSessionHeatmap;
 window.renderMaeMfeScatterChart = renderMaeMfeScatterChart;
 
+function getSampleContextHtml(n) {
+  if (n < 20) return `<span class="sample-warning low" title="Low confidence (${n}/20) - Do not form strong conclusions yet.">⚠️ Low Sample (${n})</span>`;
+  if (n < 50) return `<span class="sample-warning medium" title="Medium confidence (${n}/50) - Trends are emerging.">🟡 Med Sample (${n})</span>`;
+  return `<span class="sample-warning high" title="High confidence (${n}+) - Statistical significance reached.">🟢 High Sample (${n})</span>`;
+}
+
 function renderGroupedBars(id, grouped) {
   const rows = Object.entries(grouped).map(([name, list]) => ({ name, list, ...metrics(list) })).sort((a, b) => b.expectancy - a.expectancy);
   if (!rows.length) {
-    document.getElementById(id).innerHTML = emptyState("No data yet.");
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = emptyState("No data yet.");
     return;
   }
   const totalCount = rows.reduce((sum, row) => sum + row.count, 0) || 1;
   
-  document.getElementById(id).innerHTML = rows.map((row) => {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = rows.map((row) => {
     const volumePct = Math.max((row.count / totalCount) * 100, 10);
     const winRatePct = Math.round(row.winRate * 100);
     const isPositive = row.expectancy >= 0;
@@ -2004,10 +2056,10 @@ function renderGroupedBars(id, grouped) {
         <div class="card-info">
           <div class="card-title-wrap">
             <span class="card-name">${safe(row.name)}</span>
-            <span class="card-count">${row.count} trades</span>
+            <span class="card-count">${getSampleContextHtml(row.count)}</span>
           </div>
           <div class="card-metrics">
-            <span class="card-r-val ${isPositive ? "positive" : "negative"}">${formatR(row.expectancy)}</span>
+            <span class="card-r-val ${isPositive ? "positive" : "negative"}">${formatR(row.expectancy)} Expectancy</span>
             <span class="card-winrate">${winRatePct}% win</span>
           </div>
         </div>
@@ -2888,6 +2940,19 @@ function editTrade(id) {
   const rSt = getTradeRuleStatus(trade);
   form.rule.value = rSt === "incomplete" ? "incomplete" : (rSt === "violated" ? "false" : "true");
   form.emotion.value = trade.emotion;
+  
+  // Populate Audit Fields
+  if (form.auditCompliance && trade.audit?.compliance) form.auditCompliance.value = trade.audit.compliance;
+  if (form.auditStopLoss && trade.audit?.stopLoss) form.auditStopLoss.value = trade.audit.stopLoss;
+  if (form.auditTakeProfit && trade.audit?.takeProfit) form.auditTakeProfit.value = trade.audit.takeProfit;
+  if (form.auditEmotionScore) form.auditEmotionScore.value = trade.audit?.emotionScore || "";
+  
+  // Populate Mistakes
+  const mistakeCheckboxes = form.querySelectorAll('input[name="mistakes"]');
+  mistakeCheckboxes.forEach(cb => {
+    cb.checked = (trade.mistakes || []).includes(cb.value);
+  });
+  
   form.tradingViewUrl.value = trade.tradingViewUrl || "";
   form.imageUrl.value = trade.imageUrl || "";
   form.entryPlan.value = trade.entryPlan || "";
@@ -2895,7 +2960,9 @@ function editTrade(id) {
   form.targetPlan.value = trade.targetPlan || "";
   form.exitNote.value = trade.exitNote || "";
   form.note.value = trade.note || "";
-  for (const key of Object.keys(trade.checklist || {})) form[key].checked = Boolean(trade.checklist[key]);
+  for (const key of Object.keys(trade.checklist || {})) {
+    if (form[key]) form[key].checked = Boolean(trade.checklist[key]);
+  }
   document.querySelector(".advanced-fields").open = trade.status !== "open";
   document.getElementById("tradeFormMode").textContent = trade.status === "open" ? "Update open trade" : "Edit closed trade";
   document.getElementById("saveTradeBtn").textContent = trade.status === "open" ? "Update Trade" : "Save Trade";
@@ -2985,6 +3052,14 @@ async function saveTradeFromForm(event) {
         hasTarget: form.hasTarget.checked,
         emotionControlled: form.emotionControlled.checked
       },
+      audit: {
+        compliance: form.auditCompliance?.value || "",
+        stopLoss: form.auditStopLoss?.value || "",
+        takeProfit: form.auditTakeProfit?.value || "",
+        emotionScore: Number(form.auditEmotionScore?.value) || 0,
+        notes: current.audit?.notes || ""
+      },
+      mistakes: Array.from(form.querySelectorAll('input[name="mistakes"]:checked')).map(cb => cb.value),
       preFlightChecklist: {
         passed: preflightPassed,
         items: preflightItems,

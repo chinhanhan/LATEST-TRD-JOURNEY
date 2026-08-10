@@ -62,8 +62,9 @@ class TRDDataEngine {
 
       const backupData = {
         app: "TRD Journey",
-        version: "2.0",
-        exportDate: new Date().toISOString(),
+        backupVersion: 2,
+        schemaVersion: stateData.schemaVersion || 110,
+        exportedAt: new Date().toISOString(),
         state: stateData
       };
 
@@ -93,8 +94,9 @@ class TRDDataEngine {
         let stateToRestore = null;
 
         if (data.state && typeof data.state === "object") {
-          // New v2.0 backup format: { app, version, exportDate, state: {...} }
+          // New v2.0 backup format: { app, backupVersion, exportedAt, state: {...} }
           stateToRestore = data.state;
+          stateToRestore.schemaVersion = data.schemaVersion || stateToRestore.schemaVersion || 110;
         } else if (data.trades && Array.isArray(data.trades)) {
           // Legacy v1.x backup format: { trades: [], sop: "...", accounts: "...", ... }
           // Reconstruct a minimal state object from the old fragmented format
@@ -116,6 +118,7 @@ class TRDDataEngine {
 
           stateToRestore = {
             version: 1,
+            schemaVersion: 110,
             trades: data.trades,
             sops: Array.isArray(sops) ? sops : [],
             accounts: Array.isArray(accounts) ? accounts : [],
@@ -129,6 +132,18 @@ class TRDDataEngine {
           };
         } else {
           alert("Invalid backup file: not a recognized TRD Journey backup format.");
+          return;
+        }
+
+        const tradeCount = (stateToRestore.trades || []).length;
+        const backupDate = data.exportedAt || data.exportDate || "Unknown";
+        
+        const action = confirm(
+          `Backup detected\n\nTrades: ${tradeCount}\nSOP Versions: ${(stateToRestore.sops || []).length}\nBackup Date: ${backupDate}\n\nClick [OK] to REPLACE your existing data with this backup.\nClick [Cancel] to ABORT.`
+        );
+        
+        if (!action) {
+          console.log("Import cancelled by user");
           return;
         }
 
@@ -147,7 +162,6 @@ class TRDDataEngine {
         }
         window.saveState = async () => {}; // Block any async auto-save race condition during reload
 
-        const tradeCount = (stateToRestore.trades || []).length;
         alert(`✅ Successfully restored ${tradeCount} trade record(s)!\nPage will reload now.`);
         window.location.reload();
       } catch (err) {
