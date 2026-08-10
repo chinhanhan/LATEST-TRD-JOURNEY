@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=v101-dimension3-indexeddb-storage-and-canvas-compression" />
+    <link rel="stylesheet" href="styles.css?v=v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix" />
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -663,6 +663,23 @@
                   <div class="heatmap-grid" id="disciplineHeatmap"></div>
                 </div>
               </section>
+
+              <!-- Session & Day-of-Week Quantitative Heatmap Matrix Panel -->
+              <section class="panel heatmap-panel" id="sessionHeatmapCard" style="margin-top:24px;">
+                <div class="panel-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                  <div>
+                    <p class="eyebrow">Quantitative Matrix</p>
+                    <h2>Session & Day-of-Week Profitability Matrix (交易时段与星期胜率/期望值热力图)</h2>
+                  </div>
+                  <span class="tag info" style="font-weight: 600;">2D Matrix Heatmap</span>
+                </div>
+                <p style="font-size: 13px; color: var(--muted); margin-top: 4px; margin-bottom: 14px;">
+                  Analyze your historical performance across days of the week and market sessions to pinpoint your highest expectancy trading windows.
+                </p>
+                <div class="heatmap-table-wrapper" id="heatmapMatrixContainer" style="overflow-x: auto;">
+                  <!-- Dynamically populated 2D Heatmap Grid -->
+                </div>
+              </section>
               <section class="panel" id="insightDetailPanel" style="display:none;">
                 <div class="panel-head"><div><p class="eyebrow" id="insightDetailKicker">Detail</p><h2 id="insightDetailTitle">Metric</h2></div><button class="ghost-button" id="closeInsightDetail">Close</button></div>
                 <svg class="line-chart" id="insightDetailChart" viewBox="0 0 760 300"></svg>
@@ -1277,6 +1294,16 @@
                 </div>
                 <div class="form-row">
                   <div class="form-group">
+                    <input name="maeR" type="number" step="0.1" placeholder=" " />
+                    <label class="floating-label">MAE (Max Adverse R / 逆向浮亏 R)</label>
+                  </div>
+                  <div class="form-group">
+                    <input name="mfeR" type="number" step="0.1" placeholder=" " />
+                    <label class="floating-label">MFE (Max Favorable R / 顺向浮盈 R)</label>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
                     <select name="rule">
                       <option value="true">🟢 Followed (遵守SOP)</option>
                       <option value="false">🔴 Violated (违反SOP)</option>
@@ -1355,10 +1382,10 @@
     <!-- React Bits Inspired Floating Dock Container -->
     <div class="dock-outer" id="reactBitsDock"></div>
     <canvas id="clickSparkCanvas" class="click-spark-canvas"></canvas>
-    <script defer src="audioEngine.js?v=v101-dimension3-indexeddb-storage-and-canvas-compression"></script>
-    <script defer src="dataEngine.js?v=v101-dimension3-indexeddb-storage-and-canvas-compression"></script>
-    <script defer src="dock.js?v=v101-dimension3-indexeddb-storage-and-canvas-compression"></script>
-    <script type="module" src="gallery.js?v=v101-dimension3-indexeddb-storage-and-canvas-compression"></script>
-    <script defer src="app.js?v=v101-dimension3-indexeddb-storage-and-canvas-compression"></script>
+    <script defer src="audioEngine.js?v=v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix"></script>
+    <script defer src="dataEngine.js?v=v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix"></script>
+    <script defer src="dock.js?v=v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix"></script>
+    <script type="module" src="gallery.js?v=v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix"></script>
+    <script defer src="app.js?v=v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix"></script>
   </body>
 </html>

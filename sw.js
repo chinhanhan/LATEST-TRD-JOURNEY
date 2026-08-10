@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v101-dimension3-indexeddb-storage-and-canvas-compression';
+const CACHE_NAME = 'trd-journey-v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v101-dimension3-indexeddb-storage-and-canvas-compression',
-  './audioEngine.js?v=v101-dimension3-indexeddb-storage-and-canvas-compression',
-  './dataEngine.js?v=v101-dimension3-indexeddb-storage-and-canvas-compression',
-  './dock.js?v=v101-dimension3-indexeddb-storage-and-canvas-compression',
-  './gallery.js?v=v101-dimension3-indexeddb-storage-and-canvas-compression',
-  './app.js?v=v101-dimension3-indexeddb-storage-and-canvas-compression',
+  './styles.css?v=v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix',
+  './audioEngine.js?v=v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix',
+  './dataEngine.js?v=v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix',
+  './dock.js?v=v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix',
+  './gallery.js?v=v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix',
+  './app.js?v=v102-dimension4-mae-mfe-excursion-and-session-heatmap-matrix',
   './manifest.json'
 ];
 

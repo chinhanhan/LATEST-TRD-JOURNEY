@@ -376,7 +376,9 @@ function normalizeTrade(trade) {
     reflection: trade.reflection || "",
     images: Array.isArray(trade.images) ? trade.images : [],
     preFlightChecklist: trade.preFlightChecklist || null,
-    sopSnapshot: trade.sopSnapshot || null
+    sopSnapshot: trade.sopSnapshot || null,
+    maeR: trade.maeR !== undefined && trade.maeR !== "" && trade.maeR !== null ? Number(trade.maeR) : null,
+    mfeR: trade.mfeR !== undefined && trade.mfeR !== "" && trade.mfeR !== null ? Number(trade.mfeR) : null
   };
 }
 
@@ -1000,6 +1002,7 @@ function renderAll() {
   renderSopJourney();
   renderTodayOpenTrades();
   renderAnalytics();
+  renderSessionHeatmap();
   renderWorkflow();
   renderCycles();
   renderPlaybook();
@@ -1764,6 +1767,107 @@ function renderAnalytics() {
   renderDistribution();
   executeAndRenderMonteCarlo();
 }
+
+function getTradeExecutionEfficiency(trade) {
+  const actualR = rValue(trade);
+  const mfe = Number(trade.mfeR);
+  if (!mfe || mfe <= 0 || isNaN(mfe)) return null;
+  const eff = (actualR / mfe) * 100;
+  return Math.max(0, Math.min(100, Math.round(eff)));
+}
+
+function renderSessionHeatmap() {
+  const container = document.getElementById("heatmapMatrixContainer");
+  if (!container) return;
+
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+  const sessions = [
+    { key: "Asia", label: "Asia (18:00-03:00 EST)" },
+    { key: "London", label: "London (03:00-09:30 EST)" },
+    { key: "NY_AM", label: "NY Morning (09:30-12:00 EST)" },
+    { key: "NY_PM", label: "NY Afternoon (12:00-16:00 EST)" }
+  ];
+
+  const matrix = {};
+  days.forEach((day) => {
+    matrix[day] = {};
+    sessions.forEach((s) => {
+      matrix[day][s.key] = { rSum: 0, count: 0, wins: 0 };
+    });
+  });
+
+  const trades = (state.trades || []).filter((t) => t.status === "closed");
+
+  trades.forEach((trade) => {
+    if (!trade.date) return;
+    const dateObj = new Date(trade.date);
+    if (isNaN(dateObj.getTime())) return;
+    const dayIdx = dateObj.getDay();
+    const dayMap = { 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri" };
+    const dayName = dayMap[dayIdx];
+    if (!dayName) return;
+
+    let sessionKey = "NY_AM";
+    if (trade.openTime) {
+      const parts = trade.openTime.split("T")[1];
+      if (parts) {
+        const hour = parseInt(parts.split(":")[0], 10);
+        if (hour >= 18 || hour < 3) sessionKey = "Asia";
+        else if (hour >= 3 && hour < 9) sessionKey = "London";
+        else if (hour >= 9 && hour < 12) sessionKey = "NY_AM";
+        else if (hour >= 12 && hour < 18) sessionKey = "NY_PM";
+      }
+    }
+
+    const r = rValue(trade);
+    if (matrix[dayName] && matrix[dayName][sessionKey]) {
+      matrix[dayName][sessionKey].rSum += r;
+      matrix[dayName][sessionKey].count += 1;
+      if (r > 0) matrix[dayName][sessionKey].wins += 1;
+    }
+  });
+
+  let html = `<table class="heatmap-matrix-table">
+    <thead>
+      <tr>
+        <th class="row-header">Day / Session</th>
+        ${sessions.map((s) => `<th>${safe(s.label)}</th>`).join("")}
+      </tr>
+    </thead>
+    <tbody>
+  `;
+
+  days.forEach((day) => {
+    html += `<tr><th class="row-header">${day}</th>`;
+    sessions.forEach((s) => {
+      const cellData = matrix[day][s.key];
+      const count = cellData.count;
+      const rSum = cellData.rSum;
+      const winRate = count > 0 ? Math.round((cellData.wins / count) * 100) : 0;
+      
+      let levelClass = "level-neutral";
+      if (count > 0) {
+        if (rSum >= 3) levelClass = "level-positive-high";
+        else if (rSum > 0) levelClass = "level-positive-mid";
+        else if (rSum <= -3) levelClass = "level-negative-high";
+        else if (rSum < 0) levelClass = "level-negative-mid";
+      }
+
+      const cellText = count > 0
+        ? `<strong>${formatR(rSum)}</strong><div style="font-size:10px; opacity:0.85; margin-top:2px;">${winRate}% WR (${count}T)</div>`
+        : `<span style="opacity:0.4;">-</span>`;
+
+      html += `<td class="heatmap-cell ${levelClass}">${cellText}</td>`;
+    });
+    html += `</tr>`;
+  });
+
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+}
+
+window.getTradeExecutionEfficiency = getTradeExecutionEfficiency;
+window.renderSessionHeatmap = renderSessionHeatmap;
 
 function renderGroupedBars(id, grouped) {
   const rows = Object.entries(grouped).map(([name, list]) => ({ name, list, ...metrics(list) })).sort((a, b) => b.expectancy - a.expectancy);
@@ -2662,6 +2766,8 @@ function editTrade(id) {
   form.grade.value = trade.grade;
   form.risk.value = trade.risk;
   form.pnl.value = trade.status === "open" ? "" : trade.pnl;
+  if (form.maeR) form.maeR.value = trade.maeR !== null && trade.maeR !== undefined ? trade.maeR : "";
+  if (form.mfeR) form.mfeR.value = trade.mfeR !== null && trade.mfeR !== undefined ? trade.mfeR : "";
   const rSt = getTradeRuleStatus(trade);
   form.rule.value = rSt === "incomplete" ? "incomplete" : (rSt === "violated" ? "false" : "true");
   form.emotion.value = trade.emotion;
@@ -2741,6 +2847,8 @@ async function saveTradeFromForm(event) {
       grade: form.grade.value,
       risk: Number(form.risk.value),
       pnl: hasResult ? Number(form.pnl.value) : "",
+      maeR: form.maeR?.value.trim() !== "" ? Number(form.maeR.value) : "",
+      mfeR: form.mfeR?.value.trim() !== "" ? Number(form.mfeR.value) : "",
       rule: form.rule.value === "incomplete" ? "incomplete" : form.rule.value === "true",
       ruleStatus: form.rule.value === "incomplete" ? "incomplete" : (form.rule.value === "false" ? "violated" : "followed"),
       emotion: form.emotion.value,
@@ -2959,6 +3067,10 @@ function openDetail(id) {
     `
     : "";
 
+  const eff = getTradeExecutionEfficiency(trade);
+  const effText = eff !== null ? `${eff}% Efficiency` : (trade.mfeR ? `MFE: +${trade.mfeR}R` : "MFE Not Set");
+  const maeSub = trade.maeR !== null && trade.maeR !== undefined && trade.maeR !== "" ? `MAE: ${trade.maeR}R` : "MAE Not Set";
+
   openModal("Trade detail", "Journal", `
     <div class="day-detail">
       <div class="insight-grid">${[
@@ -2966,6 +3078,7 @@ function openDetail(id) {
         insightCard("Status", trade.status === "open" ? "Open" : "Closed", trade.status === "open" ? "Not in statistics yet" : formatR(rValue(trade))),
         insightCard("SOP", `${sopName(trade.sopId)} (v${sopVer})`, accountName(trade.accountId)),
         insightCard("Setup", trade.setup, `Grade ${trade.grade}`),
+        insightCard("Execution Eff.", effText, maeSub),
         insightCard("Process", getTradeRuleStatus(trade) === "incomplete" ? "SOP Incomplete" : (getTradeRuleStatus(trade) === "violated" ? "Broken" : "Followed"), trade.emotion)
       ].join("")}</div>
       ${snapshotDrawer}

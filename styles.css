@@ -3313,6 +3313,78 @@ tbody tr:hover {
   color: #34c759;
 }
 
+/* 2D Session & Day-of-Week Heatmap Matrix Table */
+.heatmap-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.heatmap-matrix-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 8px;
+  font-size: 13px;
+}
+
+.heatmap-matrix-table th {
+  padding: 10px 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  text-align: center;
+}
+
+.heatmap-matrix-table th.row-header {
+  text-align: left;
+  font-weight: 700;
+  color: var(--text);
+  width: 110px;
+}
+
+.heatmap-matrix-table td.heatmap-cell {
+  padding: 14px 10px;
+  border-radius: 14px;
+  text-align: center;
+  font-size: 12px;
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+  cursor: default;
+}
+
+.heatmap-matrix-table td.heatmap-cell:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.heatmap-cell.level-positive-high {
+  background: rgba(52, 199, 89, 0.22);
+  border: 1px solid rgba(52, 199, 89, 0.5);
+  color: #248a3d;
+}
+
+.heatmap-cell.level-positive-mid {
+  background: rgba(52, 199, 89, 0.12);
+  border: 1px solid rgba(52, 199, 89, 0.3);
+  color: #248a3d;
+}
+
+.heatmap-cell.level-negative-high {
+  background: rgba(255, 59, 48, 0.22);
+  border: 1px solid rgba(255, 59, 48, 0.5);
+  color: #d70015;
+}
+
+.heatmap-cell.level-negative-mid {
+  background: rgba(255, 59, 48, 0.12);
+  border: 1px solid rgba(255, 59, 48, 0.3);
+  color: #d70015;
+}
+
+.heatmap-cell.level-neutral {
+  background: rgba(142, 142, 147, 0.08);
+  border: 1px solid rgba(142, 142, 147, 0.2);
+  color: var(--muted);
+}
+
 #tradeForm button[type="submit"]:disabled {
   opacity: 0.45;
   cursor: not-allowed !allowed;
