@@ -325,7 +325,9 @@ async function loadState() {
   try {
     let idbSaved = await idbGet(STORAGE_KEY);
     if (idbSaved) {
+      const oldSchema = idbSaved.schemaVersion || 1;
       idbSaved = await migrateDatabase(idbSaved);
+      if (oldSchema < 110) await idbSet(STORAGE_KEY, idbSaved);
       return normalizeState(idbSaved);
     }
   } catch (e) {
@@ -2031,9 +2033,10 @@ window.renderSessionHeatmap = renderSessionHeatmap;
 window.renderMaeMfeScatterChart = renderMaeMfeScatterChart;
 
 function getSampleContextHtml(n) {
-  if (n < 20) return `<span class="sample-warning low" title="Low confidence (${n}/20) - Do not form strong conclusions yet.">⚠️ Low Sample (${n})</span>`;
-  if (n < 50) return `<span class="sample-warning medium" title="Medium confidence (${n}/50) - Trends are emerging.">🟡 Med Sample (${n})</span>`;
-  return `<span class="sample-warning high" title="High confidence (${n}+) - Statistical significance reached.">🟢 High Sample (${n})</span>`;
+  const base = "font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: 500; display: inline-flex; align-items: center; gap: 4px;";
+  if (n < 20) return `<span style="${base} background: var(--bg-card); color: #f59e0b; border: 1px solid #f59e0b33;" title="Low confidence (${n}/20) - Do not form strong conclusions yet.">⚠️ Low Sample (${n})</span>`;
+  if (n < 50) return `<span style="${base} background: var(--bg-card); color: #8b5cf6; border: 1px solid #8b5cf633;" title="Medium confidence (${n}/50) - Trends are emerging.">🟡 Med Sample (${n})</span>`;
+  return `<span style="${base} background: var(--bg-card); color: #10b981; border: 1px solid #10b98133;" title="High confidence (${n}+) - Statistical significance reached.">🟢 High Sample (${n})</span>`;
 }
 
 function renderGroupedBars(id, grouped) {
