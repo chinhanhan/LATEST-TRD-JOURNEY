@@ -1971,6 +1971,7 @@ function renderMaeMfeScatterChart() {
 
     elements.push(`
       <g class="scatter-point" style="cursor:pointer;" onclick="window.openDetail('${t.id}')">
+        <circle cx="${cx}" cy="${cy}" r="18" fill="transparent"><title>${safe(title)}</title></circle>
         <circle cx="${cx}" cy="${cy}" r="6" fill="${color}" opacity="0.85" stroke="#ffffff" stroke-width="1.5">
           <title>${safe(title)}</title>
         </circle>

@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v109-dimensions-1-to-5-deep-normalization-refinement';
+const CACHE_NAME = 'trd-journey-v110-dimensions-1-to-5-mobile-touch-target-scatter-enhancement';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v109-dimensions-1-to-5-deep-normalization-refinement',
-  './audioEngine.js?v=v109-dimensions-1-to-5-deep-normalization-refinement',
-  './dataEngine.js?v=v109-dimensions-1-to-5-deep-normalization-refinement',
-  './dock.js?v=v109-dimensions-1-to-5-deep-normalization-refinement',
-  './gallery.js?v=v109-dimensions-1-to-5-deep-normalization-refinement',
-  './app.js?v=v109-dimensions-1-to-5-deep-normalization-refinement',
+  './styles.css?v=v110-dimensions-1-to-5-mobile-touch-target-scatter-enhancement',
+  './audioEngine.js?v=v110-dimensions-1-to-5-mobile-touch-target-scatter-enhancement',
+  './dataEngine.js?v=v110-dimensions-1-to-5-mobile-touch-target-scatter-enhancement',
+  './dock.js?v=v110-dimensions-1-to-5-mobile-touch-target-scatter-enhancement',
+  './gallery.js?v=v110-dimensions-1-to-5-mobile-touch-target-scatter-enhancement',
+  './app.js?v=v110-dimensions-1-to-5-mobile-touch-target-scatter-enhancement',
   './manifest.json'
 ];
 
