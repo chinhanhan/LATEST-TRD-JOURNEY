@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards" />
+    <link rel="stylesheet" href="styles.css?v=v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator" />
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -678,6 +678,27 @@
                 </p>
                 <div class="heatmap-table-wrapper" id="heatmapMatrixContainer" style="overflow-x: auto;">
                   <!-- Dynamically populated 2D Heatmap Grid -->
+                </div>
+              </section>
+
+              <!-- MAE vs MFE Excursion Scatter Plot Matrix Panel -->
+              <section class="panel scatter-panel" id="maeMfeScatterPanel" style="margin-top:24px;">
+                <div class="panel-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                  <div>
+                    <p class="eyebrow">Quantitative Excursion</p>
+                    <h2>MAE vs MFE Scatter Distribution (逆向/顺向浮动 R 散点分布图)</h2>
+                  </div>
+                  <span class="tag info" style="font-weight: 600;">2D Scatter Matrix</span>
+                </div>
+                <p style="font-size: 13px; color: var(--muted); margin-top: 4px; margin-bottom: 14px;">
+                  Compare Maximum Adverse Excursion (MAE) against Maximum Favorable Excursion (MFE) to evaluate stop-loss placement and profit retention.
+                </p>
+                <div style="position:relative; width:100%; overflow-x:auto;">
+                  <svg id="maeMfeScatterSvg" viewBox="0 0 760 320" style="width:100%; height:auto; min-width:500px;" role="img" aria-label="MAE vs MFE Scatter Plot"></svg>
+                </div>
+                <div style="margin-top:12px; font-size:11px; color:var(--muted); display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                  <span style="display:flex; align-items:center; gap:6px;"><span style="width:10px; height:10px; background:#34c759; border-radius:50%; display:inline-block;"></span> Winning Trades (浮盈离场)</span>
+                  <span style="display:flex; align-items:center; gap:6px;"><span style="width:10px; height:10px; background:#ff3b30; border-radius:50%; display:inline-block;"></span> Losing Trades (浮亏/止损离场)</span>
                 </div>
               </section>
               <section class="panel" id="insightDetailPanel" style="display:none;">
@@ -1382,10 +1403,10 @@
     <!-- React Bits Inspired Floating Dock Container -->
     <div class="dock-outer" id="reactBitsDock"></div>
     <canvas id="clickSparkCanvas" class="click-spark-canvas"></canvas>
-    <script defer src="audioEngine.js?v=v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards"></script>
-    <script defer src="dataEngine.js?v=v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards"></script>
-    <script defer src="dock.js?v=v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards"></script>
-    <script type="module" src="gallery.js?v=v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards"></script>
-    <script defer src="app.js?v=v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards"></script>
+    <script defer src="audioEngine.js?v=v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator"></script>
+    <script defer src="dataEngine.js?v=v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator"></script>
+    <script defer src="dock.js?v=v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator"></script>
+    <script type="module" src="gallery.js?v=v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator"></script>
+    <script defer src="app.js?v=v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator"></script>
   </body>
 </html>

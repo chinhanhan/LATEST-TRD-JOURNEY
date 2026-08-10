@@ -1036,6 +1036,7 @@ function renderAll() {
   renderTodayOpenTrades();
   renderAnalytics();
   renderSessionHeatmap();
+  renderMaeMfeScatterChart();
   renderWorkflow();
   renderCycles();
   renderPlaybook();
@@ -1906,8 +1907,83 @@ function renderSessionHeatmap() {
   container.innerHTML = html;
 }
 
+function renderMaeMfeScatterChart() {
+  const svg = document.getElementById("maeMfeScatterSvg");
+  if (!svg) return;
+
+  const closed = (state.trades || []).filter((t) => t.status === "closed" && (t.maeR !== null || t.mfeR !== null));
+  if (!closed.length) {
+    svg.innerHTML = `<text x="380" y="160" text-anchor="middle" fill="var(--muted)" font-size="13">No MAE/MFE trade data recorded yet. Log MAE & MFE in trade form to view scatter distribution.</text>`;
+    return;
+  }
+
+  const width = 760;
+  const height = 320;
+  const padding = { top: 30, right: 40, bottom: 40, left: 60 };
+
+  let maxMae = 2.0;
+  let maxMfe = 4.0;
+
+  closed.forEach((t) => {
+    if (t.maeR !== null) maxMae = Math.max(maxMae, Math.abs(t.maeR));
+    if (t.mfeR !== null) maxMfe = Math.max(maxMfe, t.mfeR);
+  });
+
+  const chartW = width - padding.left - padding.right;
+  const chartH = height - padding.top - padding.bottom;
+
+  const scaleX = (mae) => {
+    const absMae = Math.abs(mae || 0);
+    return padding.left + (absMae / maxMae) * chartW;
+  };
+
+  const scaleY = (mfe) => {
+    const valMfe = Math.max(0, mfe || 0);
+    return padding.top + chartH - (valMfe / maxMfe) * chartH;
+  };
+
+  let elements = [];
+
+  for (let i = 0; i <= 4; i++) {
+    const yVal = (maxMfe / 4) * i;
+    const yPos = scaleY(yVal);
+    elements.push(`<line x1="${padding.left}" y1="${yPos}" x2="${width - padding.right}" y2="${yPos}" stroke="var(--hairline)" stroke-dasharray="3,3" />`);
+    elements.push(`<text x="${padding.left - 10}" y="${yPos + 4}" text-anchor="end" fill="var(--muted)" font-size="10">+${yVal.toFixed(1)}R</text>`);
+  }
+
+  for (let i = 0; i <= 4; i++) {
+    const xVal = (-maxMae / 4) * i;
+    const xPos = scaleX(xVal);
+    elements.push(`<line x1="${xPos}" y1="${padding.top}" x2="${xPos}" y2="${height - padding.bottom}" stroke="var(--hairline)" stroke-dasharray="3,3" />`);
+    elements.push(`<text x="${xPos}" y="${height - padding.bottom + 16}" text-anchor="middle" fill="var(--muted)" font-size="10">${xVal.toFixed(1)}R</text>`);
+  }
+
+  elements.push(`<text x="${width / 2}" y="${height - 4}" text-anchor="middle" fill="var(--text)" font-size="11" font-weight="600">MAE (Maximum Adverse Excursion / 逆向浮亏 R)</text>`);
+  elements.push(`<text x="16" y="${height / 2}" text-anchor="middle" fill="var(--text)" font-size="11" font-weight="600" transform="rotate(-90 16 ${height / 2})">MFE (Maximum Favorable Excursion / 顺向浮盈 R)</text>`);
+
+  closed.forEach((t) => {
+    const cx = scaleX(t.maeR || 0);
+    const cy = scaleY(t.mfeR || 0);
+    const r = rValue(t);
+    const isWin = r > 0;
+    const color = isWin ? "#34c759" : "#ff3b30";
+    const title = `${t.symbol} (${t.date}): ${formatR(r)} | MAE: ${t.maeR ?? 'N/A'}R | MFE: +${t.mfeR ?? 'N/A'}R`;
+
+    elements.push(`
+      <g class="scatter-point" style="cursor:pointer;" onclick="window.openDetail('${t.id}')">
+        <circle cx="${cx}" cy="${cy}" r="6" fill="${color}" opacity="0.85" stroke="#ffffff" stroke-width="1.5">
+          <title>${safe(title)}</title>
+        </circle>
+      </g>
+    `);
+  });
+
+  svg.innerHTML = elements.join("");
+}
+
 window.getTradeExecutionEfficiency = getTradeExecutionEfficiency;
 window.renderSessionHeatmap = renderSessionHeatmap;
+window.renderMaeMfeScatterChart = renderMaeMfeScatterChart;
 
 function renderGroupedBars(id, grouped) {
   const rows = Object.entries(grouped).map(([name, list]) => ({ name, list, ...metrics(list) })).sort((a, b) => b.expectancy - a.expectancy);

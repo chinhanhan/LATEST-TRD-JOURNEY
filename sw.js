@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards';
+const CACHE_NAME = 'trd-journey-v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards',
-  './audioEngine.js?v=v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards',
-  './dataEngine.js?v=v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards',
-  './dock.js?v=v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards',
-  './gallery.js?v=v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards',
-  './app.js?v=v105-dimension5-jsdoc-types-passive-listeners-and-runtime-resilience-guards',
+  './styles.css?v=v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator',
+  './audioEngine.js?v=v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator',
+  './dataEngine.js?v=v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator',
+  './dock.js?v=v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator',
+  './gallery.js?v=v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator',
+  './app.js?v=v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator',
   './manifest.json'
 ];
 
