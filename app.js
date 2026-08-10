@@ -2827,11 +2827,21 @@ function openDetail(id) {
   if (imgs.length > 1) {
     imageHtml = `
       <div class="carousel-container" style="display:flex; overflow-x:auto; gap:12px; padding-bottom:8px;">
-        ${imgs.map((src, i) => `<button class="text-button" data-image="${trade.id}" data-index="${i}" style="flex-shrink:0; border:1px solid var(--hairline); border-radius:8px; overflow:hidden;"><img src="${src}" alt="Screenshot ${i+1}" style="max-height:160px; object-fit:cover;" /></button>`).join("")}
+        ${imgs.map((src, i) => `
+          <button class="text-button" data-image="${trade.id}" data-index="${i}" style="flex-shrink:0; border:1px solid var(--hairline); border-radius:8px; overflow:hidden; position:relative; min-width:140px; min-height:100px; background:var(--hairline);">
+            <img src="${src}" alt="Screenshot ${i+1}" style="max-height:160px; object-fit:cover; display:block;" loading="lazy" />
+          </button>
+        `).join("")}
       </div>
     `;
   } else if (imgs.length === 1) {
-    imageHtml = `<button class="text-button" data-image="${trade.id}" data-index="0"><img src="${imgs[0]}" alt="Chart screenshot" /></button>`;
+    imageHtml = `
+      <div style="position:relative; border-radius:12px; overflow:hidden; min-height:160px;" class="skeleton-shimmer">
+        <button class="text-button" data-image="${trade.id}" data-index="0" style="width:100%; display:block;">
+          <img src="${imgs[0]}" alt="Chart screenshot" style="width:100%; display:block; border-radius:12px;" loading="lazy" onload="this.parentElement.parentElement.classList.remove('skeleton-shimmer')" />
+        </button>
+      </div>
+    `;
   }
 
   const preflightHtml = trade.preFlightChecklist?.passed

@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v98-deep-audit-open-sheet-fresh-preflight-render';
+const CACHE_NAME = 'trd-journey-v99-dimension1-ui-ux-design-tokens-and-skeleton-shimmer';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v98-deep-audit-open-sheet-fresh-preflight-render',
-  './audioEngine.js?v=v98-deep-audit-open-sheet-fresh-preflight-render',
-  './dataEngine.js?v=v98-deep-audit-open-sheet-fresh-preflight-render',
-  './dock.js?v=v98-deep-audit-open-sheet-fresh-preflight-render',
-  './gallery.js?v=v98-deep-audit-open-sheet-fresh-preflight-render',
-  './app.js?v=v98-deep-audit-open-sheet-fresh-preflight-render',
+  './styles.css?v=v99-dimension1-ui-ux-design-tokens-and-skeleton-shimmer',
+  './audioEngine.js?v=v99-dimension1-ui-ux-design-tokens-and-skeleton-shimmer',
+  './dataEngine.js?v=v99-dimension1-ui-ux-design-tokens-and-skeleton-shimmer',
+  './dock.js?v=v99-dimension1-ui-ux-design-tokens-and-skeleton-shimmer',
+  './gallery.js?v=v99-dimension1-ui-ux-design-tokens-and-skeleton-shimmer',
+  './app.js?v=v99-dimension1-ui-ux-design-tokens-and-skeleton-shimmer',
   './manifest.json'
 ];
 

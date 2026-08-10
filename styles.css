@@ -25,6 +25,14 @@
   --motion-fast: 160ms;
   --motion-base: 260ms;
   --motion-sheet: 420ms;
+  /* Z-Index Design Tokens */
+  --z-back: -1;
+  --z-normal: 1;
+  --z-dock: 100;
+  --z-sheet: 500;
+  --z-modal: 1000;
+  --z-toast: 2000;
+  --z-lightbox: 3000;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -2975,7 +2983,7 @@ tbody tr:hover {
   background: rgba(0, 0, 0, 0); /* 渐变 */
   backdrop-filter: blur(0px) saturate(100%);
   -webkit-backdrop-filter: blur(0px) saturate(100%);
-  z-index: 2500;
+  z-index: var(--z-sheet);
   display: flex;
   justify-content: center;
   align-items: flex-end; /* 从底部滑出 */
@@ -3004,12 +3012,20 @@ tbody tr:hover {
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 32px 32px 0 0; /* 圆角底部切平 */
   box-shadow: 0 -15px 45px rgba(0, 0, 0, 0.15);
-  padding: 24px 32px 56px 32px;
+  padding: 24px 32px max(32px, env(safe-area-inset-bottom)) 32px;
   max-height: 90vh; /* 避免溢出屏幕 */
   display: flex;
   flex-direction: column;
   transform: translateY(100%); /* 自下而上隐藏 */
   transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@media (max-width: 480px) {
+  .sheet-card {
+    padding: 16px 18px max(24px, env(safe-area-inset-bottom)) 18px;
+    max-height: 95vh;
+    border-radius: 24px 24px 0 0;
+  }
 }
 
 /* 暗色模式适配 */
@@ -3184,14 +3200,16 @@ tbody tr:hover {
 .preflight-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
   background: rgba(255, 255, 255, 0.6);
   border: 1px solid var(--border);
   border-radius: 12px;
   cursor: pointer;
   user-select: none;
   transition: all 0.2s ease;
+  touch-action: manipulation;
 }
 
 [data-theme="dark"] .preflight-item {
@@ -3204,8 +3222,9 @@ tbody tr:hover {
 }
 
 .preflight-item input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
   accent-color: var(--blue);
   cursor: pointer;
 }
@@ -3227,6 +3246,30 @@ tbody tr:hover {
   color: var(--text);
   text-decoration: line-through;
   opacity: 0.85;
+}
+
+/* Skeleton Shimmer Loading Placeholder */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, rgba(220, 220, 225, 0.3) 25%, rgba(245, 245, 250, 0.6) 37%, rgba(220, 220, 225, 0.3) 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer-anim 1.4s ease infinite;
+  border-radius: var(--radius-small);
+}
+
+[data-theme="dark"] .skeleton-shimmer {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.14) 37%, rgba(255, 255, 255, 0.05) 63%);
+  background-size: 400% 100%;
+}
+
+@keyframes skeleton-shimmer-anim {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+.skeleton-box {
+  width: 100%;
+  min-height: 140px;
+  border-radius: 12px;
 }
 
 .preflight-footer-hint {
