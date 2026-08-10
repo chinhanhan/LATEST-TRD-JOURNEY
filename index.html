@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=v93-preflight-gate-feature" />
+    <link rel="stylesheet" href="styles.css?v=v94-dynamic-sop-checklist-length-and-quick-edit" />
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -1159,7 +1159,7 @@
               </div>
             </div>
 
-            <!-- Pre-Flight Risk Checklist Gate (开仓前 5 项注意事项强制检查卡片) -->
+            <!-- Pre-Flight Risk Checklist Gate (开仓前风控检查卡片) -->
             <div class="pre-flight-card" id="preFlightCard">
               <div class="pre-flight-header">
                 <div class="pre-flight-title-box">
@@ -1169,10 +1169,13 @@
                     <p class="pre-flight-subtitle">核对当前 SOP 注意事项，全部勾选后解锁开仓</p>
                   </div>
                 </div>
-                <span class="preflight-progress-pill" id="preflightProgressPill">0/5 Rules Checked</span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <button class="ghost-button compact" type="button" onclick="if(window.openSopModal) window.openSopModal(document.getElementById('tradeSopSelect')?.value || state.activeSopId)" style="font-size:11px; padding:2px 8px; border-radius:9999px;" title="修改当前 SOP 的注意事项与规则">⚙️ 修改规则</button>
+                  <span class="preflight-progress-pill" id="preflightProgressPill">0 Rules Checked</span>
+                </div>
               </div>
               <div class="preflight-checklist-grid" id="preflightChecklistContainer">
-                <!-- Dynamically populated 5 checklist items -->
+                <!-- Dynamically populated SOP checklist items -->
               </div>
               <div class="preflight-footer-hint" id="preflightHint">
                 ⚠️ 必须打勾确认所有注意事项后，方可开启交易。
@@ -1337,10 +1340,10 @@
     <!-- React Bits Inspired Floating Dock Container -->
     <div class="dock-outer" id="reactBitsDock"></div>
     <canvas id="clickSparkCanvas" class="click-spark-canvas"></canvas>
-    <script defer src="audioEngine.js?v=v93-preflight-gate-feature"></script>
-    <script defer src="dataEngine.js?v=v93-preflight-gate-feature"></script>
-    <script defer src="dock.js?v=v93-preflight-gate-feature"></script>
-    <script type="module" src="gallery.js?v=v93-preflight-gate-feature"></script>
-    <script defer src="app.js?v=v93-preflight-gate-feature"></script>
+    <script defer src="audioEngine.js?v=v94-dynamic-sop-checklist-length-and-quick-edit"></script>
+    <script defer src="dataEngine.js?v=v94-dynamic-sop-checklist-length-and-quick-edit"></script>
+    <script defer src="dock.js?v=v94-dynamic-sop-checklist-length-and-quick-edit"></script>
+    <script type="module" src="gallery.js?v=v94-dynamic-sop-checklist-length-and-quick-edit"></script>
+    <script defer src="app.js?v=v94-dynamic-sop-checklist-length-and-quick-edit"></script>
   </body>
 </html>

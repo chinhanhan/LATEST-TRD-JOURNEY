@@ -2413,12 +2413,7 @@ function renderPreFlightChecklist(sopId = null, existingSavedChecklist = null) {
     "5. 情绪平静稳定，无 FOMO/报复心理"
   ];
 
-  let rules = [...rawRules];
-  if (rules.length < 5) {
-    rules = rules.concat(defaultRules.slice(rules.length, 5));
-  } else {
-    rules = rules.slice(0, 5);
-  }
+  let rules = rawRules.length > 0 ? rawRules : defaultRules;
 
   _prevChecklistFull = false;
 
@@ -2445,6 +2440,9 @@ function renderPreFlightChecklist(sopId = null, existingSavedChecklist = null) {
 
   updatePreFlightChecklistProgress(true);
 }
+
+window.renderPreFlightChecklist = renderPreFlightChecklist;
+window.updatePreFlightChecklistProgress = updatePreFlightChecklistProgress;
 
 function updatePreFlightChecklistProgress(silent = false) {
   const container = document.getElementById("preflightChecklistContainer");
