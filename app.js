@@ -1833,7 +1833,7 @@ function renderSessionHeatmap() {
     });
   });
 
-  const trades = (state.trades || []).filter((t) => t.status === "closed");
+  const trades = (typeof getActiveAccountTrades === "function" ? getActiveAccountTrades() : (state.trades || [])).filter((t) => t.status === "closed");
 
   trades.forEach((trade) => {
     if (!trade.date) return;
@@ -1911,7 +1911,7 @@ function renderMaeMfeScatterChart() {
   const svg = document.getElementById("maeMfeScatterSvg");
   if (!svg) return;
 
-  const closed = (state.trades || []).filter((t) => t.status === "closed" && (t.maeR !== null || t.mfeR !== null));
+  const closed = (typeof getActiveAccountTrades === "function" ? getActiveAccountTrades() : (state.trades || [])).filter((t) => t.status === "closed" && (t.maeR !== null || t.mfeR !== null));
   if (!closed.length) {
     svg.innerHTML = `<text x="380" y="160" text-anchor="middle" fill="var(--muted)" font-size="13">No MAE/MFE trade data recorded yet. Log MAE & MFE in trade form to view scatter distribution.</text>`;
     return;

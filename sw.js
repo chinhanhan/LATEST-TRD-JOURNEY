@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v107-dimension6-pwa-offline-and-pro-keyboard-shortcuts-command-palette';
+const CACHE_NAME = 'trd-journey-v108-dimensions-1-to-6-complete-audit-and-account-filtering-sync';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v107-dimension6-pwa-offline-and-pro-keyboard-shortcuts-command-palette',
-  './audioEngine.js?v=v107-dimension6-pwa-offline-and-pro-keyboard-shortcuts-command-palette',
-  './dataEngine.js?v=v107-dimension6-pwa-offline-and-pro-keyboard-shortcuts-command-palette',
-  './dock.js?v=v107-dimension6-pwa-offline-and-pro-keyboard-shortcuts-command-palette',
-  './gallery.js?v=v107-dimension6-pwa-offline-and-pro-keyboard-shortcuts-command-palette',
-  './app.js?v=v107-dimension6-pwa-offline-and-pro-keyboard-shortcuts-command-palette',
+  './styles.css?v=v108-dimensions-1-to-6-complete-audit-and-account-filtering-sync',
+  './audioEngine.js?v=v108-dimensions-1-to-6-complete-audit-and-account-filtering-sync',
+  './dataEngine.js?v=v108-dimensions-1-to-6-complete-audit-and-account-filtering-sync',
+  './dock.js?v=v108-dimensions-1-to-6-complete-audit-and-account-filtering-sync',
+  './gallery.js?v=v108-dimensions-1-to-6-complete-audit-and-account-filtering-sync',
+  './app.js?v=v108-dimensions-1-to-6-complete-audit-and-account-filtering-sync',
   './manifest.json'
 ];
 
