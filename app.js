@@ -5885,7 +5885,70 @@ function checkTradeFormNewsRisk() {
   }
 }
 
+function openCommandPaletteModal() {
+  const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+  const modSymbol = isMac ? "⌘" : "Ctrl";
+
+  const commandHtml = `
+    <div class="command-palette-list" style="display:flex; flex-direction:column; gap:10px; margin:10px 0;">
+      <button class="ghost-button" onclick="closeModal(); openSheet('tradeFormSheet');" style="display:flex; align-items:center; justify-content:space-between; text-align:left; padding:12px 16px; border-radius:12px;">
+        <span>🚀 Start New Trade (开启新交易)</span>
+        <kbd style="font-size:11px; padding:2px 6px; background:var(--hairline); border-radius:4px;">${modSymbol} + N</kbd>
+      </button>
+      <button class="ghost-button" onclick="closeModal(); openModule('journal');" style="display:flex; align-items:center; justify-content:space-between; text-align:left; padding:12px 16px; border-radius:12px;">
+        <span>📖 Open Journal Trail (打开交易日志)</span>
+        <kbd style="font-size:11px; padding:2px 6px; background:var(--hairline); border-radius:4px;">Journal</kbd>
+      </button>
+      <button class="ghost-button" onclick="closeModal(); openModule('review');" style="display:flex; align-items:center; justify-content:space-between; text-align:left; padding:12px 16px; border-radius:12px;">
+        <span>📊 Open Analytics & 2D Matrix (打开复盘矩阵)</span>
+        <kbd style="font-size:11px; padding:2px 6px; background:var(--hairline); border-radius:4px;">Analytics</kbd>
+      </button>
+      <button class="ghost-button" onclick="closeModal(); window.exportJSONBackup();" style="display:flex; align-items:center; justify-content:space-between; text-align:left; padding:12px 16px; border-radius:12px;">
+        <span>⚡ 1-Click JSON Backup (下载紧急安全备份)</span>
+        <kbd style="font-size:11px; padding:2px 6px; background:var(--hairline); border-radius:4px;">${modSymbol} + S</kbd>
+      </button>
+      <button class="ghost-button" onclick="closeModal(); openModule('settings');" style="display:flex; align-items:center; justify-content:space-between; text-align:left; padding:12px 16px; border-radius:12px;">
+        <span>⚙️ Open System Preferences (系统设置)</span>
+        <kbd style="font-size:11px; padding:2px 6px; background:var(--hairline); border-radius:4px;">Settings</kbd>
+      </button>
+    </div>
+  `;
+
+  openModal("Quick Command Palette", "Navigation & Shortcuts", commandHtml);
+}
+
+window.openCommandPaletteModal = openCommandPaletteModal;
+
 window.addEventListener("keydown", (e) => {
+  const modifier = e.metaKey || e.ctrlKey;
+
+  // 1. Cmd/Ctrl + N: Start Trade
+  if (modifier && e.key.toLowerCase() === "n") {
+    e.preventDefault();
+    if (window.openSheet) window.openSheet("tradeFormSheet");
+    return;
+  }
+
+  // 2. Cmd/Ctrl + K: Quick Command Palette
+  if (modifier && e.key.toLowerCase() === "k") {
+    e.preventDefault();
+    openCommandPaletteModal();
+    return;
+  }
+
+  // 3. Cmd/Ctrl + S: Export JSON Backup or Save Form
+  if (modifier && e.key.toLowerCase() === "s") {
+    e.preventDefault();
+    const tradeSheet = document.getElementById("tradeFormSheet");
+    if (tradeSheet && tradeSheet.classList.contains("active")) {
+      document.getElementById("tradeForm")?.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+    } else if (window.exportJSONBackup) {
+      window.exportJSONBackup();
+    }
+    return;
+  }
+
+  // 4. Escape key: Dismiss sheet
   if (e.key === "Escape") {
     const activeSheets = document.querySelectorAll(".sheet-backdrop.active");
     if (activeSheets.length) {

@@ -1,13 +1,13 @@
-const CACHE_NAME = 'trd-journey-v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator';
+const CACHE_NAME = 'trd-journey-v107-dimension6-pwa-offline-and-pro-keyboard-shortcuts-command-palette';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator',
-  './audioEngine.js?v=v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator',
-  './dataEngine.js?v=v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator',
-  './dock.js?v=v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator',
-  './gallery.js?v=v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator',
-  './app.js?v=v106-mae-vs-mfe-scatter-plot-matrix-and-storage-health-indicator',
+  './styles.css?v=v107-dimension6-pwa-offline-and-pro-keyboard-shortcuts-command-palette',
+  './audioEngine.js?v=v107-dimension6-pwa-offline-and-pro-keyboard-shortcuts-command-palette',
+  './dataEngine.js?v=v107-dimension6-pwa-offline-and-pro-keyboard-shortcuts-command-palette',
+  './dock.js?v=v107-dimension6-pwa-offline-and-pro-keyboard-shortcuts-command-palette',
+  './gallery.js?v=v107-dimension6-pwa-offline-and-pro-keyboard-shortcuts-command-palette',
+  './app.js?v=v107-dimension6-pwa-offline-and-pro-keyboard-shortcuts-command-palette',
   './manifest.json'
 ];
 
