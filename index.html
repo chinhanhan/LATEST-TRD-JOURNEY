@@ -6,6 +6,7 @@
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
     <link rel="stylesheet" href="styles.css?v=v110-dimensions-1-to-5-mobile-touch-target-scatter-enhancement" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
     <div class="app-shell" id="appShell">
@@ -174,6 +175,21 @@
                       <div class="card-icon">⚙️</div>
                       <div class="card-text">System</div>
                       <p class="bento-subtext">Preferences & Data</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bento Card 6: Long Game (Square) -->
+                <div class="css3d-card bento-card" data-module="long-game" onclick="window.openModule('long-game')">
+                  <div class="card-inner">
+                    <div class="card-glare"></div>
+                    <div class="card-front">
+                      <div class="bento-badge-row">
+                        <span class="bento-status-chip offline" style="background:var(--hairline-strong);color:var(--muted);border-color:var(--hairline-strong)">Evidence</span>
+                      </div>
+                      <div class="card-icon">⛰️</div>
+                      <div class="card-text">The Long Game</div>
+                      <p class="bento-subtext">Behavioral Timeline</p>
                     </div>
                   </div>
                 </div>
@@ -922,6 +938,33 @@
               </div>
             </div>
 
+            <!-- Long Game Custom Alerts Panel -->
+            <form class="panel data-export-panel" id="lgCustomAlertsForm" style="margin-top: 24px;">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">The Long Game</p>
+                  <h2>Custom Behavioral Alerts</h2>
+                </div>
+              </div>
+              <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px;">
+                Configure the thresholds for the Emergency Context and Behavioral alerts.
+              </p>
+              <div class="form-row">
+                <label>Consecutive Losses
+                  <input name="consecutiveLosses" type="number" min="1" step="1" required />
+                </label>
+                <label>SOP Change Window (Days)
+                  <input name="sopChangeWindowDays" type="number" min="1" step="1" required />
+                </label>
+              </div>
+              <div class="form-row">
+                <label>Shock/Breakthrough Delta (%)
+                  <input name="shockBreakRatioDelta" type="number" min="0" step="0.05" required />
+                </label>
+              </div>
+              <button class="primary-button" type="submit" style="margin-top: 12px;">Save Alert Config</button>
+            </form>
+
             <section class="panel">
               <div class="panel-head"><div><p class="eyebrow">Data</p><h2>Backup and restore</h2></div></div>
               <div class="row-actions settings-actions">
@@ -937,6 +980,104 @@
                 Storage: <strong id="storageEstimate" style="color:var(--ink);">Checking...</strong>
               </div>
             </section>
+          </section>
+
+          <!-- ============================================== -->
+          <!-- P0 Phase: THE LONG GAME Module                 -->
+          <!-- ============================================== -->
+          <section class="view" id="long-game" data-title="The Long Game" data-kicker="Evidence">
+            <div class="long-game-grid" style="display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 5fr); gap: 24px;">
+              <!-- Left Column: Context & Events -->
+              <div class="lg-col-left" style="display: flex; flex-direction: column; gap: 24px;">
+                
+                <!-- Current Season Context -->
+                <section class="panel lg-season-panel" id="lgCurrentSeasonPanel">
+                  <div class="panel-head">
+                    <div>
+                      <p class="eyebrow">Current Season</p>
+                      <h2 id="lgSeasonTitle">No Active Season</h2>
+                    </div>
+                    <button class="ghost-button pill-button" type="button" onclick="window.manageLongGameSeason()" style="font-size: 12px; height: 28px; padding: 0 12px;">Manage</button>
+                  </div>
+                  <div class="lg-season-context" id="lgSeasonContext" style="font-size: 14px; color: var(--muted); margin-top: 12px;">
+                    Seasons provide context to your behavior. Start a season (e.g. BUILD, STABILIZE) to track longitudinal changes.
+                  </div>
+                </section>
+                
+                <!-- Raw Journal -->
+                <section class="panel lg-raw-journal-panel">
+                  <div class="panel-head">
+                    <div>
+                      <h2 style="font-size: 15px;">Raw Journal</h2>
+                    </div>
+                  </div>
+                  <textarea id="lgRawJournalInput" rows="3" placeholder="What's on your mind? No tags, no scores." style="width: 100%; border: 1px solid var(--hairline-strong); border-radius: 8px; padding: 12px; margin-top: 12px; background: var(--bg-input, transparent); resize: vertical;"></textarea>
+                  <div style="display: flex; justify-content: flex-end; margin-top: 12px;">
+                    <button class="primary-button pill-button" type="button" onclick="window.saveLgRawJournal()" style="font-size: 13px; height: 32px;">Save Entry</button>
+                  </div>
+                  <div id="lgRawJournalFeed" style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px; max-height: 250px; overflow-y: auto;">
+                    <!-- Raw Journal entries injected here -->
+                  </div>
+                </section>
+                
+                <!-- Recent Events -->
+                <section class="panel lg-events-panel">
+                  <div class="panel-head">
+                    <div>
+                      <h2 style="font-size: 15px;">Meaningful Events</h2>
+                    </div>
+                    <button class="ghost-button pill-button" type="button" onclick="window.createLongGameEvent()" style="font-size: 12px; height: 28px; padding: 0 12px;">+ Add Event</button>
+                  </div>
+                  <div id="lgEventsFeed" style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
+                    <div class="empty-state">Not every trade needs to become a lesson.</div>
+                  </div>
+                </section>
+                
+              </div>
+              
+              <!-- Right Column: Evidence & Observations -->
+              <div class="lg-col-right" style="display: flex; flex-direction: column; gap: 24px;">
+                
+                <!-- Observations -->
+                <section class="panel lg-observations-panel">
+                  <div class="panel-head">
+                    <div>
+                      <h2 style="font-size: 15px;">Observations</h2>
+                    </div>
+                  </div>
+                  <div id="lgObservationsFeed" style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
+                    <div class="empty-state">When enough evidence accumulates, meaningful changes will surface here.</div>
+                  </div>
+                </section>
+                
+                <!-- Then -> Now Evidence -->
+                <section class="panel lg-evidence-panel">
+                  <div class="panel-head">
+                    <div>
+                      <p class="eyebrow">Behavioral Change</p>
+                      <h2 style="font-size: 15px;">Then &rarr; Now</h2>
+                    </div>
+                  </div>
+                  <div id="lgThenNowFeed" style="margin-top: 16px; display: flex; flex-direction: column; gap: 16px;">
+                    <div class="empty-state">Longitudinal evidence will appear here over time.</div>
+                  </div>
+                </section>
+                
+                <!-- Behavioral Trend Chart -->
+                <section class="panel lg-trend-panel">
+                  <div class="panel-head">
+                    <div>
+                      <p class="eyebrow">Behavioral Trend</p>
+                      <h2 style="font-size: 15px;">Historical Tracking</h2>
+                    </div>
+                  </div>
+                  <div style="margin-top: 16px; min-height: 200px;">
+                    <canvas id="lgTrendChartCanvas"></canvas>
+                  </div>
+                </section>
+                
+              </div>
+            </div>
           </section>
         </main>
         
@@ -1464,6 +1605,151 @@
       </div>
     </div>
 
+    <!-- P0 Phase: THE LONG GAME Modals -->
+    <!-- 1. Event / Guided Reflection Modal -->
+    <div class="sheet-backdrop hidden" id="lgEventModal" role="dialog" aria-modal="true" aria-labelledby="lgEventFormTitle" tabindex="-1">
+      <div class="sheet-card" role="dialog" aria-modal="true">
+        <div class="sheet-header">
+          <h2 id="lgEventTitle">New Event</h2>
+          <button class="icon-button sheet-close" id="closeLgEventModalBtn" type="button" aria-label="Close sheet">✕</button>
+        </div>
+        <div class="sheet-content">
+          <form id="lgEventForm" class="sheet-form">
+            <input type="hidden" name="eventType" id="lgEventType" />
+            <div class="form-row">
+              <label>Event Type
+                <select id="lgEventSelector" name="eventCategory" required>
+                  <!-- Populated dynamically -->
+                </select>
+              </label>
+            </div>
+            <!-- Guided Reflection Questions (Dynamic) -->
+            <div id="lgGuidedReflectionContainer" style="display: flex; flex-direction: column; gap: 16px; margin-top: 8px;">
+              <!-- Questions injected here -->
+            </div>
+            
+            <div style="margin-top: 16px;">
+              <label style="display: block; font-size: 13px; margin-bottom: 6px;">Emotional intensity of this trade (0-5)</label>
+              <div style="display: flex; gap: 12px; align-items: center;" class="emotion-radio-group">
+                <label style="display: flex; gap: 4px; align-items: center; font-weight: normal;"><input type="radio" name="emotionScore" value="0" checked /> 0</label>
+                <label style="display: flex; gap: 4px; align-items: center; font-weight: normal;"><input type="radio" name="emotionScore" value="1" /> 1</label>
+                <label style="display: flex; gap: 4px; align-items: center; font-weight: normal;"><input type="radio" name="emotionScore" value="2" /> 2</label>
+                <label style="display: flex; gap: 4px; align-items: center; font-weight: normal;"><input type="radio" name="emotionScore" value="3" /> 3</label>
+                <label style="display: flex; gap: 4px; align-items: center; font-weight: normal;"><input type="radio" name="emotionScore" value="4" /> 4</label>
+                <label style="display: flex; gap: 4px; align-items: center; font-weight: normal;"><input type="radio" name="emotionScore" value="5" /> 5</label>
+              </div>
+            </div>
+
+            <button class="primary-button pill-button" type="submit" style="margin-top: 16px;">
+              <span class="label-stack">
+                <span class="pill-label">Save Event</span>
+                <span class="pill-label-hover" aria-hidden="true">Save Event</span>
+              </span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. System Change Reason Modal -->
+    <div class="sheet-backdrop hidden" id="lgSystemChangeModal" role="dialog" aria-modal="true" aria-labelledby="lgSystemChangeTitle" tabindex="-1">
+      <div class="sheet-card" role="dialog" aria-modal="true">
+        <div class="sheet-header">
+          <h2>Why are you changing this?</h2>
+          <button class="icon-button sheet-close" id="closeLgSystemChangeBtn" type="button" aria-label="Close sheet">✕</button>
+        </div>
+        <div class="sheet-content">
+          <p style="font-size: 14px; color: var(--muted); margin-bottom: 16px;">Record the evidence or reason behind this system modification.</p>
+          <form id="lgSystemChangeForm" class="sheet-form">
+            <label>Reason
+              <select name="changeReason" id="lgChangeReason" required>
+                <option value="" disabled selected>Select a reason...</option>
+                <option value="New Evidence">New Evidence</option>
+                <option value="Execution Problem">Execution Problem</option>
+                <option value="Risk Issue">Risk Issue</option>
+                <option value="Market Condition Changed">Market Condition Changed</option>
+                <option value="Insufficient Sample">Insufficient Sample</option>
+                <option value="Emotional Reaction">Emotional Reaction</option>
+                <option value="Other">Other</option>
+              </select>
+            </label>
+            <div id="lgEmotionalWarning" style="display: none; font-size: 13px; color: var(--red); background: var(--red-soft); padding: 8px 12px; border-radius: 6px; margin-top: 8px; border: 1px solid rgba(217, 74, 69, 0.2);">
+              ⚠️ This change is being made under emotional pressure.
+            </div>
+            <label style="margin-top: 12px;">Notes (Optional)
+              <textarea name="changeNotes" rows="2" placeholder="Briefly explain..."></textarea>
+            </label>
+            <button class="primary-button pill-button" type="submit" style="margin-top: 16px;">Confirm Change</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Season Transition / Mirror Modal -->
+    <div class="sheet-backdrop hidden" id="lgSeasonModal" role="dialog" aria-modal="true" aria-labelledby="lgSeasonTitleId" tabindex="-1">
+      <div class="sheet-card" role="dialog" aria-modal="true">
+        <div class="sheet-header">
+          <h2 id="lgSeasonModalTitle">Current Season</h2>
+          <button class="icon-button sheet-close" id="closeLgSeasonBtn" type="button" aria-label="Close sheet">✕</button>
+        </div>
+        <div class="sheet-content">
+          <!-- Create New Season Form -->
+          <form id="lgSeasonForm" class="sheet-form" style="display: none;">
+            <p style="font-size: 14px; color: var(--muted); margin-bottom: 16px;">Seasons represent the current context of your trading (e.g. BUILD, DRAWDOWN, STABILIZE).</p>
+            <label>Season Name
+              <input type="text" name="seasonName" required placeholder="e.g. STABILIZE" />
+            </label>
+            <label>Context / Focus
+              <textarea name="seasonContext" rows="2" placeholder="What is the factual context right now?"></textarea>
+            </label>
+            <button class="primary-button pill-button" type="submit" style="margin-top: 16px;">Start Season</button>
+          </form>
+
+          <!-- The Mirror Form (End of Season) -->
+          <form id="lgMirrorForm" class="sheet-form" style="display: none;">
+            <div class="eyebrow">The Mirror</div>
+            <h2 style="font-size: 16px; margin-bottom: 8px; color: var(--ink);">Season Complete</h2>
+            
+            <div id="lgMirrorFacts" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+              <!-- Factual content injected here (WHAT HAPPENED, WHAT CHANGED, WHAT DIDN'T, WHAT REMAINS UNKNOWN) -->
+            </div>
+            
+            <h3 style="font-size: 13px; margin-bottom: 8px; color: var(--muted); text-transform: uppercase; font-weight: 600;">Your Reflection</h3>
+            <textarea name="mirrorReflection" rows="3" required placeholder="What do you think changed?" style="width: 100%; border: 1px solid var(--hairline-strong); border-radius: 8px; padding: 12px; background: var(--bg-input, transparent); resize: vertical;"></textarea>
+            
+            <button class="primary-button pill-button" type="submit" style="margin-top: 16px;">End Season</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Weekly Review Modal -->
+    <div class="sheet-backdrop hidden" id="lgWeeklyReviewModal" role="dialog" aria-modal="true" aria-labelledby="lgWeeklyReviewTitle" tabindex="-1">
+      <div class="sheet-card" role="dialog" aria-modal="true">
+        <div class="sheet-header">
+          <h2 id="lgWeeklyReviewTitle">Weekly Behavioral Review</h2>
+          <button class="icon-button sheet-close" id="closeLgWeeklyReviewBtn" type="button" aria-label="Close sheet">✕</button>
+        </div>
+        <div class="sheet-content">
+          <div id="lgWeeklySummaryContent" style="margin-bottom: 16px; padding: 12px; background: var(--surface-2); border-radius: 8px; font-size: 13px;">
+            <!-- Injected weekly summary -->
+          </div>
+          <form id="lgWeeklyReviewForm" class="sheet-form">
+            <label>What emotional patterns did I notice this week?
+              <textarea name="q1" rows="2" required></textarea>
+            </label>
+            <label>Which SOP changes helped or hurt my performance?
+              <textarea name="q2" rows="2" required></textarea>
+            </label>
+            <label>What concrete action will I take next week?
+              <textarea name="q3" rows="2" required></textarea>
+            </label>
+            <button class="primary-button pill-button" type="submit" style="margin-top: 16px;">Save Review</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <!-- React Bits Inspired Floating Dock Container -->
     <div class="dock-outer" id="reactBitsDock"></div>
     <canvas id="clickSparkCanvas" class="click-spark-canvas"></canvas>
@@ -1472,5 +1758,7 @@
     <script defer src="dock.js?v=v110-dimensions-1-to-5-mobile-touch-target-scatter-enhancement"></script>
     <script type="module" src="gallery.js?v=v110-dimensions-1-to-5-mobile-touch-target-scatter-enhancement"></script>
     <script defer src="app.js?v=v110-dimensions-1-to-5-mobile-touch-target-scatter-enhancement"></script>
+    <script defer src="longGameLogic.js"></script>
+    <script defer src="longGameTests.js"></script>
   </body>
 </html>

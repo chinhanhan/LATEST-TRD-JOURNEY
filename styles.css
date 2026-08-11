@@ -6422,3 +6422,25 @@ body:not(:has(#landing-gallery.active)) .ios-dock-container {
   font-size: 0.76rem;
   color: var(--text-muted);
 }
+
+/* ==========================================
+ * THE LONG GAME v1.1 - Mobile Validation
+ * ========================================== */
+@media (max-width: 768px) {
+  #long-game button,
+  #long-game .ghost-button,
+  #long-game .primary-button {
+    min-height: 44px;
+  }
+  
+  .sheet-backdrop[id^="lg"] .sheet-card {
+    width: 100%;
+    margin: 0;
+    border-radius: 16px 16px 0 0;
+    margin-top: auto;
+  }
+  
+  #lgMirrorFacts {
+    flex-direction: column !important;
+  }
+}

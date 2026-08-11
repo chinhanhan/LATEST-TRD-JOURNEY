@@ -252,7 +252,21 @@ function defaultState() {
       [todayISO()]: { bias: "Wait for confirmation near key levels.", levels: "Previous high / low, session open", allowedSetups: "Opening Drive, Liquidity Sweep", maxLossR: -2, maxTrades: 3 }
     },
     dailyReviews: {},
-    redNews: []
+    redNews: [],
+    longGame: {
+      currentSeason: null,
+      seasons: [],
+      events: [],
+      rawJournal: [],
+      observations: [],
+      mirrorEntries: [],
+      customAlertConfig: {
+        consecutiveLosses: 4,
+        sopChangeWindowDays: 7,
+        shockBreakRatioDelta: 0.2
+      },
+      weeklyReviews: []
+    }
   };
   return ensureSopState(base);
 }
@@ -390,6 +404,20 @@ function normalizeState(raw) {
       level: raw.experience?.level || 1,
       achievements: raw.experience?.achievements || [],
       dailyXpLog: raw.experience?.dailyXpLog || {}
+    },
+    longGame: {
+      currentSeason: raw.longGame?.currentSeason || null,
+      seasons: raw.longGame?.seasons || [],
+      events: raw.longGame?.events || [],
+      rawJournal: raw.longGame?.rawJournal || [],
+      observations: raw.longGame?.observations || [],
+      mirrorEntries: raw.longGame?.mirrorEntries || [],
+      customAlertConfig: raw.longGame?.customAlertConfig || {
+        consecutiveLosses: 4,
+        sopChangeWindowDays: 7,
+        shockBreakRatioDelta: 0.2
+      },
+      weeklyReviews: raw.longGame?.weeklyReviews || []
     }
   });
 }
@@ -520,8 +548,10 @@ function ensureSopState(rawState) {
 async function saveState() {
   try {
     await idbSet(STORAGE_KEY, JSON.parse(JSON.stringify(state)));
+    return true;
   } catch (e) {
     console.error("IDB save failed", e);
+    return false;
   }
 }
 
@@ -4077,6 +4107,19 @@ document.getElementById("reviewForm")?.addEventListener("submit", (event) => {
     toast(`Review saved for ${day}.`);
   }
   closeSheet("reviewSheet");
+});
+
+document.getElementById("lgCustomAlertsForm")?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  if (!state.longGame.customAlertConfig) state.longGame.customAlertConfig = {};
+  
+  state.longGame.customAlertConfig.consecutiveLosses = parseInt(form.consecutiveLosses.value, 10) || 4;
+  state.longGame.customAlertConfig.sopChangeWindowDays = parseInt(form.sopChangeWindowDays.value, 10) || 7;
+  state.longGame.customAlertConfig.shockBreakRatioDelta = parseFloat(form.shockBreakRatioDelta.value) || 0.2;
+  
+  saveState();
+  toast("Long Game custom alerts saved.");
 });
 
 document.getElementById("settingsForm")?.addEventListener("submit", (event) => {
