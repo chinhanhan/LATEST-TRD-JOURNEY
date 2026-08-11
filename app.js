@@ -2330,7 +2330,7 @@ function deleteSop(id) {
 function openSopModal(id = "") {
   const sop = state.sops.find((item) => item.id === id) || {};
   openModal(id ? "Edit SOP" : "Add SOP", "SOP Library", `
-    <form class="sop-editor-form" id="sopEditorForm" data-sop-id="${safe(id)}">
+    <div class="sop-editor-form" id="sopEditorForm" data-sop-id="${safe(id)}">
       <div class="form-row">
         <label>SOP Name<input name="name" required value="${safe(sop.name || "")}" placeholder="Opening Drive SOP" /></label>
         <label>Market<input name="market" value="${safe(sop.market || "Futures")}" placeholder="Futures / Forex / Crypto" /></label>
@@ -2345,105 +2345,140 @@ function openSopModal(id = "") {
       <label>No-trade Rules<textarea name="noTradeRules" rows="3">${safe(sop.noTradeRules || defaultSopDetails.noTradeRules)}</textarea></label>
       <label>Checklist<textarea name="checklist" rows="4">${safe((sop.checklist || defaultSopDetails.checklist).join("\n"))}</textarea></label>
       <label>Weaknesses<textarea name="weaknesses" rows="4">${safe((sop.weaknesses || defaultSopDetails.weaknesses).join("\n"))}</textarea></label>
-      <button class="primary-button" type="submit">Save SOP</button>
-    </form>
+      <button class="primary-button" type="button" onclick="window.saveSopFromModal(event)">Save SOP</button>s*</div>
   `);
+  
 }
 
 function openAccountModal(sopId = state.activeSopId, accountId = "") {
   const account = state.accounts.find((item) => item.id === accountId) || {};
   openModal(accountId ? "Edit Account" : "Add Account", "Account", `
-    <form class="sop-editor-form" id="accountEditorForm" data-sop-id="${safe(sopId)}" data-account-id="${safe(accountId)}">
+    <div class="sop-editor-form" id="accountEditorForm" data-sop-id="${safe(sopId)}" data-account-id="${safe(accountId)}">
       <label>Account Name<input name="name" required value="${safe(account.name || "")}" placeholder="ACC 1 / Prop Phase 1 / Funded" /></label>
       <label>Type<input name="type" value="${safe(account.type || "")}" placeholder="Demo, Personal, Prop, Funded" /></label>
       <div class="form-row">
         <label>Starting Balance ($)<input name="startingBalance" type="number" min="0" step="1" value="${safe(account.startingBalance ?? 1000)}" /></label>
         <label>Current Balance ($)<input name="currentBalance" type="number" min="0" step="1" value="${safe(account.currentBalance ?? account.startingBalance ?? 1000)}" /></label>
       </div>
-      <button class="primary-button" type="submit">Save Account</button>
-    </form>
+      <button class="primary-button" type="button" onclick="window.saveAccountFromModal(event)">Save Account</button>s*</div>
   `);
+  
 }
 
 window.openSopModal = openSopModal;
 window.openAccountModal = openAccountModal;
+window.saveSopFromModal = saveSopFromModal;
+window.saveAccountFromModal = saveAccountFromModal;
+window.closeTradeFromModal = closeTradeFromModal;
 
 function saveSopFromModal(event) {
   event.preventDefault();
-  const form = event.target;
-  const existing = state.sops.find((sop) => sop.id === form.dataset.sopId);
-  const id = existing?.id || makeSopId(form.name.value);
-  const newChecklist = parseSopChecklistRules(form.checklist.value);
-  
-  let version = Number(existing?.version || 1);
-  if (existing) {
-    const checklistChanged = JSON.stringify(existing.checklist || []) !== JSON.stringify(newChecklist);
-    const rulesChanged = (existing.entryRules || "").trim() !== form.entryRules.value.trim() ||
-                         (existing.exitRules || "").trim() !== form.exitRules.value.trim() ||
-                         (existing.riskRules || "").trim() !== form.riskRules.value.trim() ||
-                         (existing.noTradeRules || "").trim() !== form.noTradeRules.value.trim();
-    if (checklistChanged || rulesChanged) {
-      version += 1;
+  try {
+    const container = document.getElementById("sopEditorForm");
+    const existing = state.sops.find((sop) => sop.id === container.dataset.sopId);
+    
+    // Safely extract form values from div
+    const getValue = (name) => container.querySelector(`[name="${name}"]`)?.value || "";
+    
+    if (!getValue("name").trim()) {
+      toast("SOP Name is required.", "error");
+      return;
     }
-  }
+    
+    const id = existing?.id || makeSopId(getValue("name"));
+    const newChecklist = parseSopChecklistRules(getValue("checklist"));
+    
+    let version = Number(existing?.version || 1);
+    if (existing) {
+      const checklistChanged = JSON.stringify(existing.checklist || []) !== JSON.stringify(newChecklist);
+      const rulesChanged = (existing.entryRules || "").trim() !== getValue("entryRules").trim() ||
+                           (existing.exitRules || "").trim() !== getValue("exitRules").trim() ||
+                           (existing.riskRules || "").trim() !== getValue("riskRules").trim() ||
+                           (existing.noTradeRules || "").trim() !== getValue("noTradeRules").trim();
+      if (checklistChanged || rulesChanged) {
+        version += 1;
+      }
+    }
 
-  const sop = {
-    id,
-    version,
-    name: form.name.value.trim() || "Untitled SOP",
-    market: form.market.value.trim() || "Futures",
-    timeframe: form.timeframe.value.trim() || "Intraday",
-    status: form.status.value,
-    levelNotes: existing?.levelNotes || "",
-    entryRules: form.entryRules.value.trim(),
-    exitRules: form.exitRules.value.trim(),
-    riskRules: form.riskRules.value.trim(),
-    noTradeRules: form.noTradeRules.value.trim(),
-    checklist: newChecklist,
-    weaknesses: form.weaknesses.value.split("\n").map((item) => item.trim()).filter(Boolean),
-    createdAt: existing?.createdAt || todayISO(),
-    archivedAt: form.status.value === "archived" ? existing?.archivedAt || todayISO() : ""
-  };
-  if (existing) state.sops[state.sops.findIndex((item) => item.id === existing.id)] = sop;
-  else {
-    state.sops.push(sop);
-    state.accounts.push({ id: makeAccountId(id, "Main Account"), sopId: id, name: "Main Account", type: "Main", startingBalance: 1000, currentBalance: 1000, status: "active", createdAt: todayISO(), archivedAt: "" });
+    const sop = {
+      id,
+      version,
+      name: getValue("name").trim() || "Untitled SOP",
+      market: getValue("market").trim() || "Futures",
+      timeframe: getValue("timeframe").trim() || "Intraday",
+      status: getValue("status") || "active",
+      levelNotes: existing?.levelNotes || "",
+      entryRules: getValue("entryRules").trim(),
+      exitRules: getValue("exitRules").trim(),
+      riskRules: getValue("riskRules").trim(),
+      noTradeRules: getValue("noTradeRules").trim(),
+      checklist: newChecklist,
+      weaknesses: getValue("weaknesses").split("\n").map((item) => item.trim()).filter(Boolean),
+      createdAt: existing?.createdAt || todayISO(),
+      archivedAt: getValue("status") === "archived" ? existing?.archivedAt || todayISO() : ""
+    };
+
+    if (existing) {
+      const idx = state.sops.findIndex((item) => item.id === existing.id);
+      if (idx !== -1) state.sops[idx] = sop;
+    } else {
+      state.sops.push(sop);
+      state.accounts.push({ id: makeAccountId(id, "Main Account"), sopId: id, name: "Main Account", type: "Main", startingBalance: 1000, currentBalance: 1000, status: "active", createdAt: todayISO(), archivedAt: "" });
+    }
+    
+    state.activeSopId = id;
+    state.activeAccountId = accountsForSop(id)[0]?.id || state.activeAccountId;
+    saveState();
+    closeModal();
+    renderAll();
+    populateSopControls();
+    renderPreFlightChecklist(id);
+    toast(`${sop.name} SOP saved.`);
+  } catch (err) {
+    console.error("Error saving SOP:", err);
+    toast("Failed to save SOP: " + err.message, "error");
   }
-  state.activeSopId = id;
-  state.activeAccountId = accountsForSop(id)[0]?.id || state.activeAccountId;
-  saveState();
-  closeModal();
-  renderAll();
-  populateSopControls();
-  renderPreFlightChecklist(id);
-  toast(`${sop.name} SOP saved.`);
 }
 
 function saveAccountFromModal(event) {
   event.preventDefault();
-  const form = event.target;
-  const sopId = form.dataset.sopId || state.activeSopId;
-  const existing = state.accounts.find((account) => account.id === form.dataset.accountId);
-  const account = {
-    id: existing?.id || makeAccountId(sopId, form.name.value),
-    sopId,
-    name: form.name.value.trim(),
-    type: form.type.value.trim() || "Account",
-    startingBalance: Number(form.startingBalance.value || 0),
-    currentBalance: Number(form.currentBalance.value || form.startingBalance.value || 0),
-    status: existing?.status || "active",
-    createdAt: existing?.createdAt || todayISO(),
-    archivedAt: existing?.archivedAt || ""
-  };
-  if (existing) state.accounts[state.accounts.findIndex((item) => item.id === existing.id)] = account;
-  else state.accounts.push(account);
-  state.activeSopId = sopId;
-  state.activeAccountId = account.id;
-  saveState();
-  closeModal();
-  renderAll();
-  toast(`${account.name} account saved.`);
+  try {
+    const container = document.getElementById("accountEditorForm");
+    const sopId = container.dataset.sopId || state.activeSopId;
+    const existing = state.accounts.find((account) => account.id === container.dataset.accountId);
+    
+    const getValue = (name) => container.querySelector(`[name="${name}"]`)?.value || "";
+    
+    if (!getValue("name").trim()) {
+      toast("Account Name is required.", "error");
+      return;
+    }
+    
+    const account = {
+      id: existing?.id || makeAccountId(sopId, getValue("name")),
+      sopId,
+      name: getValue("name").trim(),
+      type: getValue("type").trim() || "Account",
+      startingBalance: Number(getValue("startingBalance") || 0),
+      currentBalance: Number(getValue("currentBalance") || getValue("startingBalance") || 0),
+      status: existing?.status || "active",
+      createdAt: existing?.createdAt || todayISO(),
+      archivedAt: existing?.archivedAt || ""
+    };
+    if (existing) state.accounts[state.accounts.findIndex((item) => item.id === existing.id)] = account;
+    else state.accounts.push(account);
+    state.activeSopId = sopId;
+    state.activeAccountId = account.id;
+    saveState();
+    closeModal();
+    renderAll();
+    toast(`${account.name} account saved.`);
+  } catch (err) {
+    console.error("Error saving Account:", err);
+    toast("Failed to save Account: " + err.message, "error");
+  }
 }
+
 
 function applyLanguage() {
   document.documentElement.lang = language === "zh" ? "zh-CN" : "en";
@@ -3145,7 +3180,7 @@ function openCloseTradeModal(id) {
   if (!trade) return;
   const currentNow = nowDatetimeLocal();
   openModal("Close trade", "Result", `
-    <form class="close-trade-form" id="closeTradeForm" data-close-id="${trade.id}">
+    <div class="close-trade-form" id="closeTradeForm" data-close-id="${trade.id}">
       <div class="insight-grid">
         ${insightCard("Symbol", trade.symbol, trade.direction)}
         ${insightCard("Setup", trade.setup, `Risk ${money(trade.risk)}`)}
@@ -3177,9 +3212,9 @@ function openCloseTradeModal(id) {
         </div>
       </label>
       <label>Upload Screenshot<input name="imageFile" type="file" accept="image/*" /></label>
-      <button class="primary-button" type="submit">Close Trade</button>
-    </form>
+      <button class="primary-button" type="button" onclick="window.closeTradeFromModal(event)">Close Trade</button>s*</div>
   `);
+  
 }
 
 function mediaBadges(trade) {
@@ -3194,32 +3229,40 @@ function mediaBadges(trade) {
 
 async function closeTradeFromModal(event) {
   event.preventDefault();
-  const form = event.target;
-  const trade = state.trades.find((item) => item.id === form.dataset.closeId);
-  if (!trade) return;
   try {
-    const pnlInput = form.pnl.value.trim();
-    const rInput = form.rResult.value.trim();
+    const container = document.getElementById("closeTradeForm");
+    const trade = state.trades.find((item) => item.id === container.dataset.closeId);
+    if (!trade) return;
+    
+    const getValue = (name) => container.querySelector(`[name="${name}"]`)?.value || "";
+    
+    const pnlInput = getValue("pnl").trim();
+    const rInput = getValue("rResult").trim();
     if (!pnlInput && !rInput) {
       toast(t("needsResult"), "error");
       return;
     }
-    const closeTimeVal = form.closeTime?.value || nowDatetimeLocal();
+    const closeTimeVal = getValue("closeTime") || nowDatetimeLocal();
     if (trade.openTime && closeTimeVal < trade.openTime) {
       toast("Closing time cannot be earlier than opening time.", "error");
       return;
     }
-    const imagePromises = Array.from(form.imageFile.files).map(file => fileToDataUrl(file));
+    
+    const imageInput = container.querySelector('[name="imageFile"]');
+    const imagePromises = imageInput && imageInput.files ? Array.from(imageInput.files).map(file => fileToDataUrl(file)) : [];
     const imagesData = (await Promise.all(imagePromises)).filter(Boolean);
+    
     trade.status = "closed";
     trade.closeTime = closeTimeVal;
     trade.closedAt = closeTimeVal.split("T")[0];
     if (rInput !== "") trade.rMultiple = Number(rInput);
     trade.pnl = pnlInput !== "" ? Number(pnlInput) : (rInput !== "" ? Number(rInput) * Number(trade.risk || 0) : 0);
-    trade.rule = form.rule.value === "incomplete" ? "incomplete" : form.rule.value === "true";
-    trade.ruleStatus = form.rule.value === "incomplete" ? "incomplete" : (form.rule.value === "false" ? "violated" : "followed");
-    trade.emotion = form.emotion.value;
-    trade.exitNote = form.exitNote.value.trim();
+    
+    const ruleValue = getValue("rule");
+    trade.rule = ruleValue === "incomplete" ? "incomplete" : ruleValue === "true";
+    trade.ruleStatus = ruleValue === "incomplete" ? "incomplete" : (ruleValue === "false" ? "violated" : "followed");
+    trade.emotion = getValue("emotion");
+    trade.exitNote = getValue("exitNote").trim();
     if (imagesData.length) trade.images = imagesData;
     
     const isWin = trade.pnl > 0 || (trade.pnl === 0 && rValue(trade) > 0);
@@ -3231,7 +3274,8 @@ async function closeTradeFromModal(event) {
     const progress = sopProgress(trade.sopId);
     toast(`${sopName(trade.sopId)} now has ${progress.records} records.`, toastType);
   } catch (error) {
-    toast(error.message, "error");
+    console.error("Error closing trade:", error);
+    toast("Failed to close trade: " + error.message, "error");
   }
 }
 
@@ -4003,11 +4047,7 @@ document.body.addEventListener("click", (event) => {
   }
 });
 
-document.body.addEventListener("submit", (event) => {
-  if (event.target.id === "closeTradeForm") closeTradeFromModal(event);
-  if (event.target.id === "sopEditorForm") saveSopFromModal(event);
-  if (event.target.id === "accountEditorForm") saveAccountFromModal(event);
-});
+// Global submit listener removed; dynamic forms now use inline onsubmit handlers to prevent iOS Safari bubbling bugs.
 
 document.querySelectorAll("[data-review-panel]").forEach((button) => {
   button.addEventListener("click", () => {
