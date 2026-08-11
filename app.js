@@ -2794,10 +2794,10 @@ function parseSopChecklistRules(text) {
   if (Array.isArray(text)) {
     text = text.join("\n");
   }
-  const lines = String(text).split("\n").map((l) => l.trim()).filter(Boolean);
+  const lines = String(text).split("\n").map((l) => l.replace(/^[\s\u200B\u3000]+|[\s\u200B\u3000]+$/g, '')).filter(Boolean);
   if (!lines.length) return [];
   
-  const numberPrefixRegex = /^(\d+[\.\)]|\u2022|-|\*)\s*/;
+  const numberPrefixRegex = /^[\s\u200B\u3000]*(\d+[\.\)）】\]]|\u2022|-|\*|•|⁃|—|－|✅|☑️|✔️)\s*/;;
   const hasNumbering = lines.some((l) => numberPrefixRegex.test(l));
 
   if (hasNumbering) {
