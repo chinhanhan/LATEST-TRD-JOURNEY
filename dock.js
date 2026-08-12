@@ -23,10 +23,7 @@ class ReactBitsDockEngine {
       { module: 'missions', icon: '🎯', label: 'Missions', onClick: () => window.openModule && window.openModule('missions') },
       { module: 'review', icon: '📊', label: 'Review', onClick: () => window.openModule && window.openModule('review') },
       { module: 'simulation', icon: '🎲', label: 'Simulation', onClick: () => { window.openModule?.('review'); setTimeout(() => document.querySelector('[data-review-panel="simulation"]')?.click(), 50); } },
-      { module: 'settings', icon: '⚙️', label: 'System', onClick: () => window.openModule && window.openModule('settings') },
-      { module: 'action-trade', icon: '⚡', label: '+ Log Trade', onClick: () => window.triggerBentoAction && window.triggerBentoAction('open-capture') },
-      { module: 'action-sop', icon: '📋', label: 'SOP Rules', onClick: () => window.openSopModal && window.openSopModal() },
-      { module: 'action-accounts', icon: '💳', label: 'Accounts', onClick: () => window.openAccountModal && window.openAccountModal() }
+      { module: 'settings', icon: '⚙️', label: 'System', onClick: () => window.openModule && window.openModule('settings') }
     ];
 
     this.mouseX = Infinity;
