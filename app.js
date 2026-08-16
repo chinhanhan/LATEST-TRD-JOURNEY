@@ -1218,7 +1218,17 @@ function populateSetupOptions() {
 
 function populateSopControls() {
   const active = activeSop();
-  if (!active) return;
+  const sopSelect = document.getElementById("activeSopSelect");
+  const accountSelect = document.getElementById("accountFilterSelect");
+  const tradeSopSelect = document.getElementById("tradeSopSelect");
+  const tradeAccountSelect = document.getElementById("tradeAccountSelect");
+  if (!active) {
+    if (sopSelect) sopSelect.innerHTML = "";
+    if (accountSelect) accountSelect.innerHTML = "";
+    if (tradeSopSelect) tradeSopSelect.innerHTML = "";
+    if (tradeAccountSelect) tradeAccountSelect.innerHTML = "";
+    return;
+  }
   const sopOptions = state.sops.filter((sop) => !sop.archivedAt).map((sop) => `<option value="${safe(sop.id)}">${safe(sop.name)}</option>`).join("");
   ["activeSopSelect", "tradeSopSelect"].forEach((id) => {
     const select = document.getElementById(id);
@@ -2394,7 +2404,7 @@ function deleteAccount(id) {
     }
     saveState();
     
-    const activeModalTitle = document.getElementById("modalTitle")?.textContent;
+    const activeModalTitle = document.getElementById("detailSheetTitle")?.textContent;
     if (activeModalTitle === "Manage Wallets") {
       openWalletManagerModal();
     }
