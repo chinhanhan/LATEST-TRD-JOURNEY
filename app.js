@@ -3744,14 +3744,34 @@ document.getElementById("accountFilterSelect")?.addEventListener("change", (even
 });
 document.getElementById("tradeSopSelect")?.addEventListener("change", (event) => {
   state.activeSopId = event.target.value;
-  state.activeAccountId = accountsForSop(state.activeSopId)[0]?.id || "";
+  const accounts = accountsForSop(state.activeSopId).filter(a => !a.archivedAt);
+  state.activeAccountId = accounts[0]?.id || "";
   saveState();
-  renderAll();
-  resetTradeForm();
+  
+  // Re-populate account options for the trade form without wiping everything else
+  const tradeAccountSelect = document.getElementById("tradeAccountSelect");
+  if (tradeAccountSelect) {
+    tradeAccountSelect.innerHTML = accounts.map(a => `<option value="${safe(a.id)}">${safe(a.name)}</option>`).join("");
+    tradeAccountSelect.value = state.activeAccountId;
+  }
+  
+  // Re-render checklist based on new SOP
+  renderPreFlightChecklist(state.activeSopId);
+  
+  // Also update the global select to keep them in sync
+  const globalSopSelect = document.getElementById("activeSopSelect");
+  if (globalSopSelect) globalSopSelect.value = state.activeSopId;
+  const globalAccountSelect = document.getElementById("accountFilterSelect");
+  if (globalAccountSelect) {
+    globalAccountSelect.innerHTML = accounts.map(a => `<option value="${safe(a.id)}">${safe(a.name)}</option>`).join("");
+    globalAccountSelect.value = state.activeAccountId;
+  }
 });
 document.getElementById("tradeAccountSelect")?.addEventListener("change", (event) => {
   state.activeAccountId = event.target.value;
   saveState();
+  const globalAccountSelect = document.getElementById("accountFilterSelect");
+  if (globalAccountSelect) globalAccountSelect.value = state.activeAccountId;
 });
 document.getElementById("exportCsvBtn")?.addEventListener("click", exportCsv);
 document.getElementById("exportJsonBtn")?.addEventListener("click", exportJson);

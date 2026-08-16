@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=v115" />
+    <link rel="stylesheet" href="styles.css?v=v116" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
@@ -554,7 +554,8 @@
                   <small id="activeAccountName">Main Account</small>
                   <button class="text-button balance-edit" type="button" data-edit-active-account>Edit Balance</button>
                 </div>
-                <div class="row-actions sop-controls">
+                <div class="row-actions sop-controls" style="align-items: center; display: flex; gap: 8px;">
+                  <span style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">Workspace Context:</span>
                   <select id="activeSopSelect" aria-label="Active SOP"></select>
                   <select id="accountFilterSelect" aria-label="Active account"></select>
                   <button class="primary-button" type="button" data-open-capture>Start Trade</button>
@@ -1353,6 +1354,18 @@
               </div>
             </div>
 
+            <!-- Active Context Selection -->
+            <div class="form-row" style="margin-bottom: 12px;">
+              <div class="form-group">
+                <select name="sopId" id="tradeSopSelect" required style="font-weight: 600; background-color: var(--surface-2);"></select>
+                <label class="floating-label">Active SOP (兵法)</label>
+              </div>
+              <div class="form-group">
+                <select name="accountId" id="tradeAccountSelect" required style="font-weight: 600; background-color: var(--surface-2);"></select>
+                <label class="floating-label">Active Account (钱包)</label>
+              </div>
+            </div>
+
             <!-- Pre-Flight Risk Checklist Gate (开仓前风控检查卡片) -->
             <div class="pre-flight-card" id="preFlightCard">
               <div class="pre-flight-header">
@@ -1374,16 +1387,6 @@
               <div id="preflightRedNewsAlert" class="preflight-news-hud hidden"></div>
               <div class="preflight-footer-hint" id="preflightHint">
                 ⚠️ 必须打勾确认所有注意事项后，方可开启交易。
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <select name="sopId" id="tradeSopSelect" required></select>
-                <label class="floating-label">SOP</label>
-              </div>
-              <div class="form-group">
-                <select name="accountId" id="tradeAccountSelect" required></select>
-                <label class="floating-label">Account</label>
               </div>
             </div>
             <div class="form-row">
@@ -1753,11 +1756,11 @@
     <!-- React Bits Inspired Floating Dock Container -->
     <div class="dock-outer" id="reactBitsDock"></div>
     <canvas id="clickSparkCanvas" class="click-spark-canvas"></canvas>
-    <script defer src="audioEngine.js?v=v115"></script>
-    <script defer src="dataEngine.js?v=v115"></script>
-    <script defer src="dock.js?v=v115"></script>
-    <script type="module" src="gallery.js?v=v115"></script>
-    <script defer src="app.js?v=v115"></script>
+    <script defer src="audioEngine.js?v=v116"></script>
+    <script defer src="dataEngine.js?v=v116"></script>
+    <script defer src="dock.js?v=v116"></script>
+    <script type="module" src="gallery.js?v=v116"></script>
+    <script defer src="app.js?v=v116"></script>
     <script defer src="longGameLogic.js"></script>
     <script defer src="longGameTests.js"></script>
   </body>
