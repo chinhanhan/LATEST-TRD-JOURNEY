@@ -1245,7 +1245,6 @@ function populateSopControls() {
     filter.innerHTML = accountOptions;
     filter.value = state.activeAccountId || accounts[0]?.id || "";
   }
-  const tradeAccountSelect = document.getElementById("tradeAccountSelect");
   if (tradeAccountSelect) {
     tradeAccountSelect.innerHTML = accountOptions;
     tradeAccountSelect.value = state.activeAccountId || accounts[0]?.id || "";
@@ -2438,6 +2437,9 @@ function openWalletManagerModal() {
   }).filter(Boolean).join('') || `<div class="empty-state">No accounts found. Create one first.</div>`;
 
   openModal("Manage Wallets", "Accounts", `
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
+      <button class="primary-button compact" type="button" onclick="window.openAccountModal()">+ Add Account</button>
+    </div>
     <div style="max-height: 60vh; overflow-y: auto; padding-right: 4px;">
       ${html}
     </div>
