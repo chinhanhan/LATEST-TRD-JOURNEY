@@ -2352,15 +2352,19 @@ function openSopModal(id = "") {
 
 function openAccountModal(sopId = state.activeSopId, accountId = "") {
   const account = state.accounts.find((item) => item.id === accountId) || {};
+    const currentSopId = account.sopId || sopId;
+  const sopOptions = state.sops.filter(s => !s.archivedAt).map(s => `<option value="${safe(s.id)}" ${s.id === currentSopId ? "selected" : ""}>${safe(s.name)}</option>`).join("");
   openModal(accountId ? "Edit Account" : "Add Account", "Account", `
-    <div class="sop-editor-form" id="accountEditorForm" data-sop-id="${safe(sopId)}" data-account-id="${safe(accountId)}">
+    <div class="sop-editor-form" id="accountEditorForm" data-account-id="${safe(accountId)}">
+      <label>Parent SOP<select name="sopId">${sopOptions}</select></label>
       <label>Account Name<input name="name" required value="${safe(account.name || "")}" placeholder="ACC 1 / Prop Phase 1 / Funded" /></label>
       <label>Type<input name="type" value="${safe(account.type || "")}" placeholder="Demo, Personal, Prop, Funded" /></label>
       <div class="form-row">
         <label>Starting Balance ($)<input name="startingBalance" type="number" min="0" step="1" value="${safe(account.startingBalance ?? 1000)}" /></label>
         <label>Current Balance ($)<input name="currentBalance" type="number" min="0" step="1" value="${safe(account.currentBalance ?? account.startingBalance ?? 1000)}" /></label>
       </div>
-      <button class="primary-button" type="button" onclick="window.saveAccountFromModal(event)">Save Account</button>s*</div>
+      <button class="primary-button" type="button" onclick="window.saveAccountFromModal(event)">Save Account</button>
+    </div>
   `);
   
 }
@@ -2444,10 +2448,10 @@ function saveAccountFromModal(event) {
   event.preventDefault();
   try {
     const container = document.getElementById("accountEditorForm");
-    const sopId = container.dataset.sopId || state.activeSopId;
     const existing = state.accounts.find((account) => account.id === container.dataset.accountId);
-    
     const getValue = (name) => container.querySelector(`[name="${name}"]`)?.value || "";
+    
+    const sopId = getValue("sopId") || state.activeSopId;
     
     if (!getValue("name").trim()) {
       toast("Account Name is required.", "error");
