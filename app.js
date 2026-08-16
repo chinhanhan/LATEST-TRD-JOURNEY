@@ -3035,6 +3035,12 @@ function editTrade(id) {
   for (const key of Object.keys(trade.checklist || {})) {
     if (form[key]) form[key].checked = Boolean(trade.checklist[key]);
   }
+  
+  // Explicitly render the pre-flight checklist for the edited trade
+  if (typeof renderPreFlightChecklist === "function") {
+    renderPreFlightChecklist(trade.sopId, trade.preFlightChecklist?.items);
+  }
+
   document.querySelector(".advanced-fields").open = trade.status !== "open";
   document.getElementById("tradeFormMode").textContent = trade.status === "open" ? "Update open trade" : "Edit closed trade";
   document.getElementById("saveTradeBtn").textContent = trade.status === "open" ? "Update Trade" : "Save Trade";
