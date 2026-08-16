@@ -2370,6 +2370,70 @@ function openAccountModal(sopId = state.activeSopId, accountId = "") {
   
 }
 
+
+function deleteAccount(id) {
+  const account = state.accounts.find((a) => a.id === id);
+  if (!account) return;
+  
+  if (confirm(`Delete Account "${account.name}"? This will hide it from menus.`)) {
+    account.archivedAt = new Date().toISOString();
+    
+    if (state.activeAccountId === id) {
+      const activeSopAccounts = accountsForSop(state.activeSopId).filter(a => !a.archivedAt && a.id !== id);
+      if (activeSopAccounts.length > 0) {
+        state.activeAccountId = activeSopAccounts[0].id;
+      } else {
+        const otherSop = state.sops.find(s => !s.archivedAt);
+        if (otherSop) {
+          state.activeSopId = otherSop.id;
+          state.activeAccountId = accountsForSop(otherSop.id).filter(a => !a.archivedAt)[0]?.id || "";
+        } else {
+          state.activeAccountId = "";
+        }
+      }
+    }
+    saveState();
+    
+    const activeModalTitle = document.getElementById("modalTitle")?.textContent;
+    if (activeModalTitle === "Manage Wallets") {
+      openWalletManagerModal();
+    }
+    renderAll();
+  }
+}
+
+function openWalletManagerModal() {
+  const html = state.sops.filter(s => !s.archivedAt).map(sop => {
+    const accounts = state.accounts.filter(a => a.sopId === sop.id && !a.archivedAt);
+    if (accounts.length === 0) return '';
+    return `
+      <div style="margin-bottom: 16px;">
+        <h4 style="margin: 0 0 8px 0; color: var(--muted); font-size: 11px; text-transform: uppercase;">${safe(sop.name)}</h4>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          ${accounts.map(acc => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--surface-2); border-radius: 8px; border: 1px solid var(--hairline);">
+              <div style="display: flex; flex-direction: column;">
+                <strong style="font-size: 14px;">${safe(acc.name)}</strong>
+                <span style="font-size: 12px; color: var(--muted);">Balance: ${acc.currentBalance ?? acc.startingBalance ?? 1000}</span>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="ghost-button compact" type="button" onclick="window.openAccountModal('${safe(sop.id)}', '${safe(acc.id)}')">Edit</button>
+                <button class="ghost-button compact" type="button" style="color: var(--red);" onclick="window.deleteAccount('${safe(acc.id)}')">Delete</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).filter(Boolean).join('') || `<div class="empty-state">No accounts found. Create one first.</div>`;
+
+  openModal("Manage Wallets", "Accounts", `
+    <div style="max-height: 60vh; overflow-y: auto; padding-right: 4px;">
+      ${html}
+    </div>
+  `);
+}
+
 window.openSopModal = openSopModal;
 window.openAccountModal = openAccountModal;
 window.deleteAccount = deleteAccount;
