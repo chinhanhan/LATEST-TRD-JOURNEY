@@ -588,15 +588,15 @@ function clearPastRedNewsEvents() {
 }
 
 function activeSop() {
-  return state.sops.find((sop) => sop.id === state.activeSopId) || state.sops[0];
+  return state.sops.find((sop) => sop.id === state.activeSopId && !sop.archivedAt) || state.sops.filter(s => !s.archivedAt)[0];
 }
 
 function accountsForSop(sopId = state.activeSopId) {
-  return state.accounts.filter((account) => account.sopId === sopId);
+  return state.accounts.filter((account) => account.sopId === sopId && !account.archivedAt);
 }
 
 function activeAccount() {
-  return state.accounts.find((account) => account.id === state.activeAccountId) || accountsForSop()[0];
+  return state.accounts.find((account) => account.id === state.activeAccountId && !account.archivedAt) || accountsForSop().filter(a => !a.archivedAt)[0];
 }
 
 function visibleTrades() {
@@ -1596,7 +1596,14 @@ function renderJournal() {
 
 function renderSopJourney() {
   const active = activeSop();
-  if (!active) return;
+  if (!active) {
+    setText("activeSopTitle", "No SOP");
+    setText("activeJourneyMeta", "Create an SOP to begin.");
+    setText("activeAccountBalance", "$0");
+    setText("activeAccountName", "No account");
+    document.getElementById("sopCards").innerHTML = "";
+    return;
+  }
   const account = activeAccount();
   const progress = sopProgress(active.id);
   const level = sopLevel(progress);
