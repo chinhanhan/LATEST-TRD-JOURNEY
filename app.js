@@ -2372,6 +2372,8 @@ function openAccountModal(sopId = state.activeSopId, accountId = "") {
 
 window.openSopModal = openSopModal;
 window.openAccountModal = openAccountModal;
+window.deleteAccount = deleteAccount;
+window.openWalletManagerModal = openWalletManagerModal;
 window.saveSopFromModal = saveSopFromModal;
 window.saveAccountFromModal = saveAccountFromModal;
 window.closeTradeFromModal = closeTradeFromModal;

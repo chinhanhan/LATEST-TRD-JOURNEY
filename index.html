@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRD Journey</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=v119" />
+    <link rel="stylesheet" href="styles.css?v=v120" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
@@ -552,7 +552,7 @@
                   <span>Current Balance</span>
                   <strong id="activeAccountBalance">$1,000</strong>
                   <small id="activeAccountName">Main Account</small>
-                  <button class="text-button balance-edit" type="button" data-edit-active-account>Edit Balance</button>
+                  <button class="text-button balance-edit" type="button" onclick="window.openWalletManagerModal()">⚙️ Manage Wallets</button>
                 </div>
                 <div class="row-actions sop-controls" style="align-items: center; display: flex; gap: 8px;">
                   <span style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">Workspace Context:</span>
@@ -1756,11 +1756,11 @@
     <!-- React Bits Inspired Floating Dock Container -->
     <div class="dock-outer" id="reactBitsDock"></div>
     <canvas id="clickSparkCanvas" class="click-spark-canvas"></canvas>
-    <script defer src="audioEngine.js?v=v119"></script>
-    <script defer src="dataEngine.js?v=v119"></script>
-    <script defer src="dock.js?v=v119"></script>
-    <script type="module" src="gallery.js?v=v119"></script>
-    <script defer src="app.js?v=v119"></script>
+    <script defer src="audioEngine.js?v=v120"></script>
+    <script defer src="dataEngine.js?v=v120"></script>
+    <script defer src="dock.js?v=v120"></script>
+    <script type="module" src="gallery.js?v=v120"></script>
+    <script defer src="app.js?v=v120"></script>
     <script defer src="longGameLogic.js"></script>
     <script defer src="longGameTests.js"></script>
   </body>
