@@ -2257,7 +2257,8 @@ function renderPlaybook() {
       <div class="sop-card-inner">
         <!-- Front Face -->
         <div class="sop-card-front">
-          <button class="card-flip-btn" onclick="flipCard('${sop.id}')" title="Flip to rules" aria-label="Flip card">🔄</button>
+          <button class="card-flip-btn" style="right: 48px;" data-edit-sop="${safe(sop.id)}" title="Edit SOP" aria-label="Edit SOP">⚙️</button>
+          <button class="card-flip-btn" onclick="flipCard('${sop.id}')" title="Flip to rules (Actions)" aria-label="Flip card">🔄</button>
           <div style="display:flex; flex-direction:column; gap:6px;">
             <span class="tag info" style="width:fit-content; margin-bottom:4px;">Level ${level.level} ${level.name}</span>
             <strong style="font-size:18px; line-height:1.2;">${safe(sop.name)}</strong>
